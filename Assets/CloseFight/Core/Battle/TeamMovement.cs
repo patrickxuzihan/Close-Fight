@@ -28,6 +28,8 @@ namespace CloseFight.Core.Battle
         /// <summary>The leader waits when a follower lags further than this behind his place.</summary>
         const float CohesionDistance = 8f;
         const float ArriveDistance = 0.15f;
+        /// <summary>Stop waiting for anyone who cannot reach his spot after this long.</summary>
+        const float DeployTimeout = 12f;
 
         readonly TacticalMap _map;
         readonly GridPathfinder _pathfinder;
@@ -58,9 +60,32 @@ namespace CloseFight.Core.Battle
         static Posture ArrivedPosture(OrderType order) => order == OrderType.Crawl ? Posture.Prone : Posture.Kneeling;
 
         /// <summary>Plans a route for the team. Returns false if no step toward the target is possible.</summary>
-        public bool PlanMove(Team team, float2 target, OrderType order)
+        /// <summary>A member still taking orders (not cowering, panicking or routing).</summary>
+        static bool UnderControl(Soldier soldier) => soldier.IsActive && !soldier.IsOutOfControl;
+
+        /// <summary>Who the team moves with: the leader, or the next man still under control.</summary>
+        static Soldier Anchor(Team team)
         {
             var leader = team.Leader;
+            if (leader != null && UnderControl(leader))
+            {
+                return leader;
+            }
+
+            foreach (var member in team.Members)
+            {
+                if (UnderControl(member))
+                {
+                    return member;
+                }
+            }
+
+            return null;
+        }
+
+        public bool PlanMove(Team team, float2 target, OrderType order)
+        {
+            var leader = Anchor(team);
             if (leader == null)
             {
                 return false;
@@ -89,7 +114,7 @@ namespace CloseFight.Core.Battle
             var posture = MovingPosture(order);
             foreach (var member in team.Members)
             {
-                if (member.IsActive)
+                if (UnderControl(member))
                 {
                     member.Posture = posture;
                 }
@@ -106,7 +131,7 @@ namespace CloseFight.Core.Battle
             team.Order = new TeamOrder(order, team.Centroid);
             foreach (var member in team.Members)
             {
-                if (member.IsActive)
+                if (UnderControl(member))
                 {
                     member.Posture = posture;
                     member.IsMoving = false;
@@ -129,7 +154,7 @@ namespace CloseFight.Core.Battle
 
         void StepMoving(Team team, float dt)
         {
-            var leader = team.Leader;
+            var leader = Anchor(team);
             if (leader == null)
             {
                 ClearPath(team);
@@ -144,7 +169,7 @@ namespace CloseFight.Core.Battle
             int slot = 1;
             foreach (var member in team.Members)
             {
-                if (member == leader || !member.IsActive)
+                if (member == leader || !UnderControl(member) || member.IsPinned)
                 {
                     continue;
                 }
@@ -159,7 +184,7 @@ namespace CloseFight.Core.Battle
                 slot++;
             }
 
-            if (!waiting)
+            if (!waiting && !leader.IsPinned)
             {
                 float leaderSpeed = speed / TerrainCostAt(leader.Position);
                 team.PathProgress = math.min(team.PathLength, team.PathProgress + leaderSpeed * dt);
@@ -175,7 +200,7 @@ namespace CloseFight.Core.Battle
             slot = 1;
             foreach (var member in team.Members)
             {
-                if (member == leader || !member.IsActive)
+                if (member == leader || !UnderControl(member))
                 {
                     continue;
                 }
@@ -197,17 +222,20 @@ namespace CloseFight.Core.Battle
             team.Facing = Soldier.HeadingOf(direction);
             ComputeLineSlots(team, team.Order.Target, direction);
             ClearPath(team);
+            team.DeployElapsed = 0f;
             team.Activity = TeamActivity.Deploying;
         }
 
         void StepDeploying(Team team, float dt)
         {
             float speed = BaseSpeed(team.Order.Type);
+            team.DeployElapsed += dt;
+            bool timedOut = team.DeployElapsed >= DeployTimeout;
             bool allArrived = true;
             int index = 0;
             foreach (var member in team.Members)
             {
-                if (!member.IsActive)
+                if (!UnderControl(member))
                 {
                     continue;
                 }
@@ -216,7 +244,8 @@ namespace CloseFight.Core.Battle
                 {
                     float2 slot = team.DeploySlots[index];
                     MoveTowards(member, slot, speed, dt);
-                    if (math.distance(member.Position, slot) > ArriveDistance)
+                    // A pinned man stays where he is; the team does not wait for him.
+                    if (!timedOut && math.distance(member.Position, slot) > ArriveDistance && !member.IsPinned)
                     {
                         allArrived = false;
                     }
@@ -230,7 +259,7 @@ namespace CloseFight.Core.Battle
                 var posture = ArrivedPosture(team.Order.Type);
                 foreach (var member in team.Members)
                 {
-                    if (member.IsActive)
+                    if (UnderControl(member) && !member.IsPinned)
                     {
                         member.IsMoving = false;
                         member.Posture = posture;
@@ -262,11 +291,12 @@ namespace CloseFight.Core.Battle
                 int k = (i + 1) / 2;
                 float sideSign = i % 2 == 1 ? 1f : -1f;
                 float2 wanted = center + right * (k * sideSign * LineSpacing);
-                team.DeploySlots.Add(FindFreeSpot(grid, wanted, direction, taken));
+                team.DeploySlots.Add(FindFreeSpot(grid, center, wanted, direction, taken));
             }
         }
 
-        float2 FindFreeSpot(TacticalGrid grid, float2 wanted, float2 direction, HashSet<int> taken)
+        /// <summary>Nearest free, passable spot to <paramref name="wanted"/> that can be walked to in a straight line from the team's center.</summary>
+        float2 FindFreeSpot(TacticalGrid grid, float2 center, float2 wanted, float2 direction, HashSet<int> taken)
         {
             // Try the wanted spot, then step back and sideways in widening rings.
             for (int ring = 0; ring <= 6; ring++)
@@ -274,7 +304,8 @@ namespace CloseFight.Core.Battle
                 for (int k = -ring; k <= ring; k++)
                 {
                     float2 candidate = wanted - direction * (ring * 1.0f) + new float2(direction.y, -direction.x) * (k * 1.0f);
-                    if (IsFree(grid, candidate, taken, out int index))
+                    if (IsFree(grid, candidate, taken, out int index)
+                        && PathUtils.IsWalkable(_pathfinder, grid, MovementClass.Infantry, center, grid.CellCenter(grid.CoordOf(index))))
                     {
                         taken.Add(index);
                         return grid.CellCenter(grid.CoordOf(index));
@@ -301,6 +332,36 @@ namespace CloseFight.Core.Battle
         /// <summary>Moves a soldier straight toward a point, sliding along walls instead of entering them.</summary>
         void MoveTowards(Soldier soldier, float2 target, float maxSpeed, float dt)
         {
+            // Out of control: Psychology moves (or freezes) him, not the team.
+            if (soldier.IsOutOfControl)
+            {
+                return;
+            }
+
+            // Pinned soldiers hug the ground and will not budge.
+            if (soldier.IsPinned)
+            {
+                soldier.IsMoving = false;
+                soldier.Posture = Posture.Prone;
+                return;
+            }
+
+            if (soldier.MoraleState == MoraleState.Suppressed)
+            {
+                maxSpeed *= 0.7f;
+            }
+
+            Displace(soldier, target, maxSpeed, dt);
+        }
+
+        /// <summary>Raw movement toward a point at up to <paramref name="maxSpeed"/>, sliding along walls. Used by Psychology for panic and flight.</summary>
+        internal void Displace(Soldier soldier, float2 target, float maxSpeed, float dt)
+        {
+            if (soldier.IsWounded)
+            {
+                maxSpeed *= 0.6f;
+            }
+
             float2 delta = target - soldier.Position;
             float distance = math.length(delta);
             if (distance < 1e-4f)

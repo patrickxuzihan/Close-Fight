@@ -127,12 +127,13 @@ namespace CloseFight.EditorTools
         {
             var orders = new (string key, OrderType order, float x, float y)[]
             {
-                ("de_1", OrderType.Move, 38f, 80f),        // into the walled yard through its gap
-                ("de_2", OrderType.MoveFast, 120f, 67f),   // around the low wall, up to the station block
-                ("de_mg", OrderType.Crawl, 86f, 50f),      // crawl to the crossroads
-                ("de_hq", OrderType.Move, 60f, 46f),
+                ("de_1", OrderType.Move, 56f, 48f),        // up behind the L-shaped house to the street
+                ("de_2", OrderType.MoveFast, 112f, 46f),   // dash to the near side of the street
+                ("de_mg", OrderType.Move, 86f, 40f),       // MG forward to the crossroads
+                ("de_hq", OrderType.Move, 76f, 30f),
             };
 
+            bootstrap.UnitsView.TracerLifetime = 1f;
             var selected = new List<Team>();
             foreach (var (key, order, x, y) in orders)
             {
@@ -147,7 +148,10 @@ namespace CloseFight.EditorTools
                     Debug.LogWarning($"Demo order {order} for {key} failed.");
                 }
 
-                selected.Add(team);
+                if (!selected.Contains(team))
+                {
+                    selected.Add(team);
+                }
             }
 
             int ticks = Mathf.CeilToInt(seconds / SimClock.TickSeconds);
@@ -159,7 +163,7 @@ namespace CloseFight.EditorTools
             // Fog of war as the German player sees it, plus one burst of unseen Soviet fire.
             battle.Visibility.Recompute();
             var soviet = battle.Teams.FirstOrDefault(t => t.Key == "su_mg");
-            if (soviet != null)
+            if (soviet != null && soviet.Leader != null)
             {
                 battle.Visibility.ReportSound(soviet.Leader, soviet.Leader.Position, 400f, 12f);
             }
@@ -170,7 +174,7 @@ namespace CloseFight.EditorTools
 
             // Show the LOS tool from the first rifle team toward the station block.
             var first = battle.Teams.FirstOrDefault(t => t.Key == "de_1");
-            if (first != null)
+            if (first != null && first.Leader != null)
             {
                 var from = first.Leader.Position;
                 var to = new float2(118f, 100f);
@@ -180,6 +184,14 @@ namespace CloseFight.EditorTools
 
             Debug.Log($"Close Fight: Germans see {battle.Visibility.VisibleEnemyCount(Side.German)} Soviet soldiers; sound markers {battle.Visibility.SoundMarkers.Count}.");
             Debug.Log($"Close Fight: demo ran {ticks} ticks.");
+            foreach (var team in battle.Teams)
+            {
+                int active = team.ActiveCount;
+                int wild = team.Members.Count(m => m.IsActive && m.IsOutOfControl);
+                Debug.Log($"Close Fight: team {team.Key}: {active}/{team.Members.Count} active, casualties {team.CasualtyFraction:P0}, " +
+                          $"morale {team.AverageMorale:0}, suppression {team.AverageSuppression:0}, out of control {wild}, " +
+                          $"shaken {team.IsShaken}, broken {team.IsBroken}, order {team.Order.Type}, ammo {team.TotalAmmo}/{team.StartingAmmo}");
+            }
         }
 
         static string Arg(string name, string fallback)

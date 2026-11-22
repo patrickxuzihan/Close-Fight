@@ -39,11 +39,101 @@ namespace CloseFight.Core.Units
         /// <summary>Compass heading the team faces when it stops.</summary>
         public float Facing { get; internal set; }
 
+        /// <summary>Enemy team named by a Fire order (null: fire at will).</summary>
+        public Team FireTarget { get; internal set; }
+        public int SmokeGrenades { get; internal set; }
+
+        // Team condition (M5, D14). Recomputed every tick by Psychology.
+        /// <summary>Casualties as a fraction of the team: the fallen count fully, the wounded half.</summary>
+        public float CasualtyFraction { get; internal set; }
+        public float AverageMorale { get; internal set; } = 100f;
+        /// <summary>Half the team down or morale low: asks to pull back and will not advance.</summary>
+        public bool IsShaken { get; internal set; }
+        /// <summary>Two thirds down or morale collapsed: falls back on its own and forms a new line.</summary>
+        public bool IsBroken { get; internal set; }
+        /// <summary>Battle time the original leader fell (NaN: still standing).</summary>
+        public float LeaderLostAt { get; internal set; } = float.NaN;
+        public OrderRefusal LastRefusal { get; internal set; }
+        public float LastRefusalAt { get; internal set; } = float.NegativeInfinity;
+        internal bool FallingBack;
+        internal bool HasFallenBack;
+
+        public bool LeaderLost => !float.IsNaN(LeaderLostAt);
+
+        /// <summary>True if any member fired within the last couple of seconds.</summary>
+        public bool IsFiring(float now)
+        {
+            foreach (var member in Members)
+            {
+                if (member.IsActive && now - member.LastFiredAt < 2f)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public int TotalAmmo
+        {
+            get
+            {
+                int total = 0;
+                foreach (var member in Members)
+                {
+                    if (member.IsActive)
+                    {
+                        total += member.Ammo;
+                    }
+                }
+
+                return total;
+            }
+        }
+
+        public int StartingAmmo
+        {
+            get
+            {
+                int total = 0;
+                foreach (var member in Members)
+                {
+                    if (member.IsActive && member.Weapon != null)
+                    {
+                        total += member.Weapon.StartingAmmo;
+                    }
+                }
+
+                return total;
+            }
+        }
+
+        /// <summary>Average suppression of active members, 0..100.</summary>
+        public float AverageSuppression
+        {
+            get
+            {
+                float sum = 0f;
+                int count = 0;
+                foreach (var member in Members)
+                {
+                    if (member.IsActive)
+                    {
+                        sum += member.Suppression;
+                        count++;
+                    }
+                }
+
+                return count == 0 ? 0f : sum / count;
+            }
+        }
+
         // Movement state, owned by TeamMovement.
         internal readonly List<float2> Path = new List<float2>();
         internal readonly List<float> PathCumulative = new List<float>();
         internal float PathProgress;
         internal readonly List<float2> DeploySlots = new List<float2>();
+        internal float DeployElapsed;
 
         /// <summary>Remaining route (world points) while moving; empty otherwise.</summary>
         public IReadOnlyList<float2> CurrentPath => Path;

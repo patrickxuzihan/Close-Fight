@@ -1,5 +1,5 @@
 {
-  "id": "test_block_m2",
+  "id": "test_block_skirmish",
   "mapId": "test_block",
   "seed": 19420914,
   "playerSide": "German",
@@ -22,7 +22,7 @@
       "size": 0,
       "position": {
         "x": 78,
-        "y": 8
+        "y": 4
       },
       "facing": 0,
       "experience": 60
@@ -34,8 +34,8 @@
       "displayName": "1. Gruppe",
       "size": 0,
       "position": {
-        "x": 40,
-        "y": 47
+        "x": 60,
+        "y": 5
       },
       "facing": 0,
       "experience": 50
@@ -48,7 +48,7 @@
       "size": 0,
       "position": {
         "x": 112,
-        "y": 47
+        "y": 8
       },
       "facing": 0,
       "experience": 50
@@ -61,7 +61,7 @@
       "size": 0,
       "position": {
         "x": 86,
-        "y": 40
+        "y": 22
       },
       "facing": 0,
       "experience": 55
@@ -74,10 +74,11 @@
       "size": 0,
       "position": {
         "x": 120,
-        "y": 98
+        "y": 80
       },
       "facing": 180,
-      "experience": 45
+      "experience": 45,
+      "initialOrder": "Ambush"
     },
     {
       "key": "su_mg",
@@ -86,11 +87,26 @@
       "displayName": "Pulemyotny raschyot",
       "size": 0,
       "position": {
-        "x": 40,
-        "y": 98
+        "x": 59,
+        "y": 82
       },
       "facing": 180,
-      "experience": 50
+      "experience": 50,
+      "initialOrder": "Ambush"
+    },
+    {
+      "key": "su_2",
+      "side": "Soviet",
+      "type": "Rifle",
+      "displayName": "2-ye otdeleniye",
+      "size": 0,
+      "position": {
+        "x": 11,
+        "y": 80
+      },
+      "facing": 90,
+      "experience": 45,
+      "initialOrder": "Ambush"
     }
   ]
 }

@@ -24,6 +24,35 @@ namespace CloseFight.Core.Units
         public Posture Posture { get; internal set; } = Posture.Standing;
         public bool IsMoving { get; internal set; }
 
+        // Combat (M4)
+        public WeaponDefinition Weapon { get; internal set; }
+        public int Ammo { get; internal set; }
+        /// <summary>Stress from incoming fire, 0..100. Drives pinning now and the full psychology model in M5.</summary>
+        public float Suppression { get; internal set; }
+        internal float FireCooldown;
+        /// <summary>Battle time of this soldier's last shot (muzzle flash makes him easier to spot).</summary>
+        public float LastFiredAt { get; internal set; } = float.NegativeInfinity;
+        /// <summary>Battle time when rounds last landed near him.</summary>
+        public float LastUnderFireAt { get; internal set; } = float.NegativeInfinity;
+
+        // Psychology (M5)
+        /// <summary>Long-term nerve, 0..100. Starts at the Morale attribute; casualties and fire erode it.</summary>
+        public float Morale { get; internal set; }
+        public float BaseMorale { get; internal set; }
+        public MoraleState MoraleState { get; internal set; } = MoraleState.Steady;
+        internal readonly System.Collections.Generic.List<float2> FleePath = new System.Collections.Generic.List<float2>();
+        internal readonly System.Collections.Generic.List<float> FleeCumulative = new System.Collections.Generic.List<float>();
+        internal float FleeProgress;
+        internal float2 PanicSpot;
+
+        /// <summary>Cowering, panicking or routing: deaf to orders until he recovers.</summary>
+        public bool IsOutOfControl => MoraleState >= MoraleState.Cowering;
+
+        /// <summary>Suppression at which a soldier hugs the ground and stops moving and firing.</summary>
+        public const float PinnedThreshold = 70f;
+        public bool IsPinned => Suppression >= PinnedThreshold;
+        public bool IsWounded => Status == SoldierStatus.Wounded;
+
         public bool IsActive => Status == SoldierStatus.Healthy || Status == SoldierStatus.Wounded;
         public string FullName => FirstName + " " + LastName;
 

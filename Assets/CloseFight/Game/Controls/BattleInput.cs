@@ -58,6 +58,7 @@ namespace CloseFight.Game.Controls
 
         Rect _menuRect;
         Rect _rosterRect;
+        Rect _infoRect;
         Texture2D _white;
         GUIStyle _label;
         GUIStyle _small;
@@ -175,6 +176,9 @@ namespace CloseFight.Game.Controls
             if (keyboard.hKey.wasPressedThisFrame) ChooseOrder(OrderType.Hide);
             if (keyboard.gKey.wasPressedThisFrame) ChooseOrder(OrderType.AssaultBuilding);
             if (keyboard.tKey.wasPressedThisFrame) ChooseOrder(OrderType.Retreat);
+            if (keyboard.fKey.wasPressedThisFrame) ChooseOrder(OrderType.Fire);
+            if (keyboard.kKey.wasPressedThisFrame) ChooseOrder(OrderType.Smoke);
+            if (keyboard.eKey.wasPressedThisFrame) ChooseOrder(OrderType.AreaFire);
         }
 
         static string Hotkey(OrderType order)
@@ -189,6 +193,9 @@ namespace CloseFight.Game.Controls
                 case OrderType.Hide: return "H";
                 case OrderType.AssaultBuilding: return "G";
                 case OrderType.Retreat: return "T";
+                case OrderType.Fire: return "F";
+                case OrderType.AreaFire: return "E";
+                case OrderType.Smoke: return "K";
                 default: return "";
             }
         }
@@ -386,27 +393,29 @@ namespace CloseFight.Game.Controls
             var ordered = new List<Team>(_selection);
             ordered.Sort((a, b) => math.dot(a.Centroid - from, right).CompareTo(math.dot(b.Centroid - from, right)));
 
-            bool anyFailed = false;
+            string refusals = "";
             for (int i = 0; i < ordered.Count; i++)
             {
                 float offset = (i - (ordered.Count - 1) * 0.5f) * TeamSpread;
-                float2 teamTarget = order == OrderType.AssaultBuilding ? target : target + right * offset;
-                if (!_battle.IssueOrder(ordered[i], order, teamTarget))
+                bool spread = order == OrderType.Move || order == OrderType.MoveFast || order == OrderType.Crawl;
+                float2 teamTarget = spread ? target + right * offset : target;
+                if (!_battle.TryIssueOrder(ordered[i], order, teamTarget, out var refusal))
                 {
-                    anyFailed = true;
+                    // D29: always say why a team will not obey.
+                    refusals += (refusals.Length > 0 ? "\n" : "") + $"{ordered[i].DisplayName}: {Loc.T(Loc.RefusalKey(refusal))}";
                 }
             }
 
-            if (anyFailed)
+            if (refusals.Length > 0)
             {
-                ShowToast(Loc.T("ui.order_failed"));
+                ShowToast(refusals);
             }
         }
 
         void ShowToast(string text)
         {
             _toast = text;
-            _toastUntil = Time.unscaledTime + 2f;
+            _toastUntil = Time.unscaledTime + 3f;
         }
 
         // ---------------------------------------------------------------- helpers
@@ -430,7 +439,7 @@ namespace CloseFight.Game.Controls
         bool IsOverUi(Vector2 screen)
         {
             var gui = ToGui(screen);
-            return (_menuOpen && _menuRect.Contains(gui)) || _rosterRect.Contains(gui);
+            return (_menuOpen && _menuRect.Contains(gui)) || _rosterRect.Contains(gui) || _infoRect.Contains(gui);
         }
 
         // ---------------------------------------------------------------- drawing
@@ -465,7 +474,9 @@ namespace CloseFight.Game.Controls
             float width = Screen.width / _scale;
             float height = Screen.height / _scale;
 
+            DrawTeamLabels();
             DrawTopBar(width);
+            DrawInfoPanel(width, height);
             DrawRoster(width, height);
             DrawBoxSelection();
             DrawPendingHint();
@@ -510,10 +521,12 @@ namespace CloseFight.Game.Controls
                 GUI.Label(new Rect(card.x + 6, card.y + 3, CardWidth - 12, 20), $"{i + 1}  {team.DisplayName}", _label);
                 GUI.Label(new Rect(card.x + 6, card.y + 22, CardWidth - 12, 18),
                     $"{Loc.T(Loc.TeamTypeKey(team.Type))} · {team.ActiveCount}/{team.Members.Count} {Loc.T("ui.men")}", _small);
-                string state = team.Activity == TeamActivity.Idle && team.Order.Type != OrderType.None
-                    ? Loc.T(Loc.OrderKey(team.Order.Type))
-                    : Loc.T(Loc.ActivityKey(team.Activity));
-                GUI.Label(new Rect(card.x + 6, card.y + 40, CardWidth - 12, 18), state, _small);
+                GUI.Label(new Rect(card.x + 6, card.y + 40, CardWidth - 12, 18), TeamStateText(team), _small);
+
+                // Suppression bar along the bottom of the card: green (calm) to red (pinned).
+                float suppression = team.AverageSuppression / 100f;
+                Fill(new Rect(card.x, card.yMax - 4, CardWidth, 4), new Color(0f, 0f, 0f, 0.5f));
+                Fill(new Rect(card.x, card.yMax - 4, CardWidth * suppression, 4), Color.Lerp(new Color(0.3f, 0.8f, 0.3f), new Color(0.9f, 0.15f, 0.1f), suppression));
 
                 if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && card.Contains(Event.current.mousePosition))
                 {
@@ -530,6 +543,173 @@ namespace CloseFight.Game.Controls
 
                 x += CardWidth + 8f;
             }
+        }
+
+        /// <summary>The most important thing about a team, in one line (D29: the player must see why).</summary>
+        string TeamStateText(Team team)
+        {
+            float now = _battle.Clock.ElapsedSeconds;
+            int pinned = 0;
+            foreach (var member in team.Members)
+            {
+                if (member.IsActive && member.IsPinned)
+                {
+                    pinned++;
+                }
+            }
+
+            string state;
+            if (team.ActiveCount == 0)
+            {
+                state = Loc.T("team.destroyed");
+            }
+            else if (team.IsBroken)
+            {
+                state = Loc.T("team.broken");
+            }
+            else if (team.IsShaken)
+            {
+                state = Loc.T("team.shaken");
+            }
+            else if (pinned * 2 >= team.ActiveCount && team.ActiveCount > 0)
+            {
+                state = Loc.T("activity.pinned");
+            }
+            else if (team.IsFiring(now))
+            {
+                state = Loc.T("activity.firing");
+            }
+            else if (team.Activity == TeamActivity.Idle && team.Order.Type != OrderType.None)
+            {
+                state = Loc.T(Loc.OrderKey(team.Order.Type));
+            }
+            else
+            {
+                state = Loc.T(Loc.ActivityKey(team.Activity));
+            }
+
+            int ammo = team.TotalAmmo;
+            int starting = team.StartingAmmo;
+            if (ammo == 0)
+            {
+                state += " · " + Loc.T("ui.ammo_out");
+            }
+            else if (starting > 0 && ammo < starting / 4)
+            {
+                state += " · " + Loc.T("ui.ammo_low");
+            }
+
+            return state;
+        }
+
+        /// <summary>
+        /// Short tags floating above each of the player's teams whenever something
+        /// is wrong (D29): the player sees at a glance why a team behaves as it does.
+        /// </summary>
+        void DrawTeamLabels()
+        {
+            float now = _battle.Clock.ElapsedSeconds;
+            foreach (var team in _playerTeams)
+            {
+                if (team.ActiveCount == 0)
+                {
+                    continue;
+                }
+
+                var tags = new List<string>();
+                if (team.IsBroken) tags.Add(Loc.T("team.broken"));
+                else if (team.IsShaken) tags.Add(Loc.T("team.shaken"));
+                if (team.LeaderLost && now - team.LeaderLostAt < 60f) tags.Add(Loc.T("team.leader_lost"));
+
+                int pinned = 0, wild = 0;
+                foreach (var member in team.Members)
+                {
+                    if (!member.IsActive) continue;
+                    if (member.IsOutOfControl) wild++;
+                    else if (member.IsPinned) pinned++;
+                }
+
+                if (wild > 0) tags.Add(Loc.T("team.out_of_control") + $" ×{wild}");
+                if (pinned * 2 >= team.ActiveCount) tags.Add(Loc.T("activity.pinned"));
+                if (team.TotalAmmo == 0) tags.Add(Loc.T("ui.ammo_out"));
+                if (now - team.LastRefusalAt < 5f) tags.Add(Loc.T(Loc.RefusalKey(team.LastRefusal)));
+
+                if (tags.Count == 0)
+                {
+                    continue;
+                }
+
+                var c = team.Centroid;
+                Vector3 screen = worldCamera.WorldToScreenPoint(new Vector3(c.x, 0f, c.y));
+                if (screen.z < 0f)
+                {
+                    continue;
+                }
+
+                Vector2 gui = ToGui(new Vector2(screen.x, screen.y));
+                string text = string.Join(" · ", tags);
+                float w = Mathf.Min(320f, 14f + text.Length * 8f);
+                var rect = new Rect(gui.x - w * 0.5f, gui.y - 46f, w, 20f);
+                Fill(rect, new Color(0.45f, 0.08f, 0.05f, 0.8f));
+                GUI.Label(new Rect(rect.x + 6, rect.y + 1, rect.width - 12, 18), text, _small);
+            }
+        }
+
+        /// <summary>Selected team in detail: every soldier's name, weapon, ammo, wounds, state, suppression and morale.</summary>
+        void DrawInfoPanel(float width, float height)
+        {
+            _infoRect = Rect.zero;
+            if (_selection.Count != 1)
+            {
+                return;
+            }
+
+            var team = _selection[0];
+            const float panelWidth = 330f;
+            float rowHeight = 34f;
+            float panelHeight = 58f + team.Members.Count * rowHeight;
+            var panel = new Rect(width - panelWidth - 8f, 34f, panelWidth, panelHeight);
+            _infoRect = panel;
+            Fill(panel, new Color(0.08f, 0.08f, 0.07f, 0.88f));
+
+            GUI.Label(new Rect(panel.x + 8, panel.y + 4, panelWidth - 16, 20), $"{team.DisplayName} — {Loc.T(Loc.TeamTypeKey(team.Type))}", _label);
+            GUI.Label(new Rect(panel.x + 8, panel.y + 24, panelWidth - 16, 18),
+                $"{Loc.T("ui.casualties")} {team.CasualtyFraction * 100f:0}% · {Loc.T("ui.morale")} {team.AverageMorale:0} · {TeamStateText(team)}", _small);
+
+            float y = panel.y + 48f;
+            foreach (var soldier in team.Members)
+            {
+                string rank = Loc.T(soldier.RankKey);
+                string weapon = soldier.Weapon != null ? Loc.T(soldier.Weapon.NameKey) : "";
+                string state = soldier.IsActive ? Loc.T(Loc.MoraleKey(soldier.MoraleState)) : Loc.T(Loc.StatusKey(soldier.Status));
+                if (soldier.IsWounded)
+                {
+                    state = Loc.T("status.wounded") + " · " + state;
+                }
+
+                var color = soldier.IsActive ? (soldier.IsOutOfControl ? new Color(1f, 0.6f, 1f) : Color.white) : new Color(0.6f, 0.6f, 0.6f);
+                var previous = GUI.color;
+                GUI.color = color;
+                GUI.Label(new Rect(panel.x + 8, y, panelWidth - 16, 18), $"{rank} {soldier.FullName}", _small);
+                GUI.Label(new Rect(panel.x + 8, y + 15, 190, 18), $"{weapon} · {soldier.Ammo}", _small);
+                GUI.Label(new Rect(panel.x + 200, y, 122, 18), state, _small);
+                GUI.color = previous;
+
+                if (soldier.IsActive)
+                {
+                    // Suppression (red) and morale (blue) bars.
+                    DrawBar(new Rect(panel.x + 200, y + 19, 120, 4), soldier.Suppression / 100f, new Color(0.9f, 0.2f, 0.1f));
+                    DrawBar(new Rect(panel.x + 200, y + 25, 120, 4), soldier.Morale / 100f, new Color(0.3f, 0.6f, 1f));
+                }
+
+                y += rowHeight;
+            }
+        }
+
+        void DrawBar(Rect rect, float value, Color color)
+        {
+            Fill(rect, new Color(0f, 0f, 0f, 0.6f));
+            Fill(new Rect(rect.x, rect.y, rect.width * Mathf.Clamp01(value), rect.height), color);
         }
 
         void DrawMenu(float width, float height)
@@ -587,7 +767,10 @@ namespace CloseFight.Game.Controls
             }
 
             Vector2 p = ToGui(Mouse.current.position.ReadValue());
-            string text = Loc.T(Loc.OrderKey(_pendingOrder)) + " — " + Loc.T("ui.choose_target");
+            string hint = _pendingOrder == OrderType.Fire ? "ui.choose_enemy"
+                : _pendingOrder == OrderType.Smoke ? "ui.choose_smoke"
+                : "ui.choose_target";
+            string text = Loc.T(Loc.OrderKey(_pendingOrder)) + " — " + Loc.T(hint);
             var rect = new Rect(p.x + 16, p.y + 12, 330, 22);
             Fill(rect, new Color(0f, 0f, 0f, 0.6f));
             GUI.Label(new Rect(rect.x + 6, rect.y + 2, rect.width - 12, 20), text, _small);
@@ -614,8 +797,9 @@ namespace CloseFight.Game.Controls
                 return;
             }
 
-            var rect = new Rect(width * 0.5f - 150, height - CardHeight - 60, 300, 28);
-            Fill(rect, new Color(0f, 0f, 0f, 0.7f));
+            int lines = _toast.Split('\n').Length;
+            var rect = new Rect(width * 0.5f - 220, height - CardHeight - 40 - lines * 24, 440, 8 + lines * 24);
+            Fill(rect, new Color(0f, 0f, 0f, 0.75f));
             GUI.Label(rect, _toast, _center);
         }
 

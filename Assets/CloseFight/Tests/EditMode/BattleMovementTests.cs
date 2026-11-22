@@ -190,11 +190,11 @@ namespace CloseFight.Tests
         }
 
         [Test]
-        public void OrdersFromLaterMilestonesAreRejected()
+        public void FireOrderNeedsAVisibleEnemy()
         {
             var battle = NewBattle();
             var team = battle.AddTeam("t", Side.German, TeamType.Rifle, "", new float2(25, 10), 0f, 6, 50);
-            Assert.IsFalse(battle.IssueOrder(team, OrderType.Fire, new float2(25, 40)));
+            Assert.IsFalse(battle.IssueOrder(team, OrderType.Fire, new float2(25, 40)), "nobody there");
         }
 
         [Test]

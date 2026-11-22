@@ -150,5 +150,137 @@
   "ui.los_blocked": {
     "zh": "被遮挡",
     "en": "Blocked"
+  },
+  "activity.firing": {
+    "zh": "开火中",
+    "en": "Firing"
+  },
+  "activity.pinned": {
+    "zh": "被压制",
+    "en": "Pinned"
+  },
+  "ui.ammo_low": {
+    "zh": "弹药不足",
+    "en": "Low ammo"
+  },
+  "ui.ammo_out": {
+    "zh": "弹药耗尽",
+    "en": "Out of ammo"
+  },
+  "ui.choose_enemy": {
+    "zh": "左键点一个看得见的敌人，Esc 取消",
+    "en": "Left-click a visible enemy, Esc to cancel"
+  },
+  "ui.choose_smoke": {
+    "zh": "左键点 35 米内的位置，Esc 取消",
+    "en": "Left-click a spot within 35 m, Esc to cancel"
+  },
+  "weapon.kar98k": {
+    "zh": "Kar98k 步枪",
+    "en": "Kar98k rifle"
+  },
+  "weapon.mp40": {
+    "zh": "MP40 冲锋枪",
+    "en": "MP40 SMG"
+  },
+  "weapon.mg34": {
+    "zh": "MG34 机枪",
+    "en": "MG34 machine gun"
+  },
+  "weapon.mosin": {
+    "zh": "莫辛-纳甘步枪",
+    "en": "Mosin-Nagant rifle"
+  },
+  "weapon.ppsh41": {
+    "zh": "PPSh-41 冲锋枪",
+    "en": "PPSh-41 SMG"
+  },
+  "weapon.dp28": {
+    "zh": "DP-28 机枪",
+    "en": "DP-28 machine gun"
+  },
+  "morale.steady": {
+    "zh": "稳定",
+    "en": "Steady"
+  },
+  "morale.suppressed": {
+    "zh": "被压制",
+    "en": "Suppressed"
+  },
+  "morale.pinned": {
+    "zh": "被钉住",
+    "en": "Pinned"
+  },
+  "morale.cowering": {
+    "zh": "畏缩",
+    "en": "Cowering"
+  },
+  "morale.panicked": {
+    "zh": "恐慌",
+    "en": "Panicked"
+  },
+  "morale.routed": {
+    "zh": "溃逃",
+    "en": "Routed"
+  },
+  "status.healthy": {
+    "zh": "健康",
+    "en": "Healthy"
+  },
+  "status.wounded": {
+    "zh": "负伤",
+    "en": "Wounded"
+  },
+  "status.incapacitated": {
+    "zh": "重伤倒地",
+    "en": "Incapacitated"
+  },
+  "status.dead": {
+    "zh": "阵亡",
+    "en": "Killed"
+  },
+  "status.fled": {
+    "zh": "溃逃离场",
+    "en": "Fled the field"
+  },
+  "team.shaken": {
+    "zh": "请求撤退",
+    "en": "Requesting withdrawal"
+  },
+  "team.broken": {
+    "zh": "自动撤退",
+    "en": "Falling back"
+  },
+  "team.leader_lost": {
+    "zh": "班长阵亡",
+    "en": "Leader down"
+  },
+  "team.out_of_control": {
+    "zh": "失控",
+    "en": "Out of control"
+  },
+  "team.destroyed": {
+    "zh": "全组覆没",
+    "en": "Wiped out"
+  },
+  "refusal.shaken": {
+    "zh": "伤亡过半，拒绝前进",
+    "en": "Half the team is down — won't advance"
+  },
+  "refusal.broken": {
+    "zh": "士气崩溃，只肯撤退",
+    "en": "Morale broken — will only retreat"
+  },
+  "refusal.impossible": {
+    "zh": "无法执行该命令",
+    "en": "Order not possible"
+  },
+  "ui.casualties": {
+    "zh": "伤亡",
+    "en": "Casualties"
+  },
+  "ui.morale": {
+    "zh": "士气",
+    "en": "Morale"
   }
 }

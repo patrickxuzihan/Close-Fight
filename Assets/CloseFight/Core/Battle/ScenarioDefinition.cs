@@ -39,6 +39,8 @@ namespace CloseFight.Core.Battle
         /// <summary>Compass heading in degrees the team faces at the start.</summary>
         public float facing;
         public int experience = 50;
+        /// <summary>Optional starting stance: Defend, Ambush or Hide.</summary>
+        public OrderType initialOrder = OrderType.None;
     }
 
     public static class ScenarioLoader
@@ -80,7 +82,11 @@ namespace CloseFight.Core.Battle
             foreach (var team in scenario.teams)
             {
                 int size = team.size > 0 ? team.size : BattleState.DefaultSize(team.type);
-                battle.AddTeam(team.key, team.side, team.type, team.displayName, team.position, team.facing, size, team.experience);
+                var created = battle.AddTeam(team.key, team.side, team.type, team.displayName, team.position, team.facing, size, team.experience);
+                if (team.initialOrder == OrderType.Defend || team.initialOrder == OrderType.Ambush || team.initialOrder == OrderType.Hide)
+                {
+                    battle.IssueOrder(created, team.initialOrder, created.Centroid);
+                }
             }
 
             battle.Visibility.Recompute();

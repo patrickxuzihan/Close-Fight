@@ -55,6 +55,41 @@ namespace CloseFight.Game.UI
             }
         }
 
+        public static string MoraleKey(MoraleState state)
+        {
+            switch (state)
+            {
+                case MoraleState.Suppressed: return "morale.suppressed";
+                case MoraleState.Pinned: return "morale.pinned";
+                case MoraleState.Cowering: return "morale.cowering";
+                case MoraleState.Panicked: return "morale.panicked";
+                case MoraleState.Routed: return "morale.routed";
+                default: return "morale.steady";
+            }
+        }
+
+        public static string StatusKey(SoldierStatus status)
+        {
+            switch (status)
+            {
+                case SoldierStatus.Wounded: return "status.wounded";
+                case SoldierStatus.Incapacitated: return "status.incapacitated";
+                case SoldierStatus.Dead: return "status.dead";
+                case SoldierStatus.Fled: return "status.fled";
+                default: return "status.healthy";
+            }
+        }
+
+        public static string RefusalKey(OrderRefusal refusal)
+        {
+            switch (refusal)
+            {
+                case OrderRefusal.Shaken: return "refusal.shaken";
+                case OrderRefusal.Broken: return "refusal.broken";
+                default: return "refusal.impossible";
+            }
+        }
+
         public static string ActivityKey(TeamActivity activity)
         {
             switch (activity)

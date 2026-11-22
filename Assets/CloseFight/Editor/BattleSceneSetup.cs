@@ -23,7 +23,7 @@ namespace CloseFight.EditorTools
         public const string ScenePath = "Assets/CloseFight/Scenes/Battle.unity";
         const string MaterialFolder = "Assets/CloseFight/Art/Materials";
         const string TestMapPath = "Assets/CloseFight/Data/Maps/test_block.json";
-        const string TestScenarioPath = "Assets/CloseFight/Data/Scenarios/test_block_m2.json";
+        const string TestScenarioPath = "Assets/CloseFight/Data/Scenarios/test_block_skirmish.json";
         const string LocalizationPath = "Assets/CloseFight/Data/Localization/strings.json";
 
         static TextAsset LoadText(string path)

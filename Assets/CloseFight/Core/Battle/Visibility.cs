@@ -38,6 +38,8 @@ namespace CloseFight.Core.Battle
         /// <summary>Daylight limit of sight in meters.</summary>
         public const float MaxSightRange = 500f;
         public const float SoundMarkerLifetime = 8f;
+        /// <summary>New noise this close to an existing marker refreshes it instead.</summary>
+        public const float MergeDistance = 25f;
 
         readonly BattleState _battle;
         readonly Dictionary<Side, HashSet<int>> _visible = new Dictionary<Side, HashSet<int>>
@@ -67,7 +69,7 @@ namespace CloseFight.Core.Battle
         /// How far away a target can be spotted, before line of sight is checked.
         /// Lying still in cover is the hardest to spot; running upright the easiest.
         /// </summary>
-        public static float SpottingRange(Soldier target, TacticalMap map)
+        public static float SpottingRange(Soldier target, TacticalMap map, float now)
         {
             float range;
             switch (target.Posture)
@@ -80,6 +82,12 @@ namespace CloseFight.Core.Battle
             if (target.IsMoving)
             {
                 range *= 1.5f;
+            }
+
+            // Muzzle flash and noise give a firing soldier away.
+            if (now - target.LastFiredAt < 3f)
+            {
+                range *= 2f;
             }
 
             switch (target.Team.Order.Type)
@@ -114,6 +122,7 @@ namespace CloseFight.Core.Battle
             var visible = _visible[side];
             visible.Clear();
             var map = _battle.Map;
+            float now = _battle.Clock.ElapsedSeconds;
 
             foreach (var target in _battle.Soldiers)
             {
@@ -122,7 +131,7 @@ namespace CloseFight.Core.Battle
                     continue;
                 }
 
-                float range = SpottingRange(target, map);
+                float range = SpottingRange(target, map, now);
                 foreach (var observer in _battle.Soldiers)
                 {
                     if (observer.Team.Side != side || !observer.IsActive)
@@ -136,7 +145,7 @@ namespace CloseFight.Core.Battle
                     }
 
                     var sight = LineOfSight.Check(map, observer.Position, observer.Posture, target.Position, target.Posture, range);
-                    if (sight.Visible)
+                    if (sight.Visible && !_battle.Smoke.Blocks(observer.Position, target.Position, now))
                     {
                         visible.Add(target.Id);
                         break;
@@ -158,6 +167,15 @@ namespace CloseFight.Core.Battle
             {
                 if (listener == source.Team.Side || CanSee(listener, source) || !AnyoneWithin(listener, position, audibleRange))
                 {
+                    continue;
+                }
+
+                // Sustained fire from one spot refreshes a single marker instead of piling up new ones.
+                int existing = _soundMarkers.FindIndex(m => m.Listener == listener && math.distance(m.Position, position) < MergeDistance);
+                if (existing >= 0)
+                {
+                    var old = _soundMarkers[existing];
+                    _soundMarkers[existing] = new SoundMarker(listener, old.Position, old.CreatedAt, now + SoundMarkerLifetime);
                     continue;
                 }
 

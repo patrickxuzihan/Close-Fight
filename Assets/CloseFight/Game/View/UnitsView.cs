@@ -25,7 +25,10 @@ namespace CloseFight.Game.View
         static readonly Color GermanColor = new Color(0.52f, 0.55f, 0.48f);
         static readonly Color SovietColor = new Color(0.70f, 0.62f, 0.40f);
         static readonly Color SelectedRing = new Color(1f, 0.85f, 0.2f);
-        static readonly Color DeadColor = new Color(0.25f, 0.22f, 0.20f);
+        static readonly Color OutOfControlRing = new Color(0.95f, 0.3f, 0.95f);
+        static readonly Color DeadColor = new Color(0.22f, 0.20f, 0.18f);
+        static readonly Color DisabledColor = new Color(0.45f, 0.16f, 0.12f);
+        static readonly Color SmokeColor = new Color(0.78f, 0.78f, 0.75f);
 
         sealed class Marker
         {
@@ -49,6 +52,15 @@ namespace CloseFight.Game.View
         LineRenderer _sightClear;
         LineRenderer _sightBlocked;
         readonly List<SpriteRenderer> _soundPool = new List<SpriteRenderer>();
+
+        // Combat (M4)
+        readonly List<LineRenderer> _tracerPool = new List<LineRenderer>();
+        readonly List<SpriteRenderer> _smokePool = new List<SpriteRenderer>();
+        /// <summary>Enemy soldiers the viewing side has seen; their bodies stay visible after they fall.</summary>
+        readonly HashSet<int> _seenEver = new HashSet<int>();
+
+        /// <summary>How long a tracer stays on screen (the screenshot tool lengthens it).</summary>
+        public float TracerLifetime { get; set; } = 0.25f;
 
         static readonly Color SoundColor = new Color(1f, 0.35f, 0.15f);
         static readonly Color SightClearColor = new Color(0.3f, 1f, 0.3f, 0.95f);
@@ -208,6 +220,104 @@ namespace CloseFight.Game.View
             }
 
             SyncSoundMarkers();
+            SyncTracers();
+            SyncSmoke();
+        }
+
+        void SyncTracers()
+        {
+            float now = _battle.Clock.ElapsedSeconds;
+            int used = 0;
+            foreach (var shot in _battle.Combat.RecentShots)
+            {
+                float age = now - shot.Time;
+                if (age > TracerLifetime)
+                {
+                    continue;
+                }
+
+                // Under fog, only draw fire the viewing side can see or that is aimed at it.
+                var shooter = _battle.Soldiers[shot.ShooterId];
+                if (_fogEnabled && !_battle.Visibility.CanSee(_viewSide, shooter))
+                {
+                    continue;
+                }
+
+                if (used == _tracerPool.Count)
+                {
+                    var line = CreateLine("Tracer");
+                    line.widthMultiplier = 0.12f;
+                    line.numCapVertices = 0;
+                    if (!Application.isPlaying)
+                    {
+                        line.gameObject.hideFlags = HideFlags.DontSave;
+                    }
+
+                    _tracerPool.Add(line);
+                }
+
+                var tracer = _tracerPool[used++];
+                var color = TracerColor(shot.Weapon);
+                color.a *= 1f - age / TracerLifetime * 0.7f;
+                SetLineColor(tracer, color);
+                tracer.enabled = true;
+                tracer.positionCount = 2;
+                tracer.SetPosition(0, new Vector3(shot.From.x, DrawHeight(shot.From) + 1f, shot.From.y));
+                tracer.SetPosition(1, new Vector3(shot.Impact.x, DrawHeight(shot.Impact) + 0.3f, shot.Impact.y));
+            }
+
+            for (int i = used; i < _tracerPool.Count; i++)
+            {
+                _tracerPool[i].enabled = false;
+            }
+        }
+
+        static Color TracerColor(WeaponClass weapon)
+        {
+            switch (weapon)
+            {
+                case WeaponClass.MachineGun: return new Color(1f, 0.45f, 0.15f, 0.9f);
+                case WeaponClass.SubmachineGun: return new Color(1f, 0.85f, 0.35f, 0.8f);
+                default: return new Color(1f, 0.95f, 0.7f, 0.85f);
+            }
+        }
+
+        void SyncSmoke()
+        {
+            float now = _battle.Clock.ElapsedSeconds;
+            int used = 0;
+            foreach (var cloud in _battle.Smoke.Clouds)
+            {
+                if (used == _smokePool.Count)
+                {
+                    var go = new GameObject("Smoke");
+                    go.transform.SetParent(_root.transform, false);
+                    go.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+                    if (!Application.isPlaying)
+                    {
+                        go.hideFlags = HideFlags.DontSave;
+                    }
+
+                    var sprite = go.AddComponent<SpriteRenderer>();
+                    sprite.sprite = MarkerSprites.SoftDisc;
+                    sprite.sortingOrder = 4;
+                    _smokePool.Add(sprite);
+                }
+
+                var smoke = _smokePool[used++];
+                float size = cloud.Radius(now) * 2.3f;
+                smoke.enabled = true;
+                smoke.transform.position = new Vector3(cloud.Center.x, 3f, cloud.Center.y);
+                smoke.transform.localScale = new Vector3(size, size, 1f);
+                var color = SmokeColor;
+                color.a = 0.85f * cloud.Density(now);
+                smoke.color = color;
+            }
+
+            for (int i = used; i < _smokePool.Count; i++)
+            {
+                _smokePool[i].enabled = false;
+            }
         }
 
         /// <summary>Expanding, fading ripples where the viewing side heard unseen gunfire.</summary>
@@ -277,14 +387,31 @@ namespace CloseFight.Game.View
             float length = soldier.Posture == Posture.Prone ? 1.7f : soldier.Posture == Posture.Kneeling ? 1.15f : 1f;
             marker.Transform.localScale = new Vector3(size, size * length, 1f);
 
-            if (!soldier.IsActive)
+            var baseColor = soldier.Team.Side == Side.German ? GermanColor : SovietColor;
+            switch (soldier.Status)
             {
-                marker.Body.color = DeadColor;
+                case SoldierStatus.Dead: marker.Body.color = DeadColor; break;
+                case SoldierStatus.Incapacitated: marker.Body.color = DisabledColor; break;
+                case SoldierStatus.Wounded: marker.Body.color = new Color(baseColor.r, baseColor.g * 0.72f, baseColor.b * 0.65f); break;
+                default: marker.Body.color = baseColor; break;
             }
 
             bool shown = !_fogEnabled || _battle.Visibility.CanSee(_viewSide, soldier);
+            if (shown && soldier.IsActive)
+            {
+                _seenEver.Add(soldier.Id);
+            }
+            else if (!soldier.IsActive && _seenEver.Contains(soldier.Id))
+            {
+                shown = true; // a body seen falling stays where it fell
+            }
+
             marker.Body.enabled = shown;
-            marker.Ring.enabled = shown && _selected.Contains(soldier.Team) && soldier.IsActive;
+            // Yellow ring: selected. Magenta ring: out of control (cowering, panicking, routing).
+            bool selected = _selected.Contains(soldier.Team);
+            bool wild = soldier.IsOutOfControl && (!_fogEnabled || soldier.Team.Side == _viewSide);
+            marker.Ring.enabled = shown && soldier.IsActive && (selected || wild);
+            marker.Ring.color = wild ? OutOfControlRing : SelectedRing;
         }
 
         void SyncLine(Team team, LineRenderer line)
@@ -380,6 +507,9 @@ namespace CloseFight.Game.View
 
         public void ClearView()
         {
+            _tracerPool.Clear();
+            _smokePool.Clear();
+            _seenEver.Clear();
             _soundPool.Clear();
             _sightClear = null;
             _sightBlocked = null;
