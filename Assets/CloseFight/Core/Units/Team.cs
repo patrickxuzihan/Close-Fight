@@ -43,6 +43,19 @@ namespace CloseFight.Core.Units
         public Team FireTarget { get; internal set; }
         public int SmokeGrenades { get; internal set; }
 
+        // Heavy equipment (M6)
+        /// <summary>The team's vehicle (tank or assault gun); stays set after it is knocked out or abandoned.</summary>
+        public Vehicle Vehicle { get; internal set; }
+        /// <summary>The team's heavy gun: a vehicle's main gun, an anti-tank gun or a mortar.</summary>
+        public HeavyWeapon Gun { get; internal set; }
+        public GunTeamDefinition GunTeam { get; internal set; }
+        /// <summary>Bundled grenades / anti-tank grenades for close assault on tanks (D37).</summary>
+        public int AntiTankGrenades { get; internal set; }
+        internal float CloseAssaultCooldown;
+
+        /// <summary>True while the team fights as a vehicle (not knocked out or abandoned).</summary>
+        public bool IsMechanized => Vehicle != null && Vehicle.IsOperational;
+
         // Team condition (M5, D14). Recomputed every tick by Psychology.
         /// <summary>Casualties as a fraction of the team: the fallen count fully, the wounded half.</summary>
         public float CasualtyFraction { get; internal set; }

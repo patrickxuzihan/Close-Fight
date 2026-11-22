@@ -127,9 +127,11 @@ namespace CloseFight.EditorTools
         {
             var orders = new (string key, OrderType order, float x, float y)[]
             {
-                ("de_1", OrderType.Move, 56f, 48f),        // up behind the L-shaped house to the street
-                ("de_2", OrderType.MoveFast, 112f, 46f),   // dash to the near side of the street
-                ("de_mg", OrderType.Move, 86f, 40f),       // MG forward to the crossroads
+                ("de_stug", OrderType.Move, 77f, 50f),        // the assault gun leads up the road
+                ("de_mortar", OrderType.AreaFire, 59f, 82f),  // mortar the concrete block
+                ("de_1", OrderType.Move, 56f, 48f),
+                ("de_2", OrderType.MoveFast, 112f, 46f),
+                ("de_mg", OrderType.Move, 86f, 40f),
                 ("de_hq", OrderType.Move, 76f, 30f),
             };
 
@@ -160,6 +162,16 @@ namespace CloseFight.EditorTools
                 battle.Step();
             }
 
+            // Optional: shell the concrete block to show the collapse decal.
+            if (Arg("-captureBlast", null) != null)
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    battle.Gunnery.Blast(new float2(55.5f, 75.5f), Equipment.StuK40, battle.Clock.ElapsedSeconds);
+                    battle.Gunnery.Blast(new float2(62.5f, 80.5f), Equipment.StuK40, battle.Clock.ElapsedSeconds);
+                }
+            }
+
             // Fog of war as the German player sees it, plus one burst of unseen Soviet fire.
             battle.Visibility.Recompute();
             var soviet = battle.Teams.FirstOrDefault(t => t.Key == "su_mg");
@@ -188,7 +200,10 @@ namespace CloseFight.EditorTools
             {
                 int active = team.ActiveCount;
                 int wild = team.Members.Count(m => m.IsActive && m.IsOutOfControl);
-                Debug.Log($"Close Fight: team {team.Key}: {active}/{team.Members.Count} active, casualties {team.CasualtyFraction:P0}, " +
+                string kit = team.Vehicle != null
+                    ? $" [{team.Vehicle.Definition.Id}: destroyed {team.Vehicle.Destroyed}, abandoned {team.Vehicle.Abandoned}, immobilized {team.Vehicle.Immobilized}, gun damaged {team.Vehicle.GunDamaged}, AP {team.Gun.AmmoAp} HE {team.Gun.AmmoHe}]"
+                    : team.Gun != null ? $" [{team.Gun.Definition.Id}: AP {team.Gun.AmmoAp} HE {team.Gun.AmmoHe} smoke {team.Gun.AmmoSmoke}]" : "";
+                Debug.Log($"Close Fight: team {team.Key}{kit}: {active}/{team.Members.Count} active, casualties {team.CasualtyFraction:P0}, " +
                           $"morale {team.AverageMorale:0}, suppression {team.AverageSuppression:0}, out of control {wild}, " +
                           $"shaken {team.IsShaken}, broken {team.IsBroken}, order {team.Order.Type}, ammo {team.TotalAmmo}/{team.StartingAmmo}");
             }

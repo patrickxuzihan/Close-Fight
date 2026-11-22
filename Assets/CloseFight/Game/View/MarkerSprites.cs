@@ -12,12 +12,13 @@ namespace CloseFight.Game.View
     public static class MarkerSprites
     {
         const int Cell = 64;
-        const int Columns = 3;
+        const int Columns = 4;
 
         static Texture2D _atlas;
         static Sprite _body;
         static Sprite _ring;
         static Sprite _softDisc;
+        static Sprite _box;
 
         public static Sprite Body
         {
@@ -37,6 +38,16 @@ namespace CloseFight.Game.View
             }
         }
 
+        /// <summary>Filled square with a dark border; scaled into hulls, turrets and barrels.</summary>
+        public static Sprite Box
+        {
+            get
+            {
+                EnsureCreated();
+                return _box;
+            }
+        }
+
         /// <summary>Round blob with soft edges (smoke).</summary>
         public static Sprite SoftDisc
         {
@@ -49,7 +60,7 @@ namespace CloseFight.Game.View
 
         static void EnsureCreated()
         {
-            if (_atlas != null && _body != null && _ring != null && _softDisc != null)
+            if (_atlas != null && _body != null && _ring != null && _softDisc != null && _box != null)
             {
                 return;
             }
@@ -66,6 +77,7 @@ namespace CloseFight.Game.View
             DrawBody(pixels, 0);
             DrawRing(pixels, Cell);
             DrawSoftDisc(pixels, Cell * 2);
+            DrawBox(pixels, Cell * 3);
             _atlas.SetPixels32(pixels);
             _atlas.Apply(false, true);
 
@@ -82,6 +94,22 @@ namespace CloseFight.Game.View
             _softDisc = Sprite.Create(_atlas, new Rect(Cell * 2, 0, Cell, Cell), new Vector2(0.5f, 0.5f), Cell, 0, SpriteMeshType.FullRect);
             _softDisc.name = "SoftDisc";
             _softDisc.hideFlags = HideFlags.DontSave;
+
+            _box = Sprite.Create(_atlas, new Rect(Cell * 3 + 1, 1, Cell - 2, Cell - 2), new Vector2(0.5f, 0.5f), Cell - 2, 0, SpriteMeshType.FullRect);
+            _box.name = "Box";
+            _box.hideFlags = HideFlags.DontSave;
+        }
+
+        static void DrawBox(Color32[] pixels, int offsetX)
+        {
+            for (int y = 0; y < Cell; y++)
+            {
+                for (int x = 0; x < Cell; x++)
+                {
+                    bool border = x < 5 || y < 5 || x >= Cell - 5 || y >= Cell - 5;
+                    pixels[y * Cell * Columns + offsetX + x] = border ? new Color32(35, 35, 35, 255) : new Color32(255, 255, 255, 255);
+                }
+            }
         }
 
         static void DrawSoftDisc(Color32[] pixels, int offsetX)

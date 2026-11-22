@@ -7,6 +7,10 @@ namespace CloseFight.Core.Units
         Rifle = 0,
         SubmachineGun = 1,
         MachineGun = 2,
+        Pistol = 3,
+        /// <summary>Tank and anti-tank guns (used for tracers and sounds).</summary>
+        Cannon = 4,
+        Mortar = 5,
     }
 
     /// <summary>
@@ -93,6 +97,35 @@ namespace CloseFight.Core.Units
         public static readonly WeaponDefinition Dp28 = new WeaponDefinition("dp28", "weapon.dp28", WeaponClass.MachineGun,
             burst: 6, interval: 1.5f, accuracy: 0.12f, falloff: 230f, effectiveRange: 600f, maxRange: 900f,
             startingAmmo: 600, suppression: 6f, lethality: 0.45f, audibleRange: 650f, needsSetup: true);
+
+        // Vehicle-mounted machine guns: fixed mounts, so they may fire on the move.
+        public static readonly WeaponDefinition Mg34Coax = new WeaponDefinition("mg34_coax", "weapon.mg34", WeaponClass.MachineGun,
+            burst: 8, interval: 1.4f, accuracy: 0.12f, falloff: 260f, effectiveRange: 600f, maxRange: 900f,
+            startingAmmo: 2000, suppression: 6f, lethality: 0.45f, audibleRange: 700f, needsSetup: false);
+
+        public static readonly WeaponDefinition DtCoax = new WeaponDefinition("dt_coax", "weapon.dt", WeaponClass.MachineGun,
+            burst: 6, interval: 1.5f, accuracy: 0.12f, falloff: 230f, effectiveRange: 600f, maxRange: 900f,
+            startingAmmo: 1500, suppression: 6f, lethality: 0.45f, audibleRange: 650f, needsSetup: false);
+
+        // Crew sidearms, for tank crews who bail out.
+        public static readonly WeaponDefinition P08 = new WeaponDefinition("p08", "weapon.p08", WeaponClass.Pistol,
+            burst: 1, interval: 2f, accuracy: 0.14f, falloff: 25f, effectiveRange: 40f, maxRange: 60f,
+            startingAmmo: 24, suppression: 3f, lethality: 0.35f, audibleRange: 250f, needsSetup: false);
+
+        public static readonly WeaponDefinition Tt33 = new WeaponDefinition("tt33", "weapon.tt33", WeaponClass.Pistol,
+            burst: 1, interval: 2f, accuracy: 0.14f, falloff: 25f, effectiveRange: 40f, maxRange: 60f,
+            startingAmmo: 24, suppression: 3f, lethality: 0.35f, audibleRange: 250f, needsSetup: false);
+
+        /// <summary>Personal weapon of a vehicle or gun crewman (commanders get an SMG).</summary>
+        public static WeaponDefinition CrewSidearm(Side side, bool commander)
+        {
+            if (commander)
+            {
+                return side == Side.German ? Mp40 : Ppsh41;
+            }
+
+            return side == Side.German ? P08 : Tt33;
+        }
 
         /// <summary>Standard issue for the given seat in a team (index 0 is the leader).</summary>
         public static WeaponDefinition Issue(Side side, TeamType type, int index)

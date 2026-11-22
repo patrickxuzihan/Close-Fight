@@ -41,6 +41,7 @@ namespace CloseFight.Game.UI
                 case OrderType.Hide: return "order.hide";
                 case OrderType.AssaultBuilding: return "order.assault_building";
                 case OrderType.Retreat: return "order.retreat";
+                case OrderType.Reverse: return "order.reverse";
                 default: return "order.none";
             }
         }
@@ -51,8 +52,27 @@ namespace CloseFight.Game.UI
             {
                 case TeamType.MachineGun: return "team.machine_gun";
                 case TeamType.Headquarters: return "team.headquarters";
+                case TeamType.Vehicle: return "team.vehicle";
+                case TeamType.AntiTankGun: return "team.anti_tank_gun";
+                case TeamType.Mortar: return "team.mortar";
                 default: return "team.rifle";
             }
+        }
+
+        /// <summary>What a team is in one word: the vehicle or gun name if it has one.</summary>
+        public static string TeamKind(Team team)
+        {
+            if (team.Vehicle != null)
+            {
+                return T(team.Vehicle.Definition.NameKey);
+            }
+
+            if (team.GunTeam != null)
+            {
+                return T(team.GunTeam.NameKey);
+            }
+
+            return T(TeamTypeKey(team.Type));
         }
 
         public static string MoraleKey(MoraleState state)

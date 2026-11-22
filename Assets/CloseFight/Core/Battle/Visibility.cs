@@ -49,6 +49,14 @@ namespace CloseFight.Core.Battle
         };
 
         readonly List<SoundMarker> _soundMarkers = new List<SoundMarker>();
+        readonly Dictionary<Side, HashSet<int>> _visibleVehicles = new Dictionary<Side, HashSet<int>>
+        {
+            { Side.German, new HashSet<int>() },
+            { Side.Soviet, new HashSet<int>() },
+        };
+
+        /// <summary>Base spotting range for a tank: big, loud and hard to miss.</summary>
+        public const float VehicleSpottingRange = 500f;
 
         public IReadOnlyList<SoundMarker> SoundMarkers => _soundMarkers;
 
@@ -64,6 +72,12 @@ namespace CloseFight.Core.Battle
         }
 
         public int VisibleEnemyCount(Side side) => _visible[side].Count;
+
+        /// <summary>True if <paramref name="side"/> currently sees the vehicle (own vehicles always). Wrecks once seen stay known to the view.</summary>
+        public bool CanSee(Side side, Vehicle vehicle)
+        {
+            return vehicle.Team.Side == side || _visibleVehicles[side].Contains(vehicle.Id);
+        }
 
         /// <summary>
         /// How far away a target can be spotted, before line of sight is checked.
@@ -126,7 +140,8 @@ namespace CloseFight.Core.Battle
 
             foreach (var target in _battle.Soldiers)
             {
-                if (target.Team.Side == side || !target.IsActive)
+                // Crew inside a tank are seen when the tank is seen (below).
+                if (target.Team.Side == side || !target.IsActive || target.IsMounted)
                 {
                     continue;
                 }
@@ -149,6 +164,60 @@ namespace CloseFight.Core.Battle
                     {
                         visible.Add(target.Id);
                         break;
+                    }
+                }
+            }
+
+            RecomputeVehicles(side, now);
+        }
+
+        void RecomputeVehicles(Side side, float now)
+        {
+            var seen = _visibleVehicles[side];
+            seen.Clear();
+            var map = _battle.Map;
+
+            foreach (var vehicle in _battle.Vehicles)
+            {
+                if (vehicle.Team.Side == side)
+                {
+                    continue;
+                }
+
+                float range = VehicleSpottingRange;
+                bool firedRecently = now - vehicle.LastFiredAt < 3f;
+                var order = vehicle.Team.Order.Type;
+                if (vehicle.IsOperational && !firedRecently && !vehicle.IsMoving && (order == OrderType.Hide || order == OrderType.Ambush))
+                {
+                    range *= 0.5f; // stopped, engine off, camouflaged
+                }
+
+                foreach (var observer in _battle.Soldiers)
+                {
+                    if (observer.Team.Side != side || !observer.IsActive
+                        || math.distancesq(observer.Position, vehicle.Position) > range * range)
+                    {
+                        continue;
+                    }
+
+                    var sight = LineOfSight.Check(map, observer.Position, observer.Posture, vehicle.Position, Posture.Standing, range);
+                    if (sight.Visible && !_battle.Smoke.Blocks(observer.Position, vehicle.Position, now))
+                    {
+                        seen.Add(vehicle.Id);
+                        break;
+                    }
+                }
+
+                if (!seen.Contains(vehicle.Id))
+                {
+                    continue;
+                }
+
+                foreach (var crewman in vehicle.Team.Members)
+                {
+                    if (crewman.IsActive && crewman.IsMounted)
+                    {
+                        _visible[side].Add(crewman.Id);
                     }
                 }
             }
@@ -182,7 +251,12 @@ namespace CloseFight.Core.Battle
                 float angle = _battle.Random.Range(0f, math.PI * 2f);
                 float distance = _battle.Random.Range(0f, fuzz);
                 float2 offset = new float2(math.cos(angle), math.sin(angle)) * distance;
-                _soundMarkers.Add(new SoundMarker(listener, position + offset, now, now + SoundMarkerLifetime));
+                var grid = _battle.Map.Grid;
+                float2 heard = position + offset;
+                heard = new float2(
+                    math.clamp(heard.x, 1f, grid.Width * grid.CellSize - 1f),
+                    math.clamp(heard.y, 1f, grid.Height * grid.CellSize - 1f));
+                _soundMarkers.Add(new SoundMarker(listener, heard, now, now + SoundMarkerLifetime));
             }
         }
 

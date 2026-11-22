@@ -50,16 +50,29 @@ namespace CloseFight.Core.Path
         /// <summary>Cost to enter a cell, or +infinity when the cell is impassable.</summary>
         public float CellCost(int index, MovementClass movement)
         {
-            var grid = _map.Grid;
-            if (grid.HasFlag(index, CellFlags.BlocksMovement))
-            {
-                return float.PositiveInfinity;
-            }
-
-            float cost = TerrainInfo.MoveCost(grid.GetTerrain(index), movement);
+            float cost = BaseCost(index, movement);
             if (float.IsPositiveInfinity(cost))
             {
                 return cost;
+            }
+
+            // A tank needs room: every cell around its center must take it too (about 3 m clearance).
+            if (movement == MovementClass.Vehicle)
+            {
+                var grid = _map.Grid;
+                int x = index % grid.Width;
+                int y = index / grid.Width;
+                for (int dy = -1; dy <= 1; dy++)
+                {
+                    for (int dx = -1; dx <= 1; dx++)
+                    {
+                        if ((dx != 0 || dy != 0) && (!grid.InBounds(x + dx, y + dy)
+                            || float.IsPositiveInfinity(BaseCost(grid.IndexOf(x + dx, y + dy), movement))))
+                        {
+                            return float.PositiveInfinity;
+                        }
+                    }
+                }
             }
 
             if (ExtraCost != null)
@@ -67,6 +80,26 @@ namespace CloseFight.Core.Path
                 cost += math.max(0f, ExtraCost(index));
             }
 
+            return cost;
+        }
+
+        /// <summary>Cost of the cell itself, ignoring clearance and danger.</summary>
+        float BaseCost(int index, MovementClass movement)
+        {
+            var grid = _map.Grid;
+            if (grid.HasFlag(index, CellFlags.BlocksMovement))
+            {
+                return float.PositiveInfinity;
+            }
+
+            // Tanks crush one-storey wooden sheds (D37); brick and concrete stop them.
+            if (movement == MovementClass.Vehicle && grid.HasFlag(index, CellFlags.Building) && !grid.HasFlag(index, CellFlags.Collapsed))
+            {
+                var building = _map.BuildingAt(index);
+                return building != null && building.Material == BuildingMaterial.Wood && building.Floors <= 1 ? 3f : float.PositiveInfinity;
+            }
+
+            float cost = TerrainInfo.MoveCost(grid.GetTerrain(index), movement);
             return cost;
         }
 

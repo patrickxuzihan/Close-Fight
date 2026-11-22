@@ -20,6 +20,8 @@ namespace CloseFight.Core.Battle
         public SimRandom Random { get; }
         public IReadOnlyList<Team> Teams => _teams;
         public IReadOnlyList<Soldier> Soldiers => _soldiers;
+        public IReadOnlyList<Vehicle> Vehicles => _vehicles;
+        public Gunnery Gunnery { get; }
         public Visibility Visibility { get; }
         public Combat Combat { get; }
         public Psychology Psychology { get; }
@@ -27,6 +29,8 @@ namespace CloseFight.Core.Battle
 
         readonly List<Team> _teams = new List<Team>();
         readonly List<Soldier> _soldiers = new List<Soldier>();
+        readonly List<Vehicle> _vehicles = new List<Vehicle>();
+        VehicleMovement _vehicleMovement;
         readonly Dictionary<Side, MapEdge> _retreatEdges = new Dictionary<Side, MapEdge>();
         readonly GridPathfinder _pathfinder;
         readonly TeamMovement _movement;
@@ -43,6 +47,8 @@ namespace CloseFight.Core.Battle
             Visibility = new Visibility(this);
             Combat = new Combat(this);
             Psychology = new Psychology(this, _movement, _pathfinder);
+            _vehicleMovement = new VehicleMovement(map, _pathfinder);
+            Gunnery = new Gunnery(this);
             _retreatEdges[Side.German] = MapEdge.South;
             _retreatEdges[Side.Soviet] = MapEdge.North;
         }
@@ -53,9 +59,23 @@ namespace CloseFight.Core.Battle
         public static int DefaultSize(TeamType type) => type == TeamType.Rifle ? 6 : 3;
 
         /// <summary>Creates a team with generated soldiers, deployed in a line around <paramref name="position"/>.</summary>
-        public Team AddTeam(string key, Side side, TeamType type, string displayName, float2 position, float facing, int size, int experience)
+        public Team AddTeam(string key, Side side, TeamType type, string displayName, float2 position, float facing, int size, int experience,
+            string equipment = null)
         {
             var team = new Team(_teams.Count, key, side, type, displayName);
+            VehicleDefinition vehicleDefinition = null;
+            GunTeamDefinition gunTeam = null;
+            if (type == TeamType.Vehicle)
+            {
+                vehicleDefinition = Equipment.Vehicle(equipment);
+                size = vehicleDefinition.Crew.Length;
+            }
+            else if (type == TeamType.AntiTankGun || type == TeamType.Mortar)
+            {
+                gunTeam = Equipment.GunTeam(equipment);
+                size = gunTeam.CrewSize;
+            }
+
             size = math.max(1, size);
 
             for (int i = 0; i < size; i++)
@@ -69,14 +89,51 @@ namespace CloseFight.Core.Battle
                     Attributes = RollAttributes(experience, i == 0),
                 };
                 soldier.Morale = soldier.BaseMorale = soldier.Attributes.Morale;
-                soldier.Weapon = Weapons.Issue(side, type, i);
-                soldier.Ammo = soldier.Weapon.StartingAmmo;
+                if (vehicleDefinition != null)
+                {
+                    // Inside the tank only the gunner shoots, with the coaxial MG.
+                    soldier.Role = vehicleDefinition.Crew[i];
+                    soldier.Weapon = soldier.Role == CrewRole.Gunner ? vehicleDefinition.CoaxMg : null;
+                }
+                else if (gunTeam != null)
+                {
+                    soldier.Role = i == 0 ? CrewRole.Commander : i == 1 ? CrewRole.Gunner : i == 2 ? CrewRole.Loader : CrewRole.None;
+                    soldier.Weapon = soldier.Role == CrewRole.Gunner ? null : Weapons.Issue(side, TeamType.Headquarters, i);
+                }
+                else
+                {
+                    soldier.Weapon = Weapons.Issue(side, type, i);
+                }
+
+                soldier.Ammo = soldier.Weapon != null ? soldier.Weapon.StartingAmmo : 0;
                 team.Members.Add(soldier);
                 _soldiers.Add(soldier);
             }
 
             team.Facing = facing;
-            team.SmokeGrenades = type == TeamType.Rifle ? 2 : 1;
+            team.SmokeGrenades = type == TeamType.Rifle ? 2 : type == TeamType.Vehicle ? 0 : 1;
+            team.AntiTankGrenades = type == TeamType.Rifle ? 1 : 0;
+
+            if (vehicleDefinition != null)
+            {
+                var vehicle = new Vehicle(_vehicles.Count, vehicleDefinition, team);
+                vehicle.SetPose(position, facing);
+                vehicle.Gun = new HeavyWeapon(vehicleDefinition.Gun, team, vehicle) { Heading = facing, PreviousHeading = facing };
+                team.Vehicle = vehicle;
+                team.Gun = vehicle.Gun;
+                foreach (var crewman in team.Members)
+                {
+                    crewman.MountedIn = vehicle;
+                    crewman.SetPosition(position);
+                    crewman.SetHeading(facing);
+                    crewman.Posture = Posture.Standing;
+                }
+
+                _vehicles.Add(vehicle);
+                _teams.Add(team);
+                return team;
+            }
+
             _movement.ComputeLineSlots(team, position, Soldier.DirectionOf(facing));
             for (int i = 0; i < team.Members.Count; i++)
             {
@@ -87,6 +144,17 @@ namespace CloseFight.Core.Battle
             }
 
             team.DeploySlots.Clear();
+            if (gunTeam != null)
+            {
+                team.GunTeam = gunTeam;
+                team.Gun = new HeavyWeapon(gunTeam.Gun, team, null)
+                {
+                    Heading = facing,
+                    PreviousHeading = facing,
+                    Emplacement = team.Members.Count > 1 ? team.Members[1].Position : position,
+                };
+            }
+
             _teams.Add(team);
             return team;
         }
@@ -107,6 +175,7 @@ namespace CloseFight.Core.Battle
                 case OrderType.Hide:
                 case OrderType.AssaultBuilding:
                 case OrderType.Retreat:
+                case OrderType.Reverse:
                     return true;
                 default:
                     return false;
@@ -209,6 +278,29 @@ namespace CloseFight.Core.Battle
 
         bool ExecuteOrder(Team team, OrderType order, float2 target)
         {
+            if (team.IsMechanized)
+            {
+                return ExecuteVehicleOrder(team, order, target);
+            }
+
+            if (order == OrderType.Reverse)
+            {
+                return false; // only vehicles back up
+            }
+
+            // Mortars fire smoke rounds instead of throwing grenades, at any range they can reach.
+            if (order == OrderType.Smoke && team.Gun != null && team.Gun.Definition.Indirect)
+            {
+                float distance = math.distance(team.Gun.Position, target);
+                if (team.Gun.AmmoSmoke <= 0 || distance < team.Gun.Definition.MinRange || distance > team.Gun.Definition.MaxRange)
+                {
+                    return false;
+                }
+
+                team.Gun.SmokePending = true;
+                team.Gun.SmokeTarget = target;
+                return true;
+            }
 
             float now = Clock.ElapsedSeconds;
             switch (order)
@@ -223,6 +315,21 @@ namespace CloseFight.Core.Battle
 
                     _movement.Halt(team, order, Posture.Kneeling);
                     team.FireTarget = enemy.Team;
+                    return true;
+                }
+
+                case OrderType.AreaFire when team.Gun != null && team.Gun.Definition.Indirect:
+                {
+                    // Indirect fire needs no line of sight from the mortar, only range.
+                    float distance = math.distance(team.Gun.Position, target);
+                    if (distance < team.Gun.Definition.MinRange || distance > team.Gun.Definition.MaxRange)
+                    {
+                        return false;
+                    }
+
+                    _movement.Halt(team, order, Posture.Kneeling);
+                    team.FireTarget = null;
+                    team.Order = new TeamOrder(OrderType.AreaFire, target);
                     return true;
                 }
 
@@ -296,6 +403,81 @@ namespace CloseFight.Core.Battle
 
         public const float MaxSmokeThrow = 35f;
 
+        /// <summary>Orders for a team fighting as a vehicle (D31 vehicle command set).</summary>
+        bool ExecuteVehicleOrder(Team team, OrderType order, float2 target)
+        {
+            var vehicle = team.Vehicle;
+            switch (order)
+            {
+                case OrderType.Move:
+                case OrderType.MoveFast:
+                case OrderType.Reverse:
+                    team.FireTarget = null;
+                    return _vehicleMovement.PlanMove(team, target, order);
+
+                case OrderType.Retreat:
+                    team.FireTarget = null;
+                    return _vehicleMovement.PlanMove(team, RetreatPoint(team), OrderType.Retreat);
+
+                case OrderType.Defend:
+                case OrderType.Ambush:
+                case OrderType.Hide:
+                    team.FireTarget = null;
+                    _vehicleMovement.Halt(team, order);
+                    return true;
+
+                case OrderType.Fire:
+                {
+                    var enemy = FindVisibleEnemyNear(team.Side, target, 5f);
+                    if (enemy == null)
+                    {
+                        return false;
+                    }
+
+                    _vehicleMovement.Halt(team, order);
+                    team.FireTarget = enemy.Team;
+                    return true;
+                }
+
+                case OrderType.AreaFire:
+                {
+                    var sight = LineOfSight.Check(Map, vehicle.Position, Posture.Standing, target, Posture.Standing, 1500f);
+                    if (!sight.Visible || Smoke.Blocks(vehicle.Position, target, Clock.ElapsedSeconds))
+                    {
+                        return false;
+                    }
+
+                    _vehicleMovement.Halt(team, order);
+                    team.FireTarget = null;
+                    team.Order = new TeamOrder(OrderType.AreaFire, target);
+                    return true;
+                }
+
+                default:
+                    return false; // vehicles do not crawl, throw smoke or storm buildings
+            }
+        }
+
+        /// <summary>Moves a team the right way for what it is (vehicle or on foot). Used by Psychology for fallback.</summary>
+        internal bool MoveTeam(Team team, float2 target, OrderType order)
+        {
+            return team.IsMechanized
+                ? _vehicleMovement.PlanMove(team, target, order == OrderType.Retreat ? OrderType.Reverse : order)
+                : _movement.PlanMove(team, target, order);
+        }
+
+        internal void HaltTeam(Team team, OrderType order, Posture posture)
+        {
+            if (team.IsMechanized)
+            {
+                _vehicleMovement.Halt(team, order);
+            }
+            else
+            {
+                _movement.Halt(team, order, posture);
+            }
+        }
+
         /// <summary>The nearest active enemy soldier that <paramref name="side"/> can see, within <paramref name="radius"/> of a point.</summary>
         public Soldier FindVisibleEnemyNear(Side side, float2 point, float radius)
         {
@@ -338,13 +520,22 @@ namespace CloseFight.Core.Battle
                 soldier.PreviousHeading = soldier.Heading;
             }
 
+            foreach (var vehicle in _vehicles)
+            {
+                _vehicleMovement.Step(vehicle, SimClock.TickSeconds);
+            }
+
             foreach (var team in _teams)
             {
-                _movement.Step(team, SimClock.TickSeconds);
+                if (!team.IsMechanized)
+                {
+                    _movement.Step(team, SimClock.TickSeconds);
+                }
             }
 
             Psychology.Step(SimClock.TickSeconds);
             Combat.Step(SimClock.TickSeconds);
+            Gunnery.Step(SimClock.TickSeconds);
             Clock.CountTick();
             Smoke.Expire(Clock.ElapsedSeconds);
             if (Clock.TickCount % Visibility.UpdateIntervalTicks == 0)

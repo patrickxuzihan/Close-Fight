@@ -140,8 +140,8 @@
     "en": "Battle time"
   },
   "ui.help": {
-    "zh": "左键选择 · 拖动框选 · 右键命令 · 按住 V 看视线 · 空格暂停 · WASD/中键移动镜头 · 滚轮缩放",
-    "en": "Left-click select · drag box · right-click orders · hold V for line of sight · Space pause · WASD/middle mouse pan · wheel zoom"
+    "zh": "左键选择 · 拖动框选 · 右键命令 · 按住 V 看视线 · 空格暂停 · WASD/中键移动镜头 · 滚轮缩放 · L 中英切换",
+    "en": "Left-click select · drag box · right-click orders · hold V for line of sight · Space pause · WASD/middle mouse pan · wheel zoom · L language"
   },
   "ui.los_visible": {
     "zh": "可见",
@@ -282,5 +282,133 @@
   "ui.morale": {
     "zh": "士气",
     "en": "Morale"
+  },
+  "order.reverse": {
+    "zh": "倒车",
+    "en": "Reverse"
+  },
+  "team.vehicle": {
+    "zh": "装甲车辆",
+    "en": "Vehicle"
+  },
+  "team.anti_tank_gun": {
+    "zh": "反坦克炮",
+    "en": "Anti-tank gun"
+  },
+  "team.mortar": {
+    "zh": "迫击炮",
+    "en": "Mortar"
+  },
+  "vehicle.stug3f": {
+    "zh": "三号突击炮 F 型",
+    "en": "StuG III F"
+  },
+  "vehicle.pz3j": {
+    "zh": "三号坦克 J 型",
+    "en": "Panzer III J"
+  },
+  "vehicle.t34_76": {
+    "zh": "T-34/76",
+    "en": "T-34/76"
+  },
+  "vehicle.t60": {
+    "zh": "T-60",
+    "en": "T-60"
+  },
+  "gun.stuk40": {
+    "zh": "7.5 厘米 StuK 40",
+    "en": "7.5 cm StuK 40"
+  },
+  "gun.kwk39": {
+    "zh": "5 厘米 KwK 39",
+    "en": "5 cm KwK 39"
+  },
+  "gun.f34": {
+    "zh": "76 毫米 F-34",
+    "en": "76 mm F-34"
+  },
+  "gun.tnsh20": {
+    "zh": "20 毫米 TNSh",
+    "en": "20 mm TNSh"
+  },
+  "gun.pak38": {
+    "zh": "5 厘米 PaK 38 反坦克炮",
+    "en": "5 cm PaK 38"
+  },
+  "gun.m1937_45": {
+    "zh": "45 毫米反坦克炮",
+    "en": "45 mm AT gun"
+  },
+  "gun.grw34": {
+    "zh": "8 厘米迫击炮",
+    "en": "8 cm mortar"
+  },
+  "gun.bm37": {
+    "zh": "82 毫米迫击炮",
+    "en": "82 mm mortar"
+  },
+  "vehicle.destroyed": {
+    "zh": "被击毁",
+    "en": "Knocked out"
+  },
+  "vehicle.abandoned": {
+    "zh": "乘员弃车",
+    "en": "Crew bailed out"
+  },
+  "vehicle.immobilized": {
+    "zh": "履带损坏",
+    "en": "Immobilized"
+  },
+  "vehicle.gun_damaged": {
+    "zh": "主炮损坏",
+    "en": "Gun damaged"
+  },
+  "ui.shells_out": {
+    "zh": "炮弹耗尽",
+    "en": "Out of shells"
+  },
+  "ui.ap": {
+    "zh": "穿甲弹",
+    "en": "AP"
+  },
+  "ui.he": {
+    "zh": "高爆弹",
+    "en": "HE"
+  },
+  "ui.smoke": {
+    "zh": "烟雾弹",
+    "en": "Smoke"
+  },
+  "role.commander": {
+    "zh": "车长/组长",
+    "en": "Commander"
+  },
+  "role.gunner": {
+    "zh": "炮手",
+    "en": "Gunner"
+  },
+  "role.driver": {
+    "zh": "驾驶员",
+    "en": "Driver"
+  },
+  "role.loader": {
+    "zh": "装填手",
+    "en": "Loader"
+  },
+  "role.radio": {
+    "zh": "无线电员",
+    "en": "Radio operator"
+  },
+  "weapon.dt": {
+    "zh": "DT 机枪",
+    "en": "DT machine gun"
+  },
+  "weapon.p08": {
+    "zh": "P08 手枪",
+    "en": "P08 pistol"
+  },
+  "weapon.tt33": {
+    "zh": "TT-33 手枪",
+    "en": "TT-33 pistol"
   }
 }

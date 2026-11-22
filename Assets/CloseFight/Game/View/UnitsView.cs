@@ -58,6 +58,7 @@ namespace CloseFight.Game.View
         readonly List<SpriteRenderer> _smokePool = new List<SpriteRenderer>();
         /// <summary>Enemy soldiers the viewing side has seen; their bodies stay visible after they fall.</summary>
         readonly HashSet<int> _seenEver = new HashSet<int>();
+        readonly EquipmentRenderer _equipment = new EquipmentRenderer();
 
         /// <summary>How long a tracer stays on screen (the screenshot tool lengthens it).</summary>
         public float TracerLifetime { get; set; } = 0.25f;
@@ -82,6 +83,8 @@ namespace CloseFight.Game.View
             {
                 _lines[team] = CreateLine("Route " + team.Key);
             }
+
+            _equipment.Build(_root.transform, battle);
 
             _sightClear = CreateLine("Sight (clear)");
             _sightBlocked = CreateLine("Sight (blocked)");
@@ -222,6 +225,7 @@ namespace CloseFight.Game.View
             SyncSoundMarkers();
             SyncTracers();
             SyncSmoke();
+            _equipment.Sync(alpha, _fogEnabled, _viewSide, _selected);
         }
 
         void SyncTracers()
@@ -257,6 +261,7 @@ namespace CloseFight.Game.View
                 }
 
                 var tracer = _tracerPool[used++];
+                tracer.widthMultiplier = shot.Weapon == WeaponClass.Cannon ? 0.35f : 0.12f;
                 var color = TracerColor(shot.Weapon);
                 color.a *= 1f - age / TracerLifetime * 0.7f;
                 SetLineColor(tracer, color);
@@ -276,6 +281,7 @@ namespace CloseFight.Game.View
         {
             switch (weapon)
             {
+                case WeaponClass.Cannon: return new Color(1f, 1f, 0.85f, 1f);
                 case WeaponClass.MachineGun: return new Color(1f, 0.45f, 0.15f, 0.9f);
                 case WeaponClass.SubmachineGun: return new Color(1f, 0.85f, 0.35f, 0.8f);
                 default: return new Color(1f, 0.95f, 0.7f, 0.85f);
@@ -376,6 +382,14 @@ namespace CloseFight.Game.View
         void SyncMarker(Marker marker, float alpha)
         {
             var soldier = marker.Soldier;
+            // Crew inside a vehicle are drawn as the vehicle.
+            if (soldier.IsMounted)
+            {
+                marker.Body.enabled = false;
+                marker.Ring.enabled = false;
+                return;
+            }
+
             float2 p = math.lerp(soldier.PreviousPosition, soldier.Position, alpha);
             float heading = Mathf.LerpAngle(soldier.PreviousHeading, soldier.Heading, alpha);
 
@@ -465,8 +479,9 @@ namespace CloseFight.Game.View
             if (grid.InBounds(cell))
             {
                 int index = grid.IndexOf(cell);
+                // Above the roof, even where it has collapsed: the roof mesh still stands under the rubble decal.
                 var building = map.BuildingAt(index);
-                if (building != null && !grid.HasFlag(index, CellFlags.Collapsed))
+                if (building != null)
                 {
                     return building.RoofHeight + 0.15f;
                 }
@@ -507,6 +522,7 @@ namespace CloseFight.Game.View
 
         public void ClearView()
         {
+            _equipment.Clear();
             _tracerPool.Clear();
             _smokePool.Clear();
             _seenEver.Clear();

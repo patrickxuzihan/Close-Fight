@@ -91,7 +91,11 @@ namespace CloseFight.Core.Battle
             var team = shooter.Team;
             var order = team.Order.Type;
             bool moving = team.Activity != TeamActivity.Idle;
-            if (moving && !CanFireWhileMoving(order, shooter.Weapon))
+            // A tank's coaxial MG fires on the move unless the driver has his foot down.
+            bool canFireMoving = shooter.IsMounted
+                ? order != OrderType.MoveFast && order != OrderType.Reverse && order != OrderType.Retreat
+                : CanFireWhileMoving(order, shooter.Weapon);
+            if (moving && !canFireMoving)
             {
                 return;
             }
@@ -117,6 +121,12 @@ namespace CloseFight.Core.Battle
         static bool CanFireWhileMoving(OrderType order, WeaponDefinition weapon)
         {
             return order == OrderType.Move && !weapon.NeedsSetup;
+        }
+
+        /// <summary>Records a shot for the view's tracers (also used by heavy guns).</summary>
+        public void RecordShot(int shooterId, float2 from, float2 impact, bool hit, WeaponClass weapon, float now)
+        {
+            _recentShots.Add(new ShotEvent(shooterId, from, impact, hit, weapon, now));
         }
 
         Soldier ChooseTarget(Soldier shooter, float holdRange)
@@ -152,7 +162,8 @@ namespace CloseFight.Core.Battle
 
         void Consider(Soldier shooter, Soldier enemy, float range, float holdRange, ref Soldier best, ref float bestScore)
         {
-            if (!enemy.IsActive || !_battle.Visibility.CanSee(shooter.Team.Side, enemy))
+            // Rifles and machine guns cannot hurt the crew inside a tank.
+            if (!enemy.IsActive || enemy.IsMounted || !_battle.Visibility.CanSee(shooter.Team.Side, enemy))
             {
                 return;
             }
@@ -221,7 +232,7 @@ namespace CloseFight.Core.Battle
                 bool hit = false;
                 foreach (var victim in _battle.Soldiers)
                 {
-                    if (victim.Team.Side == shooter.Team.Side || !victim.IsActive || math.distance(victim.Position, impact) > 1.5f)
+                    if (victim.Team.Side == shooter.Team.Side || !victim.IsActive || victim.IsMounted || math.distance(victim.Position, impact) > 1.5f)
                     {
                         continue;
                     }
@@ -321,6 +332,16 @@ namespace CloseFight.Core.Battle
                 Best = cover,
             };
             GridTraversal.Traverse(grid, target.Position, target.Position + toward * 2.5f, ref visitor);
+
+            // Anti-tank gun crews shelter behind the gun shield against fire from the front.
+            var gun = target.Team.Gun;
+            if (target.Team.GunTeam != null && target.Team.GunTeam.HasShield && gun != null && !gun.Destroyed
+                && math.distance(target.Position, gun.Position) < 3f
+                && math.abs(VehicleMovement.DeltaAngle(gun.Heading, Soldier.HeadingOf(from - gun.Position))) < 60f)
+            {
+                return math.max(visitor.Best, 60f);
+            }
+
             return visitor.Best;
         }
 
@@ -353,19 +374,31 @@ namespace CloseFight.Core.Battle
             }
         }
 
-        void ApplyHit(Soldier target, WeaponDefinition weapon, float now)
+        void ApplyHit(Soldier target, WeaponDefinition weapon, float now) => InflictHit(target, weapon.Lethality, now);
+
+        /// <summary>
+        /// A hit on a soldier: wounds, disables or kills him depending on
+        /// <paramref name="lethality"/>, and shakes the comrades around him.
+        /// Shared by small arms, shell bursts and knocked-out tanks.
+        /// </summary>
+        internal void InflictHit(Soldier target, float lethality, float now)
         {
+            if (!target.IsActive)
+            {
+                return;
+            }
+
             float roll = _battle.Random.NextFloat();
             SoldierStatus result;
             if (target.IsWounded)
             {
                 result = roll < 0.5f ? SoldierStatus.Dead : SoldierStatus.Incapacitated;
             }
-            else if (roll < weapon.Lethality * 0.55f)
+            else if (roll < lethality * 0.55f)
             {
                 result = SoldierStatus.Dead;
             }
-            else if (roll < weapon.Lethality)
+            else if (roll < lethality)
             {
                 result = SoldierStatus.Incapacitated;
             }
@@ -399,7 +432,7 @@ namespace CloseFight.Core.Battle
             var grid = _battle.Map.Grid;
             foreach (var soldier in _battle.Soldiers)
             {
-                if (soldier.Team.Side == shooterSide || !soldier.IsActive)
+                if (soldier.Team.Side == shooterSide || !soldier.IsActive || soldier.IsMounted)
                 {
                     continue;
                 }

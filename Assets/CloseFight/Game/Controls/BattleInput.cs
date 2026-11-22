@@ -30,7 +30,7 @@ namespace CloseFight.Game.Controls
             OrderType.Move, OrderType.MoveFast, OrderType.Crawl,
             OrderType.Fire, OrderType.AreaFire, OrderType.Smoke,
             OrderType.Defend, OrderType.Ambush, OrderType.Hide,
-            OrderType.AssaultBuilding, OrderType.Retreat,
+            OrderType.AssaultBuilding, OrderType.Retreat, OrderType.Reverse,
         };
 
         const float DragThreshold = 8f;
@@ -179,6 +179,7 @@ namespace CloseFight.Game.Controls
             if (keyboard.fKey.wasPressedThisFrame) ChooseOrder(OrderType.Fire);
             if (keyboard.kKey.wasPressedThisFrame) ChooseOrder(OrderType.Smoke);
             if (keyboard.eKey.wasPressedThisFrame) ChooseOrder(OrderType.AreaFire);
+            if (keyboard.xKey.wasPressedThisFrame) ChooseOrder(OrderType.Reverse);
         }
 
         static string Hotkey(OrderType order)
@@ -196,6 +197,7 @@ namespace CloseFight.Game.Controls
                 case OrderType.Fire: return "F";
                 case OrderType.AreaFire: return "E";
                 case OrderType.Smoke: return "K";
+                case OrderType.Reverse: return "X";
                 default: return "";
             }
         }
@@ -520,7 +522,7 @@ namespace CloseFight.Game.Controls
 
                 GUI.Label(new Rect(card.x + 6, card.y + 3, CardWidth - 12, 20), $"{i + 1}  {team.DisplayName}", _label);
                 GUI.Label(new Rect(card.x + 6, card.y + 22, CardWidth - 12, 18),
-                    $"{Loc.T(Loc.TeamTypeKey(team.Type))} · {team.ActiveCount}/{team.Members.Count} {Loc.T("ui.men")}", _small);
+                    $"{Loc.TeamKind(team)} · {team.ActiveCount}/{team.Members.Count} {Loc.T("ui.men")}", _small);
                 GUI.Label(new Rect(card.x + 6, card.y + 40, CardWidth - 12, 18), TeamStateText(team), _small);
 
                 // Suppression bar along the bottom of the card: green (calm) to red (pinned).
@@ -559,9 +561,18 @@ namespace CloseFight.Game.Controls
             }
 
             string state;
-            if (team.ActiveCount == 0)
+            var vehicle = team.Vehicle;
+            if (vehicle != null && vehicle.Destroyed && team.ActiveCount == 0)
+            {
+                state = Loc.T("vehicle.destroyed");
+            }
+            else if (team.ActiveCount == 0)
             {
                 state = Loc.T("team.destroyed");
+            }
+            else if (vehicle != null && vehicle.Abandoned)
+            {
+                state = Loc.T(vehicle.Destroyed ? "vehicle.destroyed" : "vehicle.abandoned");
             }
             else if (team.IsBroken)
             {
@@ -586,6 +597,23 @@ namespace CloseFight.Game.Controls
             else
             {
                 state = Loc.T(Loc.ActivityKey(team.Activity));
+            }
+
+            if (vehicle != null && vehicle.IsOperational)
+            {
+                if (vehicle.Immobilized) state += " · " + Loc.T("vehicle.immobilized");
+                if (vehicle.GunDamaged) state += " · " + Loc.T("vehicle.gun_damaged");
+            }
+
+            var gun = team.Gun;
+            if (gun != null && (vehicle == null || vehicle.IsOperational))
+            {
+                if (gun.AmmoAp + gun.AmmoHe + gun.AmmoSmoke == 0)
+                {
+                    state += " · " + Loc.T("ui.shells_out");
+                }
+
+                return state; // gun teams: the gun's ammunition is what matters
             }
 
             int ammo = team.TotalAmmo;
@@ -672,7 +700,15 @@ namespace CloseFight.Game.Controls
             _infoRect = panel;
             Fill(panel, new Color(0.08f, 0.08f, 0.07f, 0.88f));
 
-            GUI.Label(new Rect(panel.x + 8, panel.y + 4, panelWidth - 16, 20), $"{team.DisplayName} — {Loc.T(Loc.TeamTypeKey(team.Type))}", _label);
+            GUI.Label(new Rect(panel.x + 8, panel.y + 4, panelWidth - 16, 20), $"{team.DisplayName} — {Loc.TeamKind(team)}", _label);
+            if (team.Gun != null)
+            {
+                var g = team.Gun;
+                string shells = g.Definition.Indirect
+                    ? $"{Loc.T("ui.he")} {g.AmmoHe} · {Loc.T("ui.smoke")} {g.AmmoSmoke}"
+                    : $"{Loc.T("ui.ap")} {g.AmmoAp} · {Loc.T("ui.he")} {g.AmmoHe}";
+                GUI.Label(new Rect(panel.x + 180, panel.y + 4, panelWidth - 188, 20), shells, _small);
+            }
             GUI.Label(new Rect(panel.x + 8, panel.y + 24, panelWidth - 16, 18),
                 $"{Loc.T("ui.casualties")} {team.CasualtyFraction * 100f:0}% · {Loc.T("ui.morale")} {team.AverageMorale:0} · {TeamStateText(team)}", _small);
 
@@ -680,7 +716,11 @@ namespace CloseFight.Game.Controls
             foreach (var soldier in team.Members)
             {
                 string rank = Loc.T(soldier.RankKey);
-                string weapon = soldier.Weapon != null ? Loc.T(soldier.Weapon.NameKey) : "";
+                string weapon = soldier.Role != CrewRole.None ? Loc.T("role." + soldier.Role.ToString().ToLowerInvariant()) : "";
+                if (soldier.Weapon != null)
+                {
+                    weapon = (weapon.Length > 0 ? weapon + " · " : "") + Loc.T(soldier.Weapon.NameKey);
+                }
                 string state = soldier.IsActive ? Loc.T(Loc.MoraleKey(soldier.MoraleState)) : Loc.T(Loc.StatusKey(soldier.Status));
                 if (soldier.IsWounded)
                 {

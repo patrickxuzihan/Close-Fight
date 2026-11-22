@@ -19,12 +19,18 @@ namespace CloseFight.Game.View
         [SerializeField] Material groundMaterial;
         [SerializeField] Material buildingMaterial;
         [SerializeField] Material wallMaterial;
+        [Tooltip("Transparent unlit material (Sprites/Default) for the rubble decal over collapsed buildings and crushed fences.")]
+        [SerializeField] Material overlayMaterial;
 
         static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         static readonly int BaseMapId = Shader.PropertyToID("_BaseMap");
 
         TacticalMap _map;
         Texture2D _groundTexture;
+        Texture2D _overlayTexture;
+        Material _overlayInstance;
+        bool[] _hadWall;
+        static readonly Color32 RubbleDecal = new Color32(128, 112, 96, 255);
         Material _groundInstance;
         GameObject _root;
         readonly List<Mesh> _meshes = new List<Mesh>();
@@ -44,6 +50,7 @@ namespace CloseFight.Game.View
             BuildGround();
             BuildBuildings();
             BuildWalls();
+            BuildOverlay();
 
             if (!Application.isPlaying)
             {
@@ -77,6 +84,12 @@ namespace CloseFight.Game.View
             if (_groundInstance != null)
             {
                 _groundInstance.hideFlags = HideFlags.DontSave;
+            }
+
+            if (_overlayTexture != null)
+            {
+                _overlayTexture.hideFlags = HideFlags.DontSave;
+                _overlayInstance.hideFlags = HideFlags.DontSave;
             }
         }
 
@@ -139,6 +152,77 @@ namespace CloseFight.Game.View
             color.g = Mathf.Clamp01(color.g + noise);
             color.b = Mathf.Clamp01(color.b + noise);
             return color;
+        }
+
+        /// <summary>
+        /// Collapse decal (D38): a transparent texture, one pixel per cell, floating
+        /// above every roof. Collapsed building cells and crushed fences are painted
+        /// into it, so the 3D blocks never have to be rebuilt.
+        /// </summary>
+        void BuildOverlay()
+        {
+            var grid = _map.Grid;
+            _hadWall = new bool[grid.CellCount];
+            for (int i = 0; i < grid.CellCount; i++)
+            {
+                _hadWall[i] = grid.HasFlag(i, CellFlags.Wall);
+            }
+
+            if (overlayMaterial == null)
+            {
+                return;
+            }
+
+            _overlayTexture = new Texture2D(grid.Width, grid.Height, TextureFormat.RGBA32, false)
+            {
+                name = "CollapseOverlay",
+                filterMode = FilterMode.Point,
+                wrapMode = TextureWrapMode.Clamp,
+            };
+            _overlayTexture.SetPixels32(new Color32[grid.CellCount]);
+            for (int i = 0; i < grid.CellCount; i++)
+            {
+                if (grid.HasFlag(i, CellFlags.Collapsed))
+                {
+                    _overlayTexture.SetPixel(i % grid.Width, i / grid.Width, RubbleDecalAt(i));
+                }
+            }
+
+            _overlayTexture.Apply(false);
+
+            float maxRoof = 1f;
+            foreach (var building in _map.Buildings)
+            {
+                maxRoof = Mathf.Max(maxRoof, building.RoofHeight);
+            }
+
+            float width = grid.Width * grid.CellSize;
+            float height = grid.Height * grid.CellSize;
+            float y = maxRoof + 0.5f;
+            var mesh = new Mesh { name = "CollapseOverlay" };
+            mesh.SetVertices(new List<Vector3> { new Vector3(0f, y, 0f), new Vector3(width, y, 0f), new Vector3(width, y, height), new Vector3(0f, y, height) });
+            mesh.SetUVs(0, new List<Vector2> { new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(0f, 1f) });
+            mesh.SetTriangles(new[] { 0, 2, 1, 0, 3, 2 }, 0);
+            mesh.RecalculateBounds();
+            _meshes.Add(mesh);
+
+            _overlayInstance = new Material(overlayMaterial) { name = "CollapseOverlay (instance)", mainTexture = _overlayTexture };
+            var renderer = CreateRendererObject("CollapseOverlay", mesh, _overlayInstance, castShadows: false);
+            renderer.receiveShadows = false;
+            renderer.sortingOrder = -1; // under every unit sprite
+        }
+
+        /// <summary>Broken brick and plaster: the rubble color with strong per-cell variation.</summary>
+        Color32 RubbleDecalAt(int index)
+        {
+            var coord = _map.Grid.CoordOf(index);
+            float n = TerrainPalette.Hash01(coord.X * 3 + 11, coord.Y * 5 + 7) - 0.5f;
+            Color c = RubbleDecal;
+            c.r = Mathf.Clamp01(c.r + n * 0.35f);
+            c.g = Mathf.Clamp01(c.g + n * 0.3f);
+            c.b = Mathf.Clamp01(c.b + n * 0.25f);
+            c.a = 1f;
+            return c;
         }
 
         void BuildBuildings()
@@ -257,6 +341,23 @@ namespace CloseFight.Game.View
             var coord = _map.Grid.CoordOf(index);
             _groundTexture.SetPixel(coord.X, coord.Y, GroundColor(index));
             _groundTexture.Apply(false);
+
+            if (_overlayTexture != null)
+            {
+                var grid = _map.Grid;
+                Color32 decal = default;
+                if (grid.HasFlag(index, CellFlags.Collapsed))
+                {
+                    decal = RubbleDecalAt(index);
+                }
+                else if (_hadWall[index] && !grid.HasFlag(index, CellFlags.Wall))
+                {
+                    decal = GroundColor(index); // fence crushed flat
+                }
+
+                _overlayTexture.SetPixel(coord.X, coord.Y, decal);
+                _overlayTexture.Apply(false);
+            }
         }
 
         /// <summary>Destroys all generated geometry.</summary>
@@ -282,6 +383,10 @@ namespace CloseFight.Game.View
 
             SafeDestroy(_groundTexture);
             SafeDestroy(_groundInstance);
+            SafeDestroy(_overlayTexture);
+            SafeDestroy(_overlayInstance);
+            _overlayTexture = null;
+            _overlayInstance = null;
             foreach (var mesh in _meshes)
             {
                 SafeDestroy(mesh);

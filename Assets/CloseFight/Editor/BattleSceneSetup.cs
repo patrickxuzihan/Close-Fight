@@ -99,6 +99,7 @@ namespace CloseFight.EditorTools
             Assign(mapView, "groundMaterial", groundMaterial);
             Assign(mapView, "buildingMaterial", buildingMaterial);
             Assign(mapView, "wallMaterial", wallMaterial);
+            Assign(mapView, "overlayMaterial", GetOrCreateLineMaterial());
 
             var unitsView = new GameObject("Units").AddComponent<UnitsView>();
             Assign(unitsView, "lineMaterial", GetOrCreateLineMaterial());

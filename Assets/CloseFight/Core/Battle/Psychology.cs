@@ -37,6 +37,8 @@ namespace CloseFight.Core.Battle
         public const float ComradeDownLoss = 6f;
         public const float ComradeWoundedLoss = 2f;
         public const float LeaderDownLoss = 12f;
+        public const float TankTerrorRange = 60f;
+        public const float TankTerrorPerSecond = 0.6f;
 
         readonly BattleState _battle;
         readonly TeamMovement _movement;
@@ -112,13 +114,13 @@ namespace CloseFight.Core.Battle
             if (team.IsBroken && !team.HasFallenBack && active > 0)
             {
                 team.HasFallenBack = true;
-                team.FallingBack = _movement.PlanMove(team, _battle.FallbackPoint(team, FallbackDistance), OrderType.Retreat);
+                team.FallingBack = _battle.MoveTeam(team, _battle.FallbackPoint(team, FallbackDistance), OrderType.Retreat);
             }
 
             if (team.FallingBack && team.Activity == TeamActivity.Idle)
             {
                 team.FallingBack = false;
-                _movement.Halt(team, OrderType.Defend, Posture.Kneeling);
+                _battle.HaltTeam(team, OrderType.Defend, Posture.Kneeling);
             }
         }
 
@@ -131,7 +133,14 @@ namespace CloseFight.Core.Battle
                 soldier.Morale -= ProlongedFireErosion * Nerve(soldier) * dt;
             }
 
-            bool calm = now - soldier.LastUnderFireAt > 5f && soldier.Suppression < 10f;
+            // Tank terror: men on foot lose their nerve with an enemy tank close by.
+            bool tankNear = !soldier.IsMounted && EnemyTankNear(soldier, TankTerrorRange);
+            if (tankNear)
+            {
+                soldier.Morale -= TankTerrorPerSecond * Nerve(soldier) * dt;
+            }
+
+            bool calm = now - soldier.LastUnderFireAt > 5f && soldier.Suppression < 10f && !tankNear;
             if (calm && soldier.Morale < soldier.BaseMorale && soldier.MoraleState != MoraleState.Routed)
             {
                 float rate = 0.5f;
@@ -204,8 +213,29 @@ namespace CloseFight.Core.Battle
             }
         }
 
+        bool EnemyTankNear(Soldier soldier, float range)
+        {
+            foreach (var vehicle in _battle.Vehicles)
+            {
+                if (vehicle.Team.Side != soldier.Team.Side && vehicle.IsOperational
+                    && math.distancesq(vehicle.Position, soldier.Position) < range * range
+                    && _battle.Visibility.CanSee(soldier.Team.Side, vehicle))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         void Act(Soldier soldier, float dt)
         {
+            // Crew inside a vehicle stay put; losing their nerve makes them bail out (Gunnery).
+            if (soldier.IsMounted)
+            {
+                return;
+            }
+
             switch (soldier.MoraleState)
             {
                 case MoraleState.Pinned:

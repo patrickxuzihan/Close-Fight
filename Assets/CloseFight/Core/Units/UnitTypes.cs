@@ -11,6 +11,10 @@ namespace CloseFight.Core.Units
         Rifle = 0,
         MachineGun = 1,
         Headquarters = 2,
+        /// <summary>A tank or assault gun and its crew.</summary>
+        Vehicle = 3,
+        AntiTankGun = 4,
+        Mortar = 5,
     }
 
     public enum SoldierStatus : byte
@@ -65,6 +69,8 @@ namespace CloseFight.Core.Units
         Hide,
         AssaultBuilding,
         Retreat,
+        /// <summary>Vehicles only: back away while keeping the thick front armor toward the enemy.</summary>
+        Reverse,
     }
 
     public enum TeamActivity : byte

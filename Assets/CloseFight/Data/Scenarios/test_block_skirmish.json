@@ -67,6 +67,34 @@
       "experience": 55
     },
     {
+      "key": "de_stug",
+      "side": "German",
+      "type": "Vehicle",
+      "displayName": "Sturmgeschütz",
+      "size": 0,
+      "position": {
+        "x": 77,
+        "y": 16
+      },
+      "facing": 0,
+      "experience": 55,
+      "equipment": "stug3f"
+    },
+    {
+      "key": "de_mortar",
+      "side": "German",
+      "type": "Mortar",
+      "displayName": "Granatwerfer",
+      "size": 0,
+      "position": {
+        "x": 40,
+        "y": 4
+      },
+      "facing": 0,
+      "experience": 50,
+      "equipment": "grw34"
+    },
+    {
       "key": "su_1",
       "side": "Soviet",
       "type": "Rifle",
@@ -107,6 +135,50 @@
       "facing": 90,
       "experience": 45,
       "initialOrder": "Ambush"
+    },
+    {
+      "key": "su_at",
+      "side": "Soviet",
+      "type": "AntiTankGun",
+      "displayName": "Sorokapyatka",
+      "size": 0,
+      "position": {
+        "x": 84,
+        "y": 96
+      },
+      "facing": 180,
+      "experience": 50,
+      "initialOrder": "Ambush",
+      "equipment": "m1937_45"
+    },
+    {
+      "key": "su_t34",
+      "side": "Soviet",
+      "type": "Vehicle",
+      "displayName": "T-34",
+      "size": 0,
+      "position": {
+        "x": 150,
+        "y": 104
+      },
+      "facing": 270,
+      "experience": 45,
+      "initialOrder": "Ambush",
+      "equipment": "t34_76"
+    },
+    {
+      "key": "su_mortar",
+      "side": "Soviet",
+      "type": "Mortar",
+      "displayName": "Minomyot",
+      "size": 0,
+      "position": {
+        "x": 30,
+        "y": 112
+      },
+      "facing": 180,
+      "experience": 45,
+      "equipment": "bm37"
     }
   ]
 }

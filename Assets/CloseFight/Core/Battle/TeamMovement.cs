@@ -152,6 +152,9 @@ namespace CloseFight.Core.Battle
             }
         }
 
+        /// <summary>Gun teams push or carry their gun: slower than riflemen.</summary>
+        static float GunFactor(Team team) => team.GunTeam != null ? team.GunTeam.SpeedFactor : 1f;
+
         void StepMoving(Team team, float dt)
         {
             var leader = Anchor(team);
@@ -162,7 +165,7 @@ namespace CloseFight.Core.Battle
                 return;
             }
 
-            float speed = BaseSpeed(team.Order.Type);
+            float speed = BaseSpeed(team.Order.Type) * GunFactor(team);
 
             // Cohesion: the leader waits for stragglers.
             bool waiting = false;
@@ -228,7 +231,7 @@ namespace CloseFight.Core.Battle
 
         void StepDeploying(Team team, float dt)
         {
-            float speed = BaseSpeed(team.Order.Type);
+            float speed = BaseSpeed(team.Order.Type) * GunFactor(team);
             team.DeployElapsed += dt;
             bool timedOut = team.DeployElapsed >= DeployTimeout;
             bool allArrived = true;
