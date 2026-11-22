@@ -1,0 +1,96 @@
+using System;
+using System.Collections.Generic;
+
+namespace CloseFight.Core.Map
+{
+    /// <summary>Runtime state of one building: its definition plus damage.</summary>
+    public sealed class BuildingState
+    {
+        public short Index { get; }
+        public BuildingDefinition Definition { get; }
+        public int Floors => Definition.floors;
+        public BuildingMaterial Material => Definition.material;
+        /// <summary>Roof height in meters.</summary>
+        public float RoofHeight => Definition.floors * TerrainInfo.FloorHeight;
+
+        /// <summary>Grid indices of every cell in the footprint.</summary>
+        public List<int> Cells { get; } = new List<int>();
+        public int CollapsedCellCount { get; internal set; }
+
+        public BuildingState(short index, BuildingDefinition definition)
+        {
+            Index = index;
+            Definition = definition;
+        }
+    }
+
+    /// <summary>
+    /// A loaded battle map: the gameplay grid plus building state.
+    /// Raised events let the presentation layer refresh only what changed.
+    /// </summary>
+    public sealed class TacticalMap
+    {
+        public MapDefinition Definition { get; }
+        public TacticalGrid Grid { get; }
+        public IReadOnlyList<BuildingState> Buildings => _buildings;
+
+        /// <summary>Raised with the grid index of every cell whose gameplay data changed.</summary>
+        public event Action<int> CellChanged;
+
+        readonly List<BuildingState> _buildings = new List<BuildingState>();
+
+        public TacticalMap(MapDefinition definition, TacticalGrid grid)
+        {
+            Definition = definition;
+            Grid = grid;
+        }
+
+        internal BuildingState AddBuilding(BuildingDefinition definition)
+        {
+            if (_buildings.Count >= short.MaxValue)
+            {
+                throw new InvalidOperationException("Too many buildings on one map.");
+            }
+
+            var state = new BuildingState((short)_buildings.Count, definition);
+            _buildings.Add(state);
+            return state;
+        }
+
+        /// <summary>Building occupying the cell, or null.</summary>
+        public BuildingState BuildingAt(int cellIndex)
+        {
+            short index = Grid.GetBuildingIndex(cellIndex);
+            return index == TacticalGrid.NoBuilding ? null : _buildings[index];
+        }
+
+        /// <summary>
+        /// Collapses one building cell (D38): no drawn collapse animation, the view
+        /// overlays a collapse decal. The cell becomes a rubble heap: low, see-through
+        /// above the heap, and it no longer gives building cover.
+        /// </summary>
+        public bool CollapseCell(int cellIndex)
+        {
+            var grid = Grid;
+            if (!grid.HasFlag(cellIndex, CellFlags.Building) || grid.HasFlag(cellIndex, CellFlags.Collapsed))
+            {
+                return false;
+            }
+
+            grid.AddFlags(cellIndex, CellFlags.Collapsed);
+            grid.RemoveFlags(cellIndex, CellFlags.BlocksSight);
+            grid.SetTerrain(cellIndex, TerrainType.Rubble);
+            grid.SetObstacleHeight(cellIndex, TerrainInfo.RubbleHeight);
+            grid.SetCover(cellIndex, TerrainInfo.TerrainCover(TerrainType.Rubble));
+
+            var building = BuildingAt(cellIndex);
+            if (building != null)
+            {
+                building.CollapsedCellCount++;
+            }
+
+            CellChanged?.Invoke(cellIndex);
+            return true;
+        }
+    }
+}

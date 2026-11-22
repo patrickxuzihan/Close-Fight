@@ -1,0 +1,96 @@
+{
+  "id": "test_block_m2",
+  "mapId": "test_block",
+  "seed": 19420914,
+  "playerSide": "German",
+  "sides": [
+    {
+      "side": "German",
+      "retreatEdge": "South"
+    },
+    {
+      "side": "Soviet",
+      "retreatEdge": "North"
+    }
+  ],
+  "teams": [
+    {
+      "key": "de_hq",
+      "side": "German",
+      "type": "Headquarters",
+      "displayName": "Kompanietrupp",
+      "size": 0,
+      "position": {
+        "x": 78,
+        "y": 8
+      },
+      "facing": 0,
+      "experience": 60
+    },
+    {
+      "key": "de_1",
+      "side": "German",
+      "type": "Rifle",
+      "displayName": "1. Gruppe",
+      "size": 0,
+      "position": {
+        "x": 40,
+        "y": 47
+      },
+      "facing": 0,
+      "experience": 50
+    },
+    {
+      "key": "de_2",
+      "side": "German",
+      "type": "Rifle",
+      "displayName": "2. Gruppe",
+      "size": 0,
+      "position": {
+        "x": 112,
+        "y": 47
+      },
+      "facing": 0,
+      "experience": 50
+    },
+    {
+      "key": "de_mg",
+      "side": "German",
+      "type": "MachineGun",
+      "displayName": "MG-Trupp",
+      "size": 0,
+      "position": {
+        "x": 86,
+        "y": 40
+      },
+      "facing": 0,
+      "experience": 55
+    },
+    {
+      "key": "su_1",
+      "side": "Soviet",
+      "type": "Rifle",
+      "displayName": "1-ye otdeleniye",
+      "size": 0,
+      "position": {
+        "x": 120,
+        "y": 98
+      },
+      "facing": 180,
+      "experience": 45
+    },
+    {
+      "key": "su_mg",
+      "side": "Soviet",
+      "type": "MachineGun",
+      "displayName": "Pulemyotny raschyot",
+      "size": 0,
+      "position": {
+        "x": 40,
+        "y": 98
+      },
+      "facing": 180,
+      "experience": 50
+    }
+  ]
+}

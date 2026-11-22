@@ -1,0 +1,154 @@
+{
+  "order.move": {
+    "zh": "移动",
+    "en": "Move"
+  },
+  "order.move_fast": {
+    "zh": "快速移动",
+    "en": "Move Fast"
+  },
+  "order.crawl": {
+    "zh": "匍匐",
+    "en": "Crawl"
+  },
+  "order.fire": {
+    "zh": "开火",
+    "en": "Fire"
+  },
+  "order.area_fire": {
+    "zh": "区域压制",
+    "en": "Area Fire"
+  },
+  "order.smoke": {
+    "zh": "烟雾",
+    "en": "Smoke"
+  },
+  "order.defend": {
+    "zh": "防御",
+    "en": "Defend"
+  },
+  "order.ambush": {
+    "zh": "伏击",
+    "en": "Ambush"
+  },
+  "order.hide": {
+    "zh": "隐蔽",
+    "en": "Hide"
+  },
+  "order.assault_building": {
+    "zh": "突入建筑",
+    "en": "Assault Building"
+  },
+  "order.retreat": {
+    "zh": "后撤",
+    "en": "Retreat"
+  },
+  "order.none": {
+    "zh": "待命",
+    "en": "Ready"
+  },
+  "activity.idle": {
+    "zh": "待命",
+    "en": "Ready"
+  },
+  "activity.moving": {
+    "zh": "移动中",
+    "en": "Moving"
+  },
+  "activity.deploying": {
+    "zh": "展开",
+    "en": "Deploying"
+  },
+  "team.rifle": {
+    "zh": "步枪组",
+    "en": "Rifle Team"
+  },
+  "team.machine_gun": {
+    "zh": "机枪组",
+    "en": "MG Team"
+  },
+  "team.headquarters": {
+    "zh": "连部",
+    "en": "Company HQ"
+  },
+  "side.german": {
+    "zh": "德军",
+    "en": "German"
+  },
+  "side.soviet": {
+    "zh": "苏军",
+    "en": "Soviet"
+  },
+  "rank.de.lieutenant": {
+    "zh": "少尉",
+    "en": "Leutnant"
+  },
+  "rank.de.squad_leader": {
+    "zh": "下士班长",
+    "en": "Unteroffizier"
+  },
+  "rank.de.corporal": {
+    "zh": "一等兵",
+    "en": "Gefreiter"
+  },
+  "rank.de.private": {
+    "zh": "列兵",
+    "en": "Schütze"
+  },
+  "rank.su.lieutenant": {
+    "zh": "中尉",
+    "en": "Leytenant"
+  },
+  "rank.su.squad_leader": {
+    "zh": "中士班长",
+    "en": "Serzhant"
+  },
+  "rank.su.corporal": {
+    "zh": "上等兵",
+    "en": "Yefreytor"
+  },
+  "rank.su.private": {
+    "zh": "红军战士",
+    "en": "Krasnoarmeyets"
+  },
+  "ui.paused": {
+    "zh": "已暂停（空格继续）",
+    "en": "PAUSED (Space to resume)"
+  },
+  "ui.men": {
+    "zh": "人",
+    "en": "men"
+  },
+  "ui.choose_target": {
+    "zh": "左键选择目标位置，Esc 取消",
+    "en": "Left-click a target, Esc to cancel"
+  },
+  "ui.not_available": {
+    "zh": "（后续里程碑）",
+    "en": "(later milestone)"
+  },
+  "ui.order_failed": {
+    "zh": "无法执行该命令",
+    "en": "Order not possible"
+  },
+  "ui.language": {
+    "zh": "English",
+    "en": "中文"
+  },
+  "ui.time": {
+    "zh": "战斗时间",
+    "en": "Battle time"
+  },
+  "ui.help": {
+    "zh": "左键选择 · 拖动框选 · 右键命令 · 按住 V 看视线 · 空格暂停 · WASD/中键移动镜头 · 滚轮缩放",
+    "en": "Left-click select · drag box · right-click orders · hold V for line of sight · Space pause · WASD/middle mouse pan · wheel zoom"
+  },
+  "ui.los_visible": {
+    "zh": "可见",
+    "en": "Visible"
+  },
+  "ui.los_blocked": {
+    "zh": "被遮挡",
+    "en": "Blocked"
+  }
+}
