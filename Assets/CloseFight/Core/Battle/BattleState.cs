@@ -21,6 +21,9 @@ namespace CloseFight.Core.Battle
         public IReadOnlyList<Team> Teams => _teams;
         public IReadOnlyList<Soldier> Soldiers => _soldiers;
         public IReadOnlyList<Vehicle> Vehicles => _vehicles;
+        public IReadOnlyList<Objective> Objectives => _objectives;
+        /// <summary>AI commanders run every <see cref="AiIntervalTicks"/> ticks (the AI does not think every frame).</summary>
+        public const int AiIntervalTicks = 20;
         public Gunnery Gunnery { get; }
         public Visibility Visibility { get; }
         public Combat Combat { get; }
@@ -30,6 +33,8 @@ namespace CloseFight.Core.Battle
         readonly List<Team> _teams = new List<Team>();
         readonly List<Soldier> _soldiers = new List<Soldier>();
         readonly List<Vehicle> _vehicles = new List<Vehicle>();
+        readonly List<Objective> _objectives = new List<Objective>();
+        readonly List<IBattleCommander> _commanders = new List<IBattleCommander>();
         VehicleMovement _vehicleMovement;
         readonly Dictionary<Side, MapEdge> _retreatEdges = new Dictionary<Side, MapEdge>();
         readonly GridPathfinder _pathfinder;
@@ -54,6 +59,17 @@ namespace CloseFight.Core.Battle
         }
 
         public void SetRetreatEdge(Side side, MapEdge edge) => _retreatEdges[side] = edge;
+
+        public Objective AddObjective(ObjectiveDefinition definition)
+        {
+            var objective = new Objective(definition);
+            _objectives.Add(objective);
+            return objective;
+        }
+
+        /// <summary>Hands a side to a computer commander (the AI). Several sides may have one.</summary>
+        public void AddCommander(IBattleCommander commander) => _commanders.Add(commander);
+        public IReadOnlyList<IBattleCommander> Commanders => _commanders;
         public MapEdge RetreatEdgeOf(Side side) => _retreatEdges[side];
 
         public static int DefaultSize(TeamType type) => type == TeamType.Rifle ? 6 : 3;
@@ -194,6 +210,23 @@ namespace CloseFight.Core.Battle
                     return false;
                 default:
                     return true;
+            }
+        }
+
+        /// <summary>
+        /// Gives an order whose route is planned with an extra cost per cell, so
+        /// the team avoids ground the enemy covers (used by the AI with its danger map).
+        /// </summary>
+        public bool TryIssueOrderAvoiding(Team team, OrderType order, float2 target, Func<int, float> pathCost, out OrderRefusal refusal)
+        {
+            _pathfinder.ExtraCost = pathCost;
+            try
+            {
+                return TryIssueOrder(team, order, target, out refusal);
+            }
+            finally
+            {
+                _pathfinder.ExtraCost = null;
             }
         }
 
@@ -458,6 +491,20 @@ namespace CloseFight.Core.Battle
             }
         }
 
+        /// <summary>Like <see cref="MoveTeam(Team, float2, OrderType)"/>, with a danger cost on the route.</summary>
+        internal bool MoveTeam(Team team, float2 target, OrderType order, Func<int, float> pathCost)
+        {
+            _pathfinder.ExtraCost = pathCost;
+            try
+            {
+                return MoveTeam(team, target, order);
+            }
+            finally
+            {
+                _pathfinder.ExtraCost = null;
+            }
+        }
+
         /// <summary>Moves a team the right way for what it is (vehicle or on foot). Used by Psychology for fallback.</summary>
         internal bool MoveTeam(Team team, float2 target, OrderType order)
         {
@@ -536,6 +583,14 @@ namespace CloseFight.Core.Battle
             Psychology.Step(SimClock.TickSeconds);
             Combat.Step(SimClock.TickSeconds);
             Gunnery.Step(SimClock.TickSeconds);
+
+            if (Clock.TickCount % AiIntervalTicks == 0)
+            {
+                foreach (var commander in _commanders)
+                {
+                    commander.Think();
+                }
+            }
             Clock.CountTick();
             Smoke.Expire(Clock.ElapsedSeconds);
             if (Clock.TickCount % Visibility.UpdateIntervalTicks == 0)

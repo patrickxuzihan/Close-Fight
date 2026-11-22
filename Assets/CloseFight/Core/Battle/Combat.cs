@@ -109,6 +109,7 @@ namespace CloseFight.Core.Battle
             float holdRange = order == OrderType.Ambush ? AmbushRange
                 : order == OrderType.Hide ? HideRange
                 : float.PositiveInfinity;
+            holdRange = math.min(holdRange, team.SmallArmsHoldRange);
 
             var target = ChooseTarget(shooter, holdRange);
             if (target != null)

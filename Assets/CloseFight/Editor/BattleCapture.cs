@@ -181,6 +181,7 @@ namespace CloseFight.EditorTools
             }
 
             bootstrap.UnitsView.SetViewSide(Side.German);
+            bootstrap.UnitsView.ShowAiPlan = Arg("-captureAiPlan", null) != null;
             bootstrap.UnitsView.SetSelection(selected);
             bootstrap.UnitsView.Sync(1f);
 

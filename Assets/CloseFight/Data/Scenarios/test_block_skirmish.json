@@ -180,5 +180,51 @@
       "experience": 45,
       "equipment": "bm37"
     }
+  ],
+  "objectives": [
+    {
+      "id": "station",
+      "nameKey": "objective.station",
+      "position": {
+        "x": 120,
+        "y": 81
+      },
+      "radius": 14,
+      "value": 3,
+      "owner": "Soviet"
+    },
+    {
+      "id": "concrete",
+      "nameKey": "objective.concrete",
+      "position": {
+        "x": 59,
+        "y": 82
+      },
+      "radius": 10,
+      "value": 2,
+      "owner": "Soviet"
+    },
+    {
+      "id": "house",
+      "nameKey": "objective.house",
+      "position": {
+        "x": 11,
+        "y": 81
+      },
+      "radius": 8,
+      "value": 1,
+      "owner": "Soviet"
+    },
+    {
+      "id": "crossroads",
+      "nameKey": "objective.crossroads",
+      "position": {
+        "x": 77,
+        "y": 57
+      },
+      "radius": 8,
+      "value": 1,
+      "owner": "Soviet"
+    }
   ]
 }

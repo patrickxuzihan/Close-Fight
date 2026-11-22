@@ -410,5 +410,21 @@
   "weapon.tt33": {
     "zh": "TT-33 手枪",
     "en": "TT-33 pistol"
+  },
+  "objective.station": {
+    "zh": "火车站",
+    "en": "Railway station"
+  },
+  "objective.concrete": {
+    "zh": "混凝土楼",
+    "en": "Concrete block"
+  },
+  "objective.house": {
+    "zh": "住宅楼",
+    "en": "Apartment house"
+  },
+  "objective.crossroads": {
+    "zh": "十字路口",
+    "en": "Crossroads"
   }
 }

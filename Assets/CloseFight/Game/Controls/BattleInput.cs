@@ -141,6 +141,12 @@ namespace CloseFight.Game.Controls
                 Loc.ToggleLanguage();
             }
 
+            // Debug: show the enemy AI's plan (positions and fallbacks).
+            if (keyboard.f9Key.wasPressedThisFrame)
+            {
+                unitsView.ShowAiPlan = !unitsView.ShowAiPlan;
+            }
+
             if (keyboard.escapeKey.wasPressedThisFrame)
             {
                 if (_pendingOrder != OrderType.None || _menuOpen)

@@ -60,6 +60,18 @@ namespace CloseFight.Game.View
         readonly HashSet<int> _seenEver = new HashSet<int>();
         readonly EquipmentRenderer _equipment = new EquipmentRenderer();
 
+        // Objectives and the AI's plan (M7)
+        readonly List<SpriteRenderer> _objectiveRings = new List<SpriteRenderer>();
+        readonly List<LineRenderer> _planLines = new List<LineRenderer>();
+        readonly List<SpriteRenderer> _planRings = new List<SpriteRenderer>();
+        static readonly Color SovietObjective = new Color(0.85f, 0.2f, 0.15f, 0.8f);
+        static readonly Color GermanObjective = new Color(0.85f, 0.85f, 0.85f, 0.8f);
+        static readonly Color PlanPrimary = new Color(0.2f, 0.9f, 1f, 0.9f);
+        static readonly Color PlanFallback = new Color(0.3f, 0.45f, 1f, 0.9f);
+
+        /// <summary>Debug: draw where the enemy AI has sent each team (F9). It shows the enemy's plan, so it is off in normal play.</summary>
+        public bool ShowAiPlan { get; set; }
+
         /// <summary>How long a tracer stays on screen (the screenshot tool lengthens it).</summary>
         public float TracerLifetime { get; set; } = 0.25f;
 
@@ -85,6 +97,15 @@ namespace CloseFight.Game.View
             }
 
             _equipment.Build(_root.transform, battle);
+
+            foreach (var objective in battle.Objectives)
+            {
+                var ring = NewOverlaySprite("Objective " + objective.Id, MarkerSprites.Ring, 10);
+                ring.transform.position = new Vector3(objective.Position.x, 23.5f, objective.Position.y);
+                float size = objective.Radius * 2f / 0.94f; // the ring sprite's outer edge sits at ~0.47 units
+                ring.transform.localScale = new Vector3(size, size, 1f);
+                _objectiveRings.Add(ring);
+            }
 
             _sightClear = CreateLine("Sight (clear)");
             _sightBlocked = CreateLine("Sight (blocked)");
@@ -226,6 +247,103 @@ namespace CloseFight.Game.View
             SyncTracers();
             SyncSmoke();
             _equipment.Sync(alpha, _fogEnabled, _viewSide, _selected);
+            SyncObjectives();
+            SyncAiPlan();
+        }
+
+        SpriteRenderer NewOverlaySprite(string name, Sprite sprite, int order)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(_root.transform, false);
+            go.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            if (!Application.isPlaying)
+            {
+                go.hideFlags = HideFlags.DontSave;
+            }
+
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = order;
+            return sr;
+        }
+
+        void SyncObjectives()
+        {
+            for (int i = 0; i < _objectiveRings.Count && i < _battle.Objectives.Count; i++)
+            {
+                _objectiveRings[i].color = _battle.Objectives[i].Owner == Side.Soviet ? SovietObjective : GermanObjective;
+            }
+        }
+
+        void SyncAiPlan()
+        {
+            int lines = 0, rings = 0;
+            if (ShowAiPlan)
+            {
+                foreach (var commander in _battle.Commanders)
+                {
+                    if (!(commander is CloseFight.Core.AI.DefenseCommander defense))
+                    {
+                        continue;
+                    }
+
+                    foreach (var plan in defense.Plans)
+                    {
+                        if (plan.Team.ActiveCount == 0)
+                        {
+                            continue;
+                        }
+
+                        var from = plan.Team.Centroid;
+                        var line = lines < _planLines.Count ? _planLines[lines] : AddPlanLine();
+                        lines++;
+                        line.enabled = true;
+                        line.positionCount = 2;
+                        line.SetPosition(0, new Vector3(from.x, 24f, from.y));
+                        line.SetPosition(1, new Vector3(plan.Primary.x, 24f, plan.Primary.y));
+                        SetLineColor(line, PlanPrimary);
+
+                        PlaceRing(ref rings, plan.Primary, PlanPrimary, 3f);
+                        if (plan.HasFallback)
+                        {
+                            PlaceRing(ref rings, plan.Fallback, PlanFallback, 2f);
+                        }
+                    }
+                }
+            }
+
+            for (int i = lines; i < _planLines.Count; i++) _planLines[i].enabled = false;
+            for (int i = rings; i < _planRings.Count; i++) _planRings[i].enabled = false;
+        }
+
+        LineRenderer AddPlanLine()
+        {
+            var line = CreateLine("AI plan");
+            line.widthMultiplier = 0.25f;
+            if (!Application.isPlaying)
+            {
+                line.gameObject.hideFlags = HideFlags.DontSave;
+            }
+
+            _planLines.Add(line);
+            return line;
+        }
+
+        void PlaceRing(ref int used, float2 at, Color color, float size)
+        {
+            var ring = used < _planRings.Count ? _planRings[used] : AddPlanRing();
+            used++;
+            ring.enabled = true;
+            ring.color = color;
+            ring.transform.position = new Vector3(at.x, 24f, at.y);
+            ring.transform.localScale = new Vector3(size, size, 1f);
+        }
+
+        SpriteRenderer AddPlanRing()
+        {
+            var ring = NewOverlaySprite("AI plan spot", MarkerSprites.Ring, 11);
+            _planRings.Add(ring);
+            return ring;
         }
 
         void SyncTracers()
@@ -523,6 +641,9 @@ namespace CloseFight.Game.View
         public void ClearView()
         {
             _equipment.Clear();
+            _objectiveRings.Clear();
+            _planLines.Clear();
+            _planRings.Clear();
             _tracerPool.Clear();
             _smokePool.Clear();
             _seenEver.Clear();

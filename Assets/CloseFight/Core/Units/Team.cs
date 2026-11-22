@@ -39,6 +39,13 @@ namespace CloseFight.Core.Units
         /// <summary>Compass heading the team faces when it stops.</summary>
         public float Facing { get; internal set; }
 
+        /// <summary>
+        /// Fire discipline for rifles and MGs: hold fire until an enemy is this close.
+        /// Infinite means fire at will. The AI uses it to keep ambushes hidden while
+        /// moving into position (M7).
+        /// </summary>
+        public float SmallArmsHoldRange { get; internal set; } = float.PositiveInfinity;
+
         /// <summary>Enemy team named by a Fire order (null: fire at will).</summary>
         public Team FireTarget { get; internal set; }
         public int SmokeGrenades { get; internal set; }

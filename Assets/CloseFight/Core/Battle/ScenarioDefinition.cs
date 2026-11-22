@@ -17,6 +17,7 @@ namespace CloseFight.Core.Battle
         public Side playerSide = Side.German;
         public List<SideDefinition> sides = new List<SideDefinition>();
         public List<TeamDefinition> teams = new List<TeamDefinition>();
+        public List<ObjectiveDefinition> objectives = new List<ObjectiveDefinition>();
     }
 
     [Serializable]
@@ -73,7 +74,8 @@ namespace CloseFight.Core.Battle
 
         public static string ToJson(ScenarioDefinition scenario) => JsonConvert.SerializeObject(scenario, Settings);
 
-        public static BattleState CreateBattle(ScenarioDefinition scenario, TacticalMap map)
+        /// <summary>Builds the battle. With <paramref name="withAi"/>, every side but the player's gets a defending AI commander (M7).</summary>
+        public static BattleState CreateBattle(ScenarioDefinition scenario, TacticalMap map, bool withAi = true)
         {
             var battle = new BattleState(map, scenario.seed);
             foreach (var side in scenario.sides)
@@ -88,6 +90,22 @@ namespace CloseFight.Core.Battle
                 if (team.initialOrder == OrderType.Defend || team.initialOrder == OrderType.Ambush || team.initialOrder == OrderType.Hide)
                 {
                     battle.IssueOrder(created, team.initialOrder, created.Centroid);
+                }
+            }
+
+            foreach (var objective in scenario.objectives)
+            {
+                battle.AddObjective(objective);
+            }
+
+            if (withAi)
+            {
+                foreach (var side in new[] { Side.German, Side.Soviet })
+                {
+                    if (side != scenario.playerSide && scenario.teams.Exists(t => t.side == side))
+                    {
+                        battle.AddCommander(new AI.DefenseCommander(battle, side));
+                    }
                 }
             }
 
