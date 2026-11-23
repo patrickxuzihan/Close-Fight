@@ -15,6 +15,8 @@ namespace CloseFight.Core.Battle
         public string mapId = "";
         public ulong seed = 1;
         public Side playerSide = Side.German;
+        /// <summary>The side on the offensive; its AI attacks (M10), the other side's AI defends (M7).</summary>
+        public Side attacker = Side.German;
         /// <summary>Battle length in game minutes (D33: adjustable, default 45).</summary>
         public float timeLimitMinutes = VictoryConditions.DefaultTimeLimitMinutes;
         public List<SideDefinition> sides = new List<SideDefinition>();
@@ -27,6 +29,8 @@ namespace CloseFight.Core.Battle
     {
         public Side side;
         public MapEdge retreatEdge = MapEdge.South;
+        /// <summary>Polygon the side may place its teams in before the battle (empty: no deployment phase).</summary>
+        public List<MapPoint> deployZone = new List<MapPoint>();
     }
 
     [Serializable]
@@ -76,14 +80,27 @@ namespace CloseFight.Core.Battle
 
         public static string ToJson(ScenarioDefinition scenario) => JsonConvert.SerializeObject(scenario, Settings);
 
-        /// <summary>Builds the battle. With <paramref name="withAi"/>, every side but the player's gets a defending AI commander (M7).</summary>
-        public static BattleState CreateBattle(ScenarioDefinition scenario, TacticalMap map, bool withAi = true)
+        /// <summary>
+        /// Builds the battle. With <paramref name="withAi"/>, every side but the player's
+        /// (<paramref name="playerSide"/>, or the scenario's) gets an AI commander:
+        /// the attacker's AI attacks, the defender's defends. <paramref name="allAi"/>
+        /// gives both sides an AI (for tests and the benchmark).
+        /// With <paramref name="deployment"/> and deployment zones in the scenario, the
+        /// battle opens in the deployment phase and the AI places its teams at once.
+        /// </summary>
+        public static BattleState CreateBattle(ScenarioDefinition scenario, TacticalMap map, bool withAi = true,
+            Side? playerSide = null, bool deployment = false, bool allAi = false)
         {
+            var player = playerSide ?? scenario.playerSide;
             var battle = new BattleState(map, scenario.seed);
             battle.Victory.TimeLimitSeconds = scenario.timeLimitMinutes * 60f;
             foreach (var side in scenario.sides)
             {
                 battle.SetRetreatEdge(side.side, side.retreatEdge);
+                if (side.deployZone != null && side.deployZone.Count >= 3)
+                {
+                    battle.AddDeployZone(side.side, side.deployZone.ConvertAll(p => (Unity.Mathematics.float2)p));
+                }
             }
 
             foreach (var team in scenario.teams)
@@ -105,11 +122,18 @@ namespace CloseFight.Core.Battle
             {
                 foreach (var side in new[] { Side.German, Side.Soviet })
                 {
-                    if (side != scenario.playerSide && scenario.teams.Exists(t => t.side == side))
+                    if ((allAi || side != player) && scenario.teams.Exists(t => t.side == side))
                     {
-                        battle.AddCommander(new AI.DefenseCommander(battle, side));
+                        battle.AddCommander(side == scenario.attacker
+                            ? new AI.AttackCommander(battle, side)
+                            : (IBattleCommander)new AI.DefenseCommander(battle, side));
                     }
                 }
+            }
+
+            if (deployment && battle.HasDeployZones)
+            {
+                battle.BeginDeployment();
             }
 
             battle.Visibility.Recompute();

@@ -7,5 +7,8 @@ namespace CloseFight.Core.Battle
     {
         Side Side { get; }
         void Think();
+
+        /// <summary>Called once when the deployment phase opens: place teams before the shooting starts.</summary>
+        void Deploy() { }
     }
 }

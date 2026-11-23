@@ -1,5 +1,6 @@
 using CloseFight.Core.Battle;
 using CloseFight.Core.Map;
+using CloseFight.Core.Units;
 using CloseFight.Game.CameraControl;
 using CloseFight.Game.Controls;
 using CloseFight.Game.UI;
@@ -57,11 +58,26 @@ namespace CloseFight.Game.Battle
             }
         }
 
+        /// <summary>From the briefing: rebuild the battle with the player on <paramref name="side"/>.</summary>
+        void ChooseSide(Side side)
+        {
+            if (Battle == null || side != battleInput.PlayerSide)
+            {
+                Build(side, false);
+            }
+            else
+            {
+                battleInput.EndBriefing();
+            }
+        }
+
         void Start()
         {
             if (Application.isPlaying)
             {
+                GameSettings.ApplyFrameCap();
                 Build();
+                AutoScreenshot.AttachIfRequested(gameObject, battleInput);
             }
         }
 
@@ -76,8 +92,14 @@ namespace CloseFight.Game.Battle
             unitsView.Sync(Battle.Clock.Alpha);
         }
 
-        /// <summary>Builds everything. Also callable in edit mode (used by the screenshot tool).</summary>
-        public BattleState Build()
+        /// <summary>
+        /// Builds everything. Also callable in edit mode (used by the screenshot tool).
+        /// In play mode the battle opens with the briefing and deployment;
+        /// <paramref name="playerSide"/> overrides the scenario's side (chosen in the briefing).
+        /// </summary>
+        public BattleState Build() => Build(null, true);
+
+        BattleState Build(Side? playerSide, bool briefing)
         {
             if (mapJson == null || mapView == null || cameraController == null)
             {
@@ -106,15 +128,16 @@ namespace CloseFight.Game.Battle
                     Debug.LogWarning($"Scenario '{Scenario.id}' is meant for map '{Scenario.mapId}', but '{definition.id}' is loaded.", this);
                 }
 
-                Battle = ScenarioLoader.CreateBattle(Scenario, Map);
+                var side = playerSide ?? Scenario.playerSide;
+                Battle = ScenarioLoader.CreateBattle(Scenario, Map, playerSide: side, deployment: Application.isPlaying);
                 unitsView.Build(Battle);
 
                 if (Application.isPlaying)
                 {
-                    unitsView.SetViewSide(Scenario.playerSide);
+                    unitsView.SetViewSide(side);
                     if (battleInput != null)
                     {
-                        battleInput.Bind(Battle, Scenario.playerSide);
+                        battleInput.Bind(Battle, side, Scenario.id, briefing ? ChooseSide : (System.Action<Side>)null);
                     }
                 }
             }

@@ -41,3 +41,12 @@ Read docs/art/codex/00-style-guide.md first, then complete the task described in
 | 火炮 | `ArtSource/codex/guns/` |
 
 这些目录都在 Unity 的 `Assets/` 之外，草稿不会被直接导入游戏。我检查合格后，再处理成游戏用的格式，挪进项目。
+
+## 进游戏
+
+- 合格的成品图（不带 `_raw` 的那张）复制到 `Assets/CloseFight/Resources/Art/` 下对应的文件夹：载具放 `Vehicles/`，火炮放 `Guns/`。
+- 导入设置是自动的（`Editor/ArtImportSettings.cs`）：每米 128 像素、中心点在画布中心、开 mipmap。
+- 游戏按装备代号找图：车体 `veh_<代号>_hull`，炮塔 `veh_<代号>_turret`，火炮 `gun_<代号>`。没有图的装备继续画占位方块。
+- 炮塔转轴在车体上的位置写在 `Game/View/EquipmentArt.cs` 里，数字来自 Codex 的 notes.md。重画车体后如果转轴位置变了，要同步改这里。
+- 返工的图直接覆盖同名文件即可。
+- 2026-11-23：四辆车和四门炮的第一版已经进游戏。StuG 和其他车的第二版（加明暗）交付后直接替换。步兵等苏军那套交付后再一起换。

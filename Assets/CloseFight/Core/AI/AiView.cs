@@ -30,6 +30,13 @@ namespace CloseFight.Core.AI
 
         public TacticalMap Map => _battle.Map;
         public float Time => _battle.Clock.ElapsedSeconds;
+        /// <summary>Whether smoke now hangs across the line between two points (smoke is plain to see).</summary>
+        public bool SmokeBlocks(float2 from, float2 to) => _battle.Smoke.Blocks(from, to, _battle.Clock.ElapsedSeconds);
+
+        /// <summary>Battle time left (the clock is on every player's screen).</summary>
+        public float TimeLeft => _battle.Victory.TimeLimitSeconds - _battle.Clock.ElapsedSeconds;
+        /// <summary>Our own force morale (a commander knows the state of his own men; the enemy's stays hidden).</summary>
+        public float OwnForceMorale => _battle.Victory.ForceMorale(Side);
         public IReadOnlyList<Objective> Objectives => _battle.Objectives;
 
         /// <summary>The map edge the enemy comes from.</summary>
@@ -103,6 +110,21 @@ namespace CloseFight.Core.AI
             }
 
             return _battle.TryIssueOrderAvoiding(team, order, target, pathCost, out _);
+        }
+
+        /// <summary>Our own deployment zones (we know where we may set up).</summary>
+        public IReadOnlyList<float2[]> OwnDeployZones => _battle.DeployZones(Side);
+        public bool IsDeploying => _battle.IsDeploying;
+
+        /// <summary>During deployment: place one of our teams inside our own zone (false if not allowed there).</summary>
+        public bool Redeploy(Team team, float2 position, float facing)
+        {
+            if (team.Side != Side)
+            {
+                throw new InvalidOperationException("An AI may only command its own side.");
+            }
+
+            return _battle.Redeploy(team, position, facing);
         }
 
         /// <summary>Fire discipline: small arms hold fire until an enemy is within <paramref name="range"/> (infinity: fire at will).</summary>

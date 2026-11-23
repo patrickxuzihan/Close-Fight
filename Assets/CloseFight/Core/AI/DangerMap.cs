@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using CloseFight.Core.Map;
 using Unity.Mathematics;
 
@@ -39,29 +40,37 @@ namespace CloseFight.Core.AI
         public void Rebuild(IEnumerable<(float2 position, float weight)> threats)
         {
             Array.Clear(_danger, 0, _danger.Length);
-            IsEmpty = true;
-            foreach (var (position, weight) in threats)
+            var list = new List<(float2 position, float weight)>(threats);
+            IsEmpty = list.Count == 0;
+            if (IsEmpty)
             {
-                IsEmpty = false;
-                for (int cy = 0; cy < _height; cy++)
+                return;
+            }
+
+            // Rows in parallel; each cell sums its threats in list order, so the result is deterministic.
+            Parallel.For(0, _height, cy =>
+            {
+                for (int cx = 0; cx < _width; cx++)
                 {
-                    for (int cx = 0; cx < _width; cx++)
+                    float2 center = new float2((cx + 0.5f) * CoarseCell, (cy + 0.5f) * CoarseCell);
+                    float sum = 0f;
+                    foreach (var (position, weight) in list)
                     {
-                        float2 center = new float2((cx + 0.5f) * CoarseCell, (cy + 0.5f) * CoarseCell);
                         float distance = math.distance(center, position);
                         if (distance > ThreatRange)
                         {
                             continue;
                         }
 
-                        var sight = LineOfSight.Check(_map, position, EyeHeight, center, EyeHeight);
-                        if (sight.Visible)
+                        if (LineOfSight.Check(_map, position, EyeHeight, center, EyeHeight).Visible)
                         {
-                            _danger[cy * _width + cx] += weight * (1f - distance / ThreatRange * 0.7f);
+                            sum += weight * (1f - distance / ThreatRange * 0.7f);
                         }
                     }
+
+                    _danger[cy * _width + cx] = sum;
                 }
-            }
+            });
         }
 
         public float At(float2 world)

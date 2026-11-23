@@ -3,14 +3,51 @@
   "mapId": "test_block",
   "seed": 19420914,
   "playerSide": "German",
+  "attacker": "German",
   "sides": [
     {
       "side": "German",
-      "retreatEdge": "South"
+      "retreatEdge": "South",
+      "deployZone": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 160,
+          "y": 0
+        },
+        {
+          "x": 160,
+          "y": 25
+        },
+        {
+          "x": 0,
+          "y": 25
+        }
+      ]
     },
     {
       "side": "Soviet",
-      "retreatEdge": "North"
+      "retreatEdge": "North",
+      "deployZone": [
+        {
+          "x": 0,
+          "y": 50
+        },
+        {
+          "x": 160,
+          "y": 50
+        },
+        {
+          "x": 160,
+          "y": 120
+        },
+        {
+          "x": 0,
+          "y": 120
+        }
+      ]
     }
   ],
   "teams": [

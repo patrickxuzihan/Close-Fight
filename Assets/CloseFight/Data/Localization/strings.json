@@ -140,8 +140,16 @@
     "en": "Battle time"
   },
   "ui.help": {
-    "zh": "左键选择 · 拖动框选 · 右键命令 · 按住 V 看视线 · 空格暂停 · WASD/中键移动镜头 · 滚轮缩放 · L 中英切换",
-    "en": "Left-click select · drag box · right-click orders · hold V for line of sight · Space pause · WASD/middle mouse pan · wheel zoom · L language"
+    "zh": "左键选择 · 拖动框选 · 右键（或 Ctrl+单击）命令 · 按住 V 看视线 · 空格暂停 · WASD/中键移动镜头 · 滚轮缩放 · L 中英切换",
+    "en": "Left-click select · drag box · right-click (or Ctrl+click) orders · hold V for line of sight · Space pause · WASD/middle mouse pan · wheel zoom · L language"
+  },
+  "ui.trackpad_on": {
+    "zh": "触控板：开",
+    "en": "Trackpad: on"
+  },
+  "ui.trackpad_off": {
+    "zh": "触控板：关",
+    "en": "Trackpad: off"
   },
   "ui.los_visible": {
     "zh": "可见",
@@ -554,5 +562,97 @@
   "result.reason.soviet_ceasefire": {
     "zh": "苏军请求停火，按目标点判定",
     "en": "The Soviets requested a ceasefire; objectives decide"
+  },
+  "ui.deployment": {
+    "zh": "部署阶段",
+    "en": "Deployment"
+  },
+  "ui.deploy_hint": {
+    "zh": "选中小组，在黄色区域内左键点击放置 · 准备好后按 Enter 或点「开始战斗」",
+    "en": "Select teams and left-click inside the yellow zone to place them · press Enter or Start battle when ready"
+  },
+  "ui.start_battle": {
+    "zh": "开始战斗",
+    "en": "Start battle"
+  },
+  "ui.battle_started": {
+    "zh": "战斗开始",
+    "en": "The battle begins"
+  },
+  "ui.command_german": {
+    "zh": "指挥德军（进攻）",
+    "en": "Command the Germans (attack)"
+  },
+  "ui.command_soviet": {
+    "zh": "指挥苏军（防守）",
+    "en": "Command the Soviets (defend)"
+  },
+  "ui.goal_german": {
+    "zh": "德军目标",
+    "en": "German objectives"
+  },
+  "ui.goal_soviet": {
+    "zh": "苏军目标",
+    "en": "Soviet objectives"
+  },
+  "deploy.outside_zone": {
+    "zh": "只能放在己方的部署区内",
+    "en": "Teams can only be placed inside your deployment zone"
+  },
+  "deploy.blocked": {
+    "zh": "那里进不去",
+    "en": "That spot cannot be reached"
+  },
+  "deploy.no_room": {
+    "zh": "那里放不下坦克",
+    "en": "There is no room for the vehicle there"
+  },
+  "deploy.gun_in_building": {
+    "zh": "火炮不能放进建筑",
+    "en": "Guns cannot be placed inside buildings"
+  },
+  "scenario.stalingrad_station_sept14.title": {
+    "zh": "第一火车站",
+    "en": "Railway Station No. 1"
+  },
+  "scenario.stalingrad_station_sept14.date": {
+    "zh": "1942 年 9 月 14 日 · 斯大林格勒市中心",
+    "en": "14 September 1942 · central Stalingrad"
+  },
+  "scenario.stalingrad_station_sept14.brief": {
+    "zh": "德军第 71 步兵师突入市中心，正向第一火车站和中央渡口推进。伏尔加河对岸，罗季姆采夫的近卫第 13 步兵师准备连夜渡河。在他们大部赶到之前，车站一带只有内务部队、第 62 集团军的残部和最先渡河的近卫连。此后几天里，车站多次易手。",
+    "en": "The German 71st Infantry Division has broken into the city centre and is driving on Railway Station No. 1 and the central landing stage. Across the Volga, Rodimtsev's 13th Guards Rifle Division is preparing to cross by night. Until most of it arrives, the station area is held only by NKVD troops, remnants of the 62nd Army and the first Guards companies across the river. In the days that follow, the station changes hands many times."
+  },
+  "scenario.stalingrad_station_sept14.goal_german": {
+    "zh": "45 分钟内夺取信号楼、车站、广场和东角，或者打垮守军的士气。结束时谁的目标点分数高，谁就赢。",
+    "en": "Within 45 minutes take the signal box, the station, the square and the east corner, or break the defenders' morale. Whoever holds more objective points at the end wins."
+  },
+  "scenario.stalingrad_station_sept14.goal_soviet": {
+    "zh": "守住车站一带的目标点直到时间结束，或者让进攻者伤亡过重、士气崩溃。",
+    "en": "Hold the objectives around the station until time runs out, or bleed the attackers until their morale breaks."
+  },
+  "scenario.test_block_skirmish.title": {
+    "zh": "试验街区",
+    "en": "Test Block"
+  },
+  "scenario.test_block_skirmish.date": {
+    "zh": "测试地图",
+    "en": "Test map"
+  },
+  "scenario.test_block_skirmish.brief": {
+    "zh": "一个小街区，用来试验新功能。德军从南边进攻，苏军守在楼里。",
+    "en": "A small block for trying out new features. The Germans attack from the south; the Soviets hold the buildings."
+  },
+  "scenario.test_block_skirmish.goal_german": {
+    "zh": "夺取车站、混凝土楼、住宅和十字路口。",
+    "en": "Take the station, the concrete block, the house and the crossroads."
+  },
+  "scenario.test_block_skirmish.goal_soviet": {
+    "zh": "守住这些目标点。",
+    "en": "Hold these objectives."
+  },
+  "ui.side_hint": {
+    "zh": "另一方由 AI 指挥：苏军 AI 会布防死守，德军 AI 会侦察、压制、放烟幕、迂回之后集中突破。",
+    "en": "The AI commands the other side: the Soviet AI digs in; the German AI scouts, suppresses, lays smoke and flanks before massing for the assault."
   }
 }

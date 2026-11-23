@@ -1,3 +1,4 @@
+using CloseFight.Game.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -5,8 +6,10 @@ namespace CloseFight.Game.CameraControl
 {
     /// <summary>
     /// Fixed straight-down orthographic camera (D23).
-    /// Pan: WASD / arrow keys, middle-mouse drag, optional screen-edge scroll.
-    /// Zoom: mouse wheel, toward the cursor.
+    /// Pan: WASD / arrow keys, middle-mouse drag, optional screen-edge scroll;
+    /// in trackpad mode also two-finger scroll.
+    /// Zoom: mouse wheel (or Cmd/Ctrl + two-finger scroll in trackpad mode), toward
+    /// the cursor, in proportion to the scroll so a trackpad zooms smoothly.
     /// Uses unscaled time so the camera still moves while the battle is paused (D34).
     /// </summary>
     [RequireComponent(typeof(Camera))]
@@ -18,6 +21,8 @@ namespace CloseFight.Game.CameraControl
         [SerializeField] float maxOrthographicSize = 260f;
         [Tooltip("Fraction of the current size changed per wheel notch.")]
         [SerializeField] float zoomStep = 0.15f;
+        [Tooltip("Trackpad mode: screen heights panned per unit of scroll.")]
+        [SerializeField] float trackpadPan = 0.04f;
         [SerializeField] bool edgeScroll = false;
         [SerializeField] float edgeScrollBorder = 6f;
         [SerializeField] float cameraHeight = 300f;
@@ -94,10 +99,20 @@ namespace CloseFight.Game.CameraControl
                     if (pointer.y >= Screen.height - edgeScrollBorder) move.y += 1f;
                 }
 
-                float scroll = mouse.scroll.ReadValue().y;
-                if (Mathf.Abs(scroll) > 0.01f)
+                // One wheel notch is 1; a trackpad sends many small fractions per gesture.
+                Vector2 scroll = mouse.scroll.ReadValue();
+                bool zoomModifier = keyboard != null && (keyboard.leftCommandKey.isPressed || keyboard.rightCommandKey.isPressed || keyboard.ctrlKey.isPressed);
+                if (GameSettings.TrackpadMode && !zoomModifier)
                 {
-                    ZoomTowards(pointer, scroll > 0f ? 1f - zoomStep : 1f + zoomStep);
+                    if (scroll.sqrMagnitude > 1e-6f)
+                    {
+                        float step = trackpadPan * cam.orthographicSize * 2f;
+                        transform.position += new Vector3(scroll.x, 0f, scroll.y) * step;
+                    }
+                }
+                else if (Mathf.Abs(scroll.y) > 1e-3f)
+                {
+                    ZoomTowards(pointer, Mathf.Pow(1f - zoomStep, Mathf.Clamp(scroll.y, -4f, 4f)));
                 }
 
                 if (mouse.middleButton.wasPressedThisFrame)

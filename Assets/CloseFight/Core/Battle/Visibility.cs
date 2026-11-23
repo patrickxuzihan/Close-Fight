@@ -135,6 +135,11 @@ namespace CloseFight.Core.Battle
         {
             var visible = _visible[side];
             visible.Clear();
+            if (_battle.IsDeploying)
+            {
+                _visibleVehicles[side].Clear();
+                return; // nobody sees the enemy while both sides deploy
+            }
             var map = _battle.Map;
             float now = _battle.Clock.ElapsedSeconds;
 

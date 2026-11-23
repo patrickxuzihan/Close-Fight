@@ -101,19 +101,44 @@ namespace CloseFight.Core.AI
 
         public void Think()
         {
-            if (_analysis == null)
-            {
-                _analysis = new PositionAnalysis(_view.Map, _view.EnemyEdge, _view.Objectives);
-                _danger = new DangerMap(_view.Map);
-                MakePlan();
-            }
-
+            EnsurePlanned();
             _danger.Rebuild(KnownThreats());
             foreach (var plan in _plans)
             {
                 if (plan.Team.ActiveCount > 0)
                 {
                     Execute(plan);
+                }
+            }
+        }
+
+        void EnsurePlanned()
+        {
+            if (_analysis != null)
+            {
+                return;
+            }
+
+            _analysis = new PositionAnalysis(_view.Map, _view.EnemyEdge, _view.Objectives);
+            _danger = new DangerMap(_view.Map);
+            MakePlan();
+        }
+
+        /// <summary>
+        /// Deployment phase: the defenders are already in their positions when the
+        /// battle opens (as the Guards held the station before the 71st attacked),
+        /// facing the enemy. A position outside our zone is reached on foot once
+        /// the battle starts.
+        /// </summary>
+        public void Deploy()
+        {
+            EnsurePlanned();
+            float facing = Soldier.HeadingOf(_analysis.TowardEnemy);
+            foreach (var plan in _plans)
+            {
+                if (plan.Team.ActiveCount > 0)
+                {
+                    _view.Redeploy(plan.Team, plan.Primary, facing);
                 }
             }
         }

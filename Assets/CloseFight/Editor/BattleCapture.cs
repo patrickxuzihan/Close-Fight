@@ -22,6 +22,7 @@ namespace CloseFight.EditorTools
     ///   -executeMethod CloseFight.EditorTools.BattleCapture.CaptureFromCommandLine
     ///   -captureOut path.png [-captureWidth 1600] [-captureHeight 1000]
     ///   [-captureOrthoSize 40] [-captureCenter 80,60]
+    ///   [-captureViews "x,y,size;x,y,size"]  several close-ups: path_0.png, path_1.png, ...
     /// </summary>
     public static class BattleCapture
     {
@@ -77,6 +78,28 @@ namespace CloseFight.EditorTools
                 RunDemo(bootstrap, battle, demoSeconds);
             }
 
+            string views = Arg("-captureViews", null);
+            if (!string.IsNullOrEmpty(views))
+            {
+                var list = views.Split(';');
+                for (int i = 0; i < list.Length; i++)
+                {
+                    var v = list[i].Split(',');
+                    float x = float.Parse(v[0], CultureInfo.InvariantCulture);
+                    float y = float.Parse(v[1], CultureInfo.InvariantCulture);
+                    float size = float.Parse(v[2], CultureInfo.InvariantCulture);
+                    string viewPath = Path.Combine(Path.GetDirectoryName(path) ?? "", Path.GetFileNameWithoutExtension(path) + "_" + i + ".png");
+                    RenderTo(camera, viewPath, width, height, size, new Vector2(x, y));
+                }
+
+                return;
+            }
+
+            RenderTo(camera, path, width, height, orthoSize, center);
+        }
+
+        static void RenderTo(Camera camera, string path, int width, int height, float orthoSize, Vector2? center)
+        {
             if (orthoSize > 0f)
             {
                 camera.orthographicSize = orthoSize;
@@ -119,11 +142,8 @@ namespace CloseFight.EditorTools
             Debug.Log("Close Fight: captured " + Path.GetFullPath(path));
         }
 
-        /// <summary>
-        /// Scripted orders for the German teams of the test scenario, then a few
-        /// seconds of simulation, so a screenshot shows movement, file order and routes.
-        /// </summary>
-        static void RunDemo(BattleBootstrap bootstrap, BattleState battle, float seconds)
+        /// <summary>Scripted German orders for the station or test map; returns the teams that got one.</summary>
+        internal static List<Team> IssueDemoOrders(BattleState battle)
         {
             bool station = battle.Map.Definition.id == "stalingrad_station";
             var orders = station ? new (string key, OrderType order, float x, float y)[]
@@ -145,7 +165,6 @@ namespace CloseFight.EditorTools
                 ("de_hq", OrderType.Move, 76f, 30f),
             };
 
-            bootstrap.UnitsView.TracerLifetime = 1f;
             var selected = new List<Team>();
             foreach (var (key, order, x, y) in orders)
             {
@@ -165,6 +184,18 @@ namespace CloseFight.EditorTools
                     selected.Add(team);
                 }
             }
+
+            return selected;
+        }
+
+        /// <summary>
+        /// Scripted orders for the German teams of the test scenario, then a few
+        /// seconds of simulation, so a screenshot shows movement, file order and routes.
+        /// </summary>
+        static void RunDemo(BattleBootstrap bootstrap, BattleState battle, float seconds)
+        {
+            bootstrap.UnitsView.TracerLifetime = 1f;
+            var selected = IssueDemoOrders(battle);
 
             int ticks = Mathf.CeilToInt(seconds / SimClock.TickSeconds);
             var watch = System.Diagnostics.Stopwatch.StartNew();

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using CloseFight.Core.Battle;
 using CloseFight.Core.Map;
 using CloseFight.Core.Path;
@@ -115,6 +116,10 @@ namespace CloseFight.Core.AI
                 if (v) vehiclePoints++;
             }
 
+            // Candidate cells first (cheap, serial), then the line-of-sight sweep in parallel:
+            // each candidate only reads the map and writes its own fields, so the result
+            // does not depend on thread timing.
+            var eyes = new List<float>();
             for (float y = CandidateSpacing * 0.5f; y < height; y += CandidateSpacing)
             {
                 for (float x = CandidateSpacing * 0.5f; x < width; x += CandidateSpacing)
@@ -128,7 +133,7 @@ namespace CloseFight.Core.AI
 
                     var building = map.BuildingAt(index);
                     bool inBuilding = building != null && !grid.HasFlag(index, CellFlags.Collapsed);
-                    float eye = inBuilding ? (building.Floors - 1) * TerrainInfo.FloorHeight + LineOfSight.EyeStanding : LineOfSight.EyeKneeling;
+                    eyes.Add(inBuilding ? (building.Floors - 1) * TerrainInfo.FloorHeight + LineOfSight.EyeStanding : LineOfSight.EyeKneeling);
 
                     var candidate = new Candidate
                     {
@@ -141,34 +146,6 @@ namespace CloseFight.Core.AI
                         Sees = new bool[_approach.Count],
                     };
 
-                    int seen = 0, seenVehicle = 0, seenBy = 0;
-                    for (int i = 0; i < _approach.Count; i++)
-                    {
-                        float2 p = _approach[i];
-                        if (math.distance(p, point) > FieldOfFireRange)
-                        {
-                            continue;
-                        }
-
-                        var sight = LineOfSight.Check(map, point, eye, p, LineOfSight.EyeKneeling);
-                        if (!sight.Visible)
-                        {
-                            continue;
-                        }
-
-                        seenBy++;
-                        if (Depth(p, width, height) < candidate.Depth - 5f)
-                        {
-                            candidate.Sees[i] = true;
-                            seen++;
-                            if (_approachVehicle[i]) seenVehicle++;
-                        }
-                    }
-
-                    candidate.Coverage = _approach.Count == 0 ? 0f : seen / (float)_approach.Count;
-                    candidate.VehicleCoverage = vehiclePoints == 0 ? 0f : seenVehicle / (float)vehiclePoints;
-                    candidate.Exposure = _approach.Count == 0 ? 0f : seenBy / (float)_approach.Count;
-
                     foreach (var objective in objectives)
                     {
                         float d = math.distance(point, objective.Position);
@@ -178,6 +155,40 @@ namespace CloseFight.Core.AI
                     _candidates.Add(candidate);
                 }
             }
+
+            Parallel.For(0, _candidates.Count, c => Sweep(_candidates[c], eyes[c], width, height, vehiclePoints));
+        }
+
+        /// <summary>What one candidate sees of the approach, and how much of it sees the candidate.</summary>
+        void Sweep(Candidate candidate, float eye, float width, float height, int vehiclePoints)
+        {
+            int seen = 0, seenVehicle = 0, seenBy = 0;
+            for (int i = 0; i < _approach.Count; i++)
+            {
+                float2 p = _approach[i];
+                if (math.distance(p, candidate.Position) > FieldOfFireRange)
+                {
+                    continue;
+                }
+
+                var sight = LineOfSight.Check(_map, candidate.Position, eye, p, LineOfSight.EyeKneeling);
+                if (!sight.Visible)
+                {
+                    continue;
+                }
+
+                seenBy++;
+                if (Depth(p, width, height) < candidate.Depth - 5f)
+                {
+                    candidate.Sees[i] = true;
+                    seen++;
+                    if (_approachVehicle[i]) seenVehicle++;
+                }
+            }
+
+            candidate.Coverage = _approach.Count == 0 ? 0f : seen / (float)_approach.Count;
+            candidate.VehicleCoverage = vehiclePoints == 0 ? 0f : seenVehicle / (float)vehiclePoints;
+            candidate.Exposure = _approach.Count == 0 ? 0f : seenBy / (float)_approach.Count;
         }
 
         /// <summary>Distance from the enemy's edge into the map.</summary>

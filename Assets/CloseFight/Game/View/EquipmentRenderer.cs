@@ -7,10 +7,10 @@ using UnityEngine;
 namespace CloseFight.Game.View
 {
     /// <summary>
-    /// Placeholder drawing for heavy equipment (M6): tanks as hull + turret +
-    /// barrel boxes, anti-tank guns as a small carriage with a barrel, mortars
-    /// as a tube disc, plus shell bursts. Replaced by Codex top-down art later
-    /// (art-asset-list.md section 3: hull and turret as separate images).
+    /// Draws heavy equipment: tanks as hull + turret, guns and mortars as one
+    /// image, plus shell bursts. Uses the Codex top-down art (<see cref="EquipmentArt"/>)
+    /// with a soft drop shadow cast the same way as the buildings' shadows; an item
+    /// without art yet falls back to placeholder boxes.
     /// Owned by <see cref="UnitsView"/>.
     /// </summary>
     sealed class EquipmentRenderer
@@ -21,6 +21,15 @@ namespace CloseFight.Game.View
         static readonly Color FlashColor = new Color(1f, 0.6f, 0.2f);
         static readonly Color PuffColor = new Color(0.85f, 0.85f, 0.82f);
         static readonly Color SelectedRing = new Color(1f, 0.85f, 0.2f);
+        static readonly Color ShadowColor = new Color(0f, 0f, 0f, 0.42f);
+        /// <summary>Tint over painted art: wrecks burnt dark, abandoned vehicles a little grey.</summary>
+        static readonly Color WreckTint = new Color(0.32f, 0.29f, 0.27f);
+        static readonly Color AbandonedTint = new Color(0.78f, 0.78f, 0.78f);
+
+        /// <summary>Drop shadow length per meter of height (sun at about 50° elevation).</summary>
+        const float VehicleShadow = 0.9f;
+        const float TurretShadow = 0.5f;
+        const float GunShadow = 0.3f;
 
         const float VehicleHeight = 0.35f;
         const float FlashSeconds = 0.8f;
@@ -34,6 +43,9 @@ namespace CloseFight.Game.View
             public SpriteRenderer TurretSprite;
             public SpriteRenderer BarrelSprite;
             public SpriteRenderer Ring;
+            public SpriteRenderer HullShadow;
+            public SpriteRenderer TurretShadow;
+            public bool Painted;
         }
 
         sealed class GunSprites
@@ -42,6 +54,8 @@ namespace CloseFight.Game.View
             public Transform Mount;
             public SpriteRenderer Carriage;
             public SpriteRenderer Barrel;
+            public SpriteRenderer Shadow;
+            public bool Painted;
         }
 
         readonly List<VehicleSprites> _vehicles = new List<VehicleSprites>();
@@ -50,12 +64,24 @@ namespace CloseFight.Game.View
         readonly HashSet<int> _seenVehicles = new HashSet<int>();
         Transform _root;
         BattleState _battle;
+        /// <summary>Ground direction shadows fall in (x, z), from the scene's sun.</summary>
+        Vector3 _shadowDirection = new Vector3(-0.57f, 0f, 0.82f);
 
         public void Build(Transform root, BattleState battle)
         {
             Clear();
             _root = root;
             _battle = battle;
+            var sun = RenderSettings.sun;
+            if (sun != null)
+            {
+                var d = sun.transform.forward;
+                var flat = new Vector3(d.x, 0f, d.z);
+                if (flat.sqrMagnitude > 1e-4f)
+                {
+                    _shadowDirection = flat.normalized;
+                }
+            }
 
             foreach (var vehicle in battle.Vehicles)
             {
@@ -101,20 +127,64 @@ namespace CloseFight.Game.View
             return sr;
         }
 
+        /// <summary>A sprite of Codex art, on its own material (see <see cref="EquipmentArt.MaterialFor"/>).</summary>
+        SpriteRenderer NewArtSprite(string name, Transform parent, Sprite sprite, int order)
+        {
+            var sr = NewSprite(name, parent, sprite, order);
+            sr.sharedMaterial = EquipmentArt.MaterialFor(sprite, sr.sharedMaterial);
+            return sr;
+        }
+
         VehicleSprites CreateVehicle(Vehicle vehicle)
         {
             var definition = vehicle.Definition;
-            var paint = vehicle.Team.Side == Side.German ? GermanPaint : SovietPaint;
-
             var hull = NewChild("Vehicle " + vehicle.Team.Key, _root).transform;
-            var hullSprite = NewSprite("Hull", hull, MarkerSprites.Box, 5);
-            hullSprite.transform.localScale = new Vector3(definition.Width, definition.Length, 1f);
-            hullSprite.color = paint;
+            var hullArt = EquipmentArt.Hull(definition.Id);
+            var turretArt = definition.HasTurret ? EquipmentArt.Turret(definition.Id) : null;
+            var sprites = hullArt != null && (!definition.HasTurret || turretArt != null)
+                ? CreatePaintedVehicle(hull, definition, hullArt, turretArt)
+                : CreatePlaceholderVehicle(hull, vehicle);
 
             var ring = NewSprite("Selection", hull, MarkerSprites.Ring, 8);
             ring.transform.localScale = Vector3.one * (definition.Length * 1.25f);
             ring.color = SelectedRing;
             ring.enabled = false;
+
+            sprites.Vehicle = vehicle;
+            sprites.Hull = hull;
+            sprites.Ring = ring;
+            return sprites;
+        }
+
+        VehicleSprites CreatePaintedVehicle(Transform hull, VehicleDefinition definition, Sprite hullArt, Sprite turretArt)
+        {
+            var sprites = new VehicleSprites { Painted = true };
+            sprites.HullShadow = NewArtSprite("HullShadow", hull, hullArt, 3);
+            sprites.HullShadow.color = ShadowColor;
+            sprites.HullSprite = NewArtSprite("Hull", hull, hullArt, 4);
+
+            // A casemate gun is part of the hull image; the turret turns around its ring.
+            var turret = NewChild("Turret", hull).transform;
+            var ringOffset = EquipmentArt.TurretRing(definition.Id) ?? Vector2.zero;
+            turret.localPosition = new Vector3(ringOffset.x, ringOffset.y, 0f);
+            sprites.Turret = turret;
+            if (turretArt != null)
+            {
+                sprites.TurretShadow = NewArtSprite("TurretShadow", turret, turretArt, 5);
+                sprites.TurretShadow.color = ShadowColor;
+                sprites.TurretSprite = NewArtSprite("TurretBody", turret, turretArt, 6);
+            }
+
+            return sprites;
+        }
+
+        VehicleSprites CreatePlaceholderVehicle(Transform hull, Vehicle vehicle)
+        {
+            var definition = vehicle.Definition;
+            var paint = vehicle.Team.Side == Side.German ? GermanPaint : SovietPaint;
+            var hullSprite = NewSprite("Hull", hull, MarkerSprites.Box, 5);
+            hullSprite.transform.localScale = new Vector3(definition.Width, definition.Length, 1f);
+            hullSprite.color = paint;
 
             // Turret sits a little behind the hull center; a casemate gun sits in the hull front.
             var turret = NewChild("Turret", hull).transform;
@@ -134,16 +204,21 @@ namespace CloseFight.Game.View
             barrel.transform.localPosition = new Vector3(0f, barrelLength * 0.5f, 0f);
             barrel.color = paint * 0.8f;
 
-            return new VehicleSprites
-            {
-                Vehicle = vehicle, Hull = hull, HullSprite = hullSprite, Turret = turret,
-                TurretSprite = turretSprite, BarrelSprite = barrel, Ring = ring,
-            };
+            return new VehicleSprites { HullSprite = hullSprite, Turret = turret, TurretSprite = turretSprite, BarrelSprite = barrel };
         }
 
         GunSprites CreateGun(HeavyWeapon gun)
         {
             var mount = NewChild("Gun " + gun.Team.Key, _root).transform;
+            var art = EquipmentArt.Gun(gun.Definition.Id);
+            if (art != null)
+            {
+                var shadow = NewArtSprite("Shadow", mount, art, 4);
+                shadow.color = ShadowColor;
+                var body = NewArtSprite("Gun", mount, art, 5);
+                return new GunSprites { Gun = gun, Mount = mount, Carriage = body, Shadow = shadow, Painted = true };
+            }
+
             var paint = gun.Team.Side == Side.German ? GermanPaint : SovietPaint;
             bool mortar = gun.Definition.Indirect;
 
@@ -208,6 +283,21 @@ namespace CloseFight.Game.View
             float gunHeading = gun != null ? Mathf.LerpAngle(gun.PreviousHeading, gun.Heading, alpha) : hull;
             sprites.Turret.rotation = Quaternion.Euler(90f, gunHeading, 0f);
 
+            sprites.Ring.enabled = selected.Contains(vehicle.Team) && vehicle.IsOperational;
+            if (sprites.Painted)
+            {
+                var tint = vehicle.Destroyed ? WreckTint : vehicle.Abandoned ? AbandonedTint : Color.white;
+                sprites.HullSprite.color = tint;
+                sprites.HullShadow.transform.position = sprites.Hull.position + _shadowDirection * VehicleShadow - Vector3.up * 0.05f;
+                if (sprites.TurretSprite != null)
+                {
+                    sprites.TurretSprite.color = tint;
+                    sprites.TurretShadow.transform.position = sprites.Turret.position + _shadowDirection * TurretShadow - Vector3.up * 0.03f;
+                }
+
+                return;
+            }
+
             var paint = vehicle.Team.Side == Side.German ? GermanPaint : SovietPaint;
             if (vehicle.Destroyed)
             {
@@ -225,7 +315,6 @@ namespace CloseFight.Game.View
             }
 
             sprites.BarrelSprite.color = paint * 0.8f;
-            sprites.Ring.enabled = selected.Contains(vehicle.Team) && vehicle.IsOperational;
         }
 
         void SyncGun(GunSprites sprites, float alpha, bool fog, Side viewSide)
@@ -256,6 +345,13 @@ namespace CloseFight.Game.View
             sprites.Mount.position = new Vector3(p.x, 0.12f, p.y);
             float heading = Mathf.LerpAngle(gun.PreviousHeading, gun.Heading, alpha);
             sprites.Mount.rotation = Quaternion.Euler(90f, heading, 0f);
+            if (sprites.Painted)
+            {
+                sprites.Carriage.color = gun.Destroyed ? WreckTint : !crewAlive ? AbandonedTint : Color.white;
+                sprites.Shadow.transform.position = sprites.Mount.position + _shadowDirection * GunShadow - Vector3.up * 0.03f;
+                return;
+            }
+
             var paint = gun.Team.Side == Side.German ? GermanPaint : SovietPaint;
             if (!crewAlive || gun.Destroyed)
             {

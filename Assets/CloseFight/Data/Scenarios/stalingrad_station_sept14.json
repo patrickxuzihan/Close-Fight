@@ -3,15 +3,52 @@
   "mapId": "stalingrad_station",
   "seed": 19420914,
   "playerSide": "German",
+  "attacker": "German",
   "timeLimitMinutes": 45,
   "sides": [
     {
       "side": "German",
-      "retreatEdge": "West"
+      "retreatEdge": "West",
+      "deployZone": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 35,
+          "y": 0
+        },
+        {
+          "x": 35,
+          "y": 280
+        },
+        {
+          "x": 0,
+          "y": 280
+        }
+      ]
     },
     {
       "side": "Soviet",
-      "retreatEdge": "East"
+      "retreatEdge": "East",
+      "deployZone": [
+        {
+          "x": 68,
+          "y": 0
+        },
+        {
+          "x": 360,
+          "y": 0
+        },
+        {
+          "x": 360,
+          "y": 280
+        },
+        {
+          "x": 68,
+          "y": 280
+        }
+      ]
     }
   ],
   "teams": [
@@ -113,8 +150,8 @@
       "displayName": "Granatwerfer",
       "size": 0,
       "position": {
-        "x": 6,
-        "y": 152
+        "x": 8,
+        "y": 158
       },
       "facing": 90,
       "experience": 50,
@@ -127,8 +164,8 @@
       "displayName": "PaK 38",
       "size": 0,
       "position": {
-        "x": 12,
-        "y": 186
+        "x": 14,
+        "y": 191
       },
       "facing": 90,
       "experience": 50,

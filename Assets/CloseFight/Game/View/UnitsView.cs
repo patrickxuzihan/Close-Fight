@@ -282,6 +282,12 @@ namespace CloseFight.Game.View
             {
                 foreach (var commander in _battle.Commanders)
                 {
+                    if (commander is CloseFight.Core.AI.AttackCommander attack)
+                    {
+                        DrawAttackPlan(attack, ref lines, ref rings);
+                        continue;
+                    }
+
                     if (!(commander is CloseFight.Core.AI.DefenseCommander defense))
                     {
                         continue;
@@ -314,6 +320,48 @@ namespace CloseFight.Game.View
 
             for (int i = lines; i < _planLines.Count; i++) _planLines[i].enabled = false;
             for (int i = rings; i < _planRings.Count; i++) _planRings[i].enabled = false;
+        }
+
+        static readonly Color PlanAssembly = new Color(1f, 0.6f, 0.1f, 0.9f);
+        static readonly Color PlanJumpOff = new Color(1f, 0.2f, 0.2f, 0.9f);
+        static readonly Color PlanGun = new Color(0.75f, 0.75f, 0.75f, 0.9f);
+
+        /// <summary>
+        /// Debug view of the attacking AI: orange = assembly point, cyan = machine-gun
+        /// overwatch, red = jump-off, grey = assault gun position; lines show where
+        /// each team is heading and the objective under attack.
+        /// </summary>
+        void DrawAttackPlan(CloseFight.Core.AI.AttackCommander attack, ref int lines, ref int rings)
+        {
+            if (!attack.HasGeometry || attack.Target == null)
+            {
+                return;
+            }
+
+            PlaceRing(ref rings, attack.Assembly, PlanAssembly, 4f);
+            PlaceRing(ref rings, attack.Overwatch, PlanPrimary, 4f);
+            PlaceRing(ref rings, attack.JumpOff, PlanJumpOff, 4f);
+            PlaceRing(ref rings, attack.ArmorSpot, PlanGun, 4f);
+
+            PlanLine(ref lines, attack.JumpOff, attack.Target.Position, PlanJumpOff);
+            foreach (var plan in attack.Plans)
+            {
+                if (plan.Team.ActiveCount > 0 && plan.HasGoal)
+                {
+                    PlanLine(ref lines, plan.Team.Centroid, plan.Goal, PlanFallback);
+                }
+            }
+        }
+
+        void PlanLine(ref int lines, float2 from, float2 to, Color color)
+        {
+            var line = lines < _planLines.Count ? _planLines[lines] : AddPlanLine();
+            lines++;
+            line.enabled = true;
+            line.positionCount = 2;
+            line.SetPosition(0, new Vector3(from.x, 24f, from.y));
+            line.SetPosition(1, new Vector3(to.x, 24f, to.y));
+            SetLineColor(line, color);
         }
 
         LineRenderer AddPlanLine()
@@ -638,8 +686,83 @@ namespace CloseFight.Game.View
             return new Vector3(soldier.Position.x, DrawHeight(soldier.Position), soldier.Position.y);
         }
 
+        GameObject _zones;
+
+        /// <summary>Tints the player's deployment zones on the ground, with an outline.</summary>
+        public void ShowDeployZones(IReadOnlyList<float2[]> zones, Color fill, Color outline)
+        {
+            HideDeployZones();
+            if (_root == null || zones.Count == 0)
+            {
+                return;
+            }
+
+            _zones = new GameObject("Deployment zones");
+            _zones.transform.SetParent(_root.transform, false);
+            var vertices = new List<Vector3>();
+            var colors = new List<Color>();
+            var indices = new List<int>();
+            var triangles = new List<int>();
+            foreach (var zone in zones)
+            {
+                triangles.Clear();
+                if (!CloseFight.Core.Geometry.PolygonTriangulator.Triangulate(zone, triangles))
+                {
+                    continue;
+                }
+
+                int start = vertices.Count;
+                foreach (var p in zone)
+                {
+                    vertices.Add(new Vector3(p.x, 0.2f, p.y));
+                    colors.Add(fill);
+                }
+
+                // Map triangles are counter-clockwise seen from above (x east, y north); Unity wants clockwise from the camera.
+                for (int i = 0; i < triangles.Count; i += 3)
+                {
+                    indices.Add(start + triangles[i]);
+                    indices.Add(start + triangles[i + 2]);
+                    indices.Add(start + triangles[i + 1]);
+                }
+
+                var line = CreateLine("Zone outline");
+                line.transform.SetParent(_zones.transform, false);
+                line.enabled = true;
+                line.loop = true;
+                line.widthMultiplier = 0.8f;
+                line.positionCount = zone.Length;
+                for (int i = 0; i < zone.Length; i++)
+                {
+                    line.SetPosition(i, new Vector3(zone[i].x, 0.3f, zone[i].y));
+                }
+
+                SetLineColor(line, outline);
+            }
+
+            var mesh = new Mesh { name = "Deployment zone" };
+            mesh.SetVertices(vertices);
+            mesh.SetColors(colors);
+            mesh.SetTriangles(indices, 0);
+            var fillObject = new GameObject("Zone fill");
+            fillObject.transform.SetParent(_zones.transform, false);
+            fillObject.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var renderer = fillObject.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = lineMaterial;
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+            renderer.sortingOrder = 1;
+        }
+
+        public void HideDeployZones()
+        {
+            SafeDestroy(_zones);
+            _zones = null;
+        }
+
         public void ClearView()
         {
+            _zones = null;
             _equipment.Clear();
             _objectiveRings.Clear();
             _planLines.Clear();

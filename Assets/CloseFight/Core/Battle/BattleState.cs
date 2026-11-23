@@ -8,6 +8,24 @@ using Unity.Mathematics;
 
 namespace CloseFight.Core.Battle
 {
+    /// <summary>Before the shooting starts, each side places its teams inside its deployment zone (CC style).</summary>
+    public enum BattlePhase : byte
+    {
+        Deployment,
+        Battle,
+    }
+
+    /// <summary>Why a team cannot be placed somewhere during deployment.</summary>
+    public enum DeployRefusal : byte
+    {
+        None,
+        NotDeploying,
+        OutsideZone,
+        Blocked,
+        NoRoomForVehicle,
+        GunInBuilding,
+    }
+
     /// <summary>
     /// The whole running battle: map, teams, soldiers, clock and random source.
     /// The presentation layer only reads it and sends orders through
@@ -40,6 +58,11 @@ namespace CloseFight.Core.Battle
         readonly Dictionary<Side, MapEdge> _retreatEdges = new Dictionary<Side, MapEdge>();
         readonly GridPathfinder _pathfinder;
         readonly TeamMovement _movement;
+        readonly Dictionary<Side, List<float2[]>> _deployZones = new Dictionary<Side, List<float2[]>>();
+
+        /// <summary>Battles built directly (tests, tools) start fighting at once; the game starts with deployment.</summary>
+        public BattlePhase Phase { get; private set; } = BattlePhase.Battle;
+        public bool IsDeploying => Phase == BattlePhase.Deployment;
 
         /// <summary>Raised after every simulation tick.</summary>
         public event Action Ticked;
@@ -135,21 +158,51 @@ namespace CloseFight.Core.Battle
             if (vehicleDefinition != null)
             {
                 var vehicle = new Vehicle(_vehicles.Count, vehicleDefinition, team);
-                vehicle.SetPose(position, facing);
-                vehicle.Gun = new HeavyWeapon(vehicleDefinition.Gun, team, vehicle) { Heading = facing, PreviousHeading = facing };
+                vehicle.Gun = new HeavyWeapon(vehicleDefinition.Gun, team, vehicle);
                 team.Vehicle = vehicle;
                 team.Gun = vehicle.Gun;
                 foreach (var crewman in team.Members)
                 {
                     crewman.MountedIn = vehicle;
+                }
+
+                _vehicles.Add(vehicle);
+            }
+            else if (gunTeam != null)
+            {
+                team.GunTeam = gunTeam;
+                team.Gun = new HeavyWeapon(gunTeam.Gun, team, null);
+            }
+
+            Place(team, position, facing);
+
+            _teams.Add(team);
+            return team;
+        }
+
+        /// <summary>
+        /// Puts a team at <paramref name="position"/> facing <paramref name="facing"/>:
+        /// a vehicle and its crew on the spot, a foot team in a line across the facing,
+        /// a gun at its gunner's place. Clears any order.
+        /// </summary>
+        void Place(Team team, float2 position, float facing)
+        {
+            team.Facing = facing;
+            team.Path.Clear();
+            team.Activity = TeamActivity.Idle;
+            team.Order = new TeamOrder(OrderType.None, position);
+            if (team.Vehicle != null)
+            {
+                team.Vehicle.SetPose(position, facing);
+                team.Gun.Heading = team.Gun.PreviousHeading = facing;
+                foreach (var crewman in team.Members)
+                {
                     crewman.SetPosition(position);
                     crewman.SetHeading(facing);
                     crewman.Posture = Posture.Standing;
                 }
 
-                _vehicles.Add(vehicle);
-                _teams.Add(team);
-                return team;
+                return;
             }
 
             _movement.ComputeLineSlots(team, position, Soldier.DirectionOf(facing));
@@ -162,19 +215,124 @@ namespace CloseFight.Core.Battle
             }
 
             team.DeploySlots.Clear();
-            if (gunTeam != null)
+            if (team.Gun != null)
             {
-                team.GunTeam = gunTeam;
-                team.Gun = new HeavyWeapon(gunTeam.Gun, team, null)
-                {
-                    Heading = facing,
-                    PreviousHeading = facing,
-                    Emplacement = team.Members.Count > 1 ? team.Members[1].Position : position,
-                };
+                team.Gun.Heading = team.Gun.PreviousHeading = facing;
+                team.Gun.Emplacement = team.Members.Count > 1 ? team.Members[1].Position : position;
+            }
+        }
+
+        // ---------------------------------------------------------------- deployment
+
+        /// <summary>Adds a deployment zone (a polygon) for a side; a side may have several.</summary>
+        public void AddDeployZone(Side side, IReadOnlyList<float2> polygon)
+        {
+            if (!_deployZones.TryGetValue(side, out var zones))
+            {
+                zones = new List<float2[]>();
+                _deployZones[side] = zones;
             }
 
-            _teams.Add(team);
-            return team;
+            var copy = new float2[polygon.Count];
+            for (int i = 0; i < copy.Length; i++) copy[i] = polygon[i];
+            zones.Add(copy);
+        }
+
+        static readonly List<float2[]> NoZones = new List<float2[]>();
+        public IReadOnlyList<float2[]> DeployZones(Side side) => _deployZones.TryGetValue(side, out var zones) ? zones : NoZones;
+        public bool HasDeployZones => _deployZones.Count > 0;
+
+        public bool InDeployZone(Side side, float2 point)
+        {
+            foreach (var zone in DeployZones(side))
+            {
+                if (Geometry.PolygonMath.Contains(zone, point))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>Opens the deployment phase: the clock waits, and computer commanders place their teams now.</summary>
+        public void BeginDeployment()
+        {
+            Phase = BattlePhase.Deployment;
+            foreach (var commander in _commanders)
+            {
+                commander.Deploy();
+            }
+        }
+
+        /// <summary>
+        /// Ends deployment; the battle clock starts with the next update. Teams
+        /// without an order start lying low in ambush where they were placed, so
+        /// nobody stands in the open waiting to be seen while the player looks around.
+        /// </summary>
+        public void BeginBattle()
+        {
+            Phase = BattlePhase.Battle;
+            foreach (var team in _teams)
+            {
+                if (team.Order.Type == OrderType.None && team.ActiveCount > 0)
+                {
+                    IssueOrder(team, OrderType.Ambush, team.Vehicle != null ? team.Vehicle.Position : team.Centroid);
+                }
+            }
+
+            Visibility.Recompute();
+        }
+
+        /// <summary>Whether <paramref name="team"/> may be placed at <paramref name="position"/> now.</summary>
+        public DeployRefusal CheckDeploy(Team team, float2 position)
+        {
+            if (!IsDeploying)
+            {
+                return DeployRefusal.NotDeploying;
+            }
+
+            if (!InDeployZone(team.Side, position))
+            {
+                return DeployRefusal.OutsideZone;
+            }
+
+            var grid = Map.Grid;
+            var cell = grid.WorldToCell(position);
+            if (!grid.InBounds(cell))
+            {
+                return DeployRefusal.OutsideZone;
+            }
+
+            int index = grid.IndexOf(cell);
+            if (team.Vehicle != null)
+            {
+                return _pathfinder.IsPassable(index, MovementClass.Vehicle) ? DeployRefusal.None : DeployRefusal.NoRoomForVehicle;
+            }
+
+            if (!_pathfinder.IsPassable(index, MovementClass.Infantry))
+            {
+                return DeployRefusal.Blocked;
+            }
+
+            if (team.GunTeam != null && Map.BuildingAt(index) != null)
+            {
+                return DeployRefusal.GunInBuilding;
+            }
+
+            return DeployRefusal.None;
+        }
+
+        /// <summary>Moves a team instantly during deployment. Returns false (and leaves it) when not allowed.</summary>
+        public bool Redeploy(Team team, float2 position, float facing)
+        {
+            if (CheckDeploy(team, position) != DeployRefusal.None)
+            {
+                return false;
+            }
+
+            Place(team, position, facing);
+            return true;
         }
 
         /// <summary>True for the orders that work in the current milestone.</summary>
@@ -553,6 +711,11 @@ namespace CloseFight.Core.Battle
         /// <summary>Feeds real time to the clock and runs the ticks that are due.</summary>
         public void Update(float realDeltaSeconds)
         {
+            if (IsDeploying)
+            {
+                return; // the clock starts when deployment ends
+            }
+
             int ticks = Clock.Advance(realDeltaSeconds);
             for (int i = 0; i < ticks; i++)
             {
@@ -563,7 +726,7 @@ namespace CloseFight.Core.Battle
         /// <summary>Runs exactly one simulation tick. Does nothing once the battle is over.</summary>
         public void Step()
         {
-            if (Victory.IsOver)
+            if (Victory.IsOver || IsDeploying)
             {
                 return;
             }

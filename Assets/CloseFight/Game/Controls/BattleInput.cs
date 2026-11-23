@@ -18,6 +18,7 @@ namespace CloseFight.Game.Controls
     /// - Right-click opens the order menu; pick an order, then left-click the target.
     /// - Hotkeys skip the menu. Space pauses; orders still work while paused (D34).
     /// - The bottom bar lists the player's teams (CC layout); click a card to select it.
+    /// Flow: briefing (choose a side) → deployment (place teams in the zone) → battle.
     /// UI is IMGUI for the prototype; it moves to UI Toolkit when the look is designed.
     /// </summary>
     public sealed class BattleInput : MonoBehaviour
@@ -41,8 +42,22 @@ namespace CloseFight.Game.Controls
         const float MenuWidth = 190f;
         const float MenuRowHeight = 24f;
 
+        enum Stage : byte
+        {
+            Briefing,
+            Deployment,
+            Battle,
+        }
+
+        static readonly Color ZoneFill = new Color(0.95f, 0.85f, 0.35f, 0.16f);
+        static readonly Color ZoneOutline = new Color(1f, 0.85f, 0.3f, 0.85f);
+
         BattleState _battle;
         Side _playerSide;
+        Stage _stage = Stage.Battle;
+        string _scenarioId = "";
+        System.Action<Side> _chooseSide;
+        public Side PlayerSide => _playerSide;
         readonly List<Team> _selection = new List<Team>();
         readonly List<Team> _playerTeams = new List<Team>();
 
@@ -69,10 +84,24 @@ namespace CloseFight.Game.Controls
         GUIStyle _title;
         float _scale = 1f;
 
-        public void Bind(BattleState battle, Side playerSide)
+        /// <summary>
+        /// Takes over a new battle. With <paramref name="chooseSide"/> the briefing opens
+        /// first and reports the side the player picks; otherwise deployment (if the
+        /// battle is deploying) or the battle itself starts right away.
+        /// </summary>
+        public void Bind(BattleState battle, Side playerSide, string scenarioId, System.Action<Side> chooseSide)
         {
             _battle = battle;
             _playerSide = playerSide;
+            _scenarioId = scenarioId ?? "";
+            _chooseSide = chooseSide;
+            _reportHidden = false;
+            _stage = chooseSide != null ? Stage.Briefing : battle.IsDeploying ? Stage.Deployment : Stage.Battle;
+            if (_stage == Stage.Deployment)
+            {
+                ShowZones();
+            }
+
             _playerTeams.Clear();
             foreach (var team in battle.Teams)
             {
@@ -83,6 +112,108 @@ namespace CloseFight.Game.Controls
             }
 
             ClearSelection();
+        }
+
+        /// <summary>The briefing closed without changing sides.</summary>
+        public void EndBriefing()
+        {
+            _stage = _battle.IsDeploying ? Stage.Deployment : Stage.Battle;
+            if (_stage == Stage.Deployment)
+            {
+                ShowZones();
+            }
+        }
+
+        /// <summary>For <see cref="Battle.AutoScreenshot"/>: pick a side as if from the briefing.</summary>
+        internal void DebugChooseSide(Side side)
+        {
+            if (_chooseSide != null)
+            {
+                _chooseSide(side);
+            }
+        }
+
+        internal void DebugStartBattle()
+        {
+            if (_stage == Stage.Deployment)
+            {
+                StartBattle();
+            }
+        }
+
+        /// <summary>For <see cref="Battle.AutoScreenshot"/>: AI plan overlay and camera framing.</summary>
+        internal void DebugView(bool aiPlan, string zoom, string center)
+        {
+            unitsView.ShowAiPlan = aiPlan;
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            if (!string.IsNullOrEmpty(zoom))
+            {
+                worldCamera.orthographicSize = float.Parse(zoom, inv);
+            }
+
+            if (!string.IsNullOrEmpty(center))
+            {
+                var parts = center.Split(',');
+                cameraController.FocusOn(new Vector3(float.Parse(parts[0], inv), 0f, float.Parse(parts[1], inv)));
+            }
+        }
+
+        void ShowZones() => unitsView.ShowDeployZones(_battle.DeployZones(_playerSide), ZoneFill, ZoneOutline);
+
+        void StartBattle()
+        {
+            _battle.BeginBattle();
+            unitsView.HideDeployZones();
+            _stage = Stage.Battle;
+            ShowToast(Loc.T("ui.battle_started"));
+        }
+
+        /// <summary>
+        /// Deployment: the selected teams jump to the clicked spot, keeping their
+        /// positions relative to each other, facing the enemy's side of the map.
+        /// </summary>
+        void DeploySelection(float2 target)
+        {
+            float2 center = float2.zero;
+            foreach (var team in _selection)
+            {
+                center += Anchor(team);
+            }
+
+            center /= math.max(1, _selection.Count);
+            float facing = Soldier.HeadingOf(math.normalizesafe(target - _battle.EdgePoint(_playerSide, target), new float2(1f, 0f)));
+            var refusal = DeployRefusal.None;
+            foreach (var team in _selection)
+            {
+                float2 spot = _selection.Count == 1 ? target : target + (Anchor(team) - center);
+                var why = _battle.CheckDeploy(team, spot);
+                if (why == DeployRefusal.None)
+                {
+                    _battle.Redeploy(team, spot, facing);
+                }
+                else if (refusal == DeployRefusal.None)
+                {
+                    refusal = why;
+                }
+            }
+
+            if (refusal != DeployRefusal.None)
+            {
+                ShowToast(Loc.T(DeployRefusalKey(refusal)));
+            }
+        }
+
+        static float2 Anchor(Team team) => team.Vehicle != null ? team.Vehicle.Position : team.Centroid;
+
+        static string DeployRefusalKey(DeployRefusal refusal)
+        {
+            switch (refusal)
+            {
+                case DeployRefusal.OutsideZone: return "deploy.outside_zone";
+                case DeployRefusal.NoRoomForVehicle: return "deploy.no_room";
+                case DeployRefusal.GunInBuilding: return "deploy.gun_in_building";
+                default: return "deploy.blocked";
+            }
         }
 
         void Update()
@@ -134,14 +265,25 @@ namespace CloseFight.Game.Controls
                 return;
             }
 
-            if (keyboard.spaceKey.wasPressedThisFrame && !_battle.Victory.IsOver)
-            {
-                _battle.Clock.Paused = !_battle.Clock.Paused;
-            }
-
             if (keyboard.lKey.wasPressedThisFrame)
             {
                 Loc.ToggleLanguage();
+            }
+
+            if (_stage == Stage.Briefing)
+            {
+                return;
+            }
+
+            if (_stage == Stage.Deployment && (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame))
+            {
+                StartBattle();
+                return;
+            }
+
+            if (_stage == Stage.Battle && keyboard.spaceKey.wasPressedThisFrame && !_battle.Victory.IsOver)
+            {
+                _battle.Clock.Paused = !_battle.Clock.Paused;
             }
 
             // Debug: show the enemy AI's plan (positions and fallbacks).
@@ -172,7 +314,7 @@ namespace CloseFight.Game.Controls
                 }
             }
 
-            if (_selection.Count == 0)
+            if (_selection.Count == 0 || _stage != Stage.Battle)
             {
                 return;
             }
@@ -223,8 +365,15 @@ namespace CloseFight.Game.Controls
 
             Vector2 screen = mouse.position.ReadValue();
             bool overUi = IsOverUi(screen);
+            if (_stage == Stage.Briefing)
+            {
+                return;
+            }
 
-            if (mouse.rightButton.wasPressedThisFrame && !overUi)
+            // Ctrl + click works as a right click (Mac trackpads without secondary click).
+            bool ctrl = Keyboard.current != null && Keyboard.current.ctrlKey.isPressed;
+            bool secondary = mouse.rightButton.wasPressedThisFrame || (ctrl && mouse.leftButton.wasPressedThisFrame);
+            if (secondary && !overUi && _stage == Stage.Battle)
             {
                 if (_pendingOrder != OrderType.None)
                 {
@@ -237,7 +386,7 @@ namespace CloseFight.Game.Controls
                 }
             }
 
-            if (mouse.leftButton.wasPressedThisFrame)
+            if (mouse.leftButton.wasPressedThisFrame && !ctrl)
             {
                 if (_menuOpen && !_menuRect.Contains(ToGui(screen)))
                 {
@@ -275,6 +424,10 @@ namespace CloseFight.Game.Controls
                     IssueToSelection(_pendingOrder, ScreenToMap(screen));
                     _pendingOrder = OrderType.None;
                 }
+                else if (_stage == Stage.Deployment && !additive && _selection.Count > 0 && PickOwn(screen) == null)
+                {
+                    DeploySelection(ScreenToMap(screen));
+                }
                 else
                 {
                     ClickSelect(screen, additive);
@@ -282,6 +435,12 @@ namespace CloseFight.Game.Controls
 
                 _dragging = false;
             }
+        }
+
+        Soldier PickOwn(Vector2 screen)
+        {
+            float radius = Mathf.Max(1.2f, worldCamera.orthographicSize * 0.025f);
+            return unitsView.PickSoldier(ScreenToMap(screen), radius, _playerSide);
         }
 
         void ClickSelect(Vector2 screen, bool additive)
@@ -450,9 +609,14 @@ namespace CloseFight.Game.Controls
         bool IsOverUi(Vector2 screen)
         {
             var gui = ToGui(screen);
-            if (_battle.Victory.IsOver && !_reportHidden)
+            if (_stage == Stage.Briefing || (_battle.Victory.IsOver && !_reportHidden))
             {
-                return true; // the after-action report covers the screen
+                return true; // the briefing or the after-action report covers the screen
+            }
+
+            if (gui.y < 26f)
+            {
+                return true; // top bar
             }
 
             return (_menuOpen && _menuRect.Contains(gui)) || _rosterRect.Contains(gui) || _infoRect.Contains(gui);
@@ -492,6 +656,12 @@ namespace CloseFight.Game.Controls
             float width = Screen.width / _scale;
             float height = Screen.height / _scale;
 
+            if (_stage == Stage.Briefing)
+            {
+                DrawBriefing(width, height);
+                return;
+            }
+
             DrawObjectiveLabels();
             DrawTeamLabels();
             DrawTopBar(width);
@@ -518,8 +688,9 @@ namespace CloseFight.Game.Controls
         {
             Fill(new Rect(0, 0, width, 26), new Color(0f, 0f, 0f, 0.55f));
             var victory = _battle.Victory;
-            GUI.Label(new Rect(10, 4, 230, 20),
-                $"{Loc.T("ui.time")}  {Clock(_battle.Clock.ElapsedSeconds)} / {Clock(victory.TimeLimitSeconds)}", _label);
+            GUI.Label(new Rect(10, 4, 230, 20), _stage == Stage.Deployment
+                ? $"{Loc.T("ui.deployment")}  ·  {Clock(victory.TimeLimitSeconds)}"
+                : $"{Loc.T("ui.time")}  {Clock(_battle.Clock.ElapsedSeconds)} / {Clock(victory.TimeLimitSeconds)}", _label);
 
             // Objective points and our own force morale (the enemy's stays hidden, as in CC).
             var enemy = _playerSide == Side.German ? Side.Soviet : Side.German;
@@ -530,10 +701,27 @@ namespace CloseFight.Game.Controls
             DrawBar(new Rect(570, 10, 110, 8), morale / 100f, Color.Lerp(new Color(0.9f, 0.2f, 0.1f), new Color(0.3f, 0.8f, 0.3f), morale / 100f));
             GUI.Label(new Rect(688, 5, 50, 20), $"{morale:0}%", _small);
 
-            GUI.Label(new Rect(745, 5, width - 1000, 20), Loc.T("ui.help"), _small);
+            GUI.Label(new Rect(745, 5, width - 1180, 20), Loc.T("ui.help"), _small);
+
+            if (GUI.Button(new Rect(width - 425, 2, 70, 22), $"{GameSettings.FrameCap} FPS"))
+            {
+                GameSettings.ToggleFrameCap();
+            }
+
+            if (GUI.Button(new Rect(width - 350, 2, 95, 22), Loc.T(GameSettings.TrackpadMode ? "ui.trackpad_on" : "ui.trackpad_off")))
+            {
+                GameSettings.TrackpadMode = !GameSettings.TrackpadMode;
+            }
 
             bool armed = Time.unscaledTime < _ceasefireArmedUntil;
-            if (!victory.IsOver && GUI.Button(new Rect(width - 250, 2, 150, 22), Loc.T(armed ? "ui.ceasefire_confirm" : "ui.ceasefire")))
+            if (_stage == Stage.Deployment)
+            {
+                if (GUI.Button(new Rect(width - 250, 2, 150, 22), Loc.T("ui.start_battle")))
+                {
+                    StartBattle();
+                }
+            }
+            else if (!victory.IsOver && GUI.Button(new Rect(width - 250, 2, 150, 22), Loc.T(armed ? "ui.ceasefire_confirm" : "ui.ceasefire")))
             {
                 if (armed)
                 {
@@ -550,10 +738,53 @@ namespace CloseFight.Game.Controls
                 Loc.ToggleLanguage();
             }
 
-            if (_battle.Clock.Paused && !victory.IsOver)
+            if (_stage == Stage.Deployment)
+            {
+                Fill(new Rect(width * 0.5f - 330, 34, 660, 30), new Color(0.35f, 0.28f, 0.05f, 0.8f));
+                GUI.Label(new Rect(width * 0.5f - 330, 34, 660, 30), Loc.T("ui.deploy_hint"), _smallCenter);
+            }
+            else if (_battle.Clock.Paused && !victory.IsOver)
             {
                 Fill(new Rect(width * 0.5f - 160, 34, 320, 34), new Color(0.5f, 0.1f, 0.05f, 0.8f));
                 GUI.Label(new Rect(width * 0.5f - 160, 34, 320, 34), Loc.T("ui.paused"), _center);
+            }
+        }
+
+        /// <summary>The scenario's situation and goals, and the choice of side.</summary>
+        void DrawBriefing(float width, float height)
+        {
+            Fill(new Rect(0, 0, width, height), new Color(0f, 0f, 0f, 0.55f));
+            var panel = new Rect(width * 0.5f - 340, height * 0.5f - 250, 680, 500);
+            Fill(panel, new Color(0.1f, 0.09f, 0.08f, 0.95f));
+
+            string key = "scenario." + _scenarioId;
+            GUI.Label(new Rect(panel.x, panel.y + 18, panel.width, 34), Loc.T(key + ".title"), _title);
+            GUI.Label(new Rect(panel.x, panel.y + 56, panel.width, 20), Loc.T(key + ".date"), _smallCenter);
+
+            var wrap = new GUIStyle(_label) { wordWrap = true, fontSize = 14 };
+            GUI.Label(new Rect(panel.x + 34, panel.y + 92, panel.width - 68, 150), Loc.T(key + ".brief"), wrap);
+
+            var goal = new GUIStyle(_small) { wordWrap = true };
+            GUI.Label(new Rect(panel.x + 34, panel.y + 250, panel.width - 68, 20), Loc.T("ui.goal_german"), _label);
+            GUI.Label(new Rect(panel.x + 34, panel.y + 272, panel.width - 68, 44), Loc.T(key + ".goal_german"), goal);
+            GUI.Label(new Rect(panel.x + 34, panel.y + 320, panel.width - 68, 20), Loc.T("ui.goal_soviet"), _label);
+            GUI.Label(new Rect(panel.x + 34, panel.y + 342, panel.width - 68, 44), Loc.T(key + ".goal_soviet"), goal);
+
+            if (GUI.Button(new Rect(panel.x + 40, panel.yMax - 92, 290, 36), Loc.T("ui.command_german")))
+            {
+                _chooseSide?.Invoke(Side.German);
+            }
+
+            if (GUI.Button(new Rect(panel.xMax - 330, panel.yMax - 92, 290, 36), Loc.T("ui.command_soviet")))
+            {
+                _chooseSide?.Invoke(Side.Soviet);
+            }
+
+            GUI.Label(new Rect(panel.x + 34, panel.yMax - 48, panel.width - 68, 36), Loc.T("ui.side_hint"), new GUIStyle(_small) { wordWrap = true, alignment = TextAnchor.MiddleCenter, normal = { textColor = new Color(0.8f, 0.75f, 0.6f) } });
+
+            if (GUI.Button(new Rect(panel.xMax - 90, panel.y + 10, 80, 22), Loc.T("ui.language")))
+            {
+                Loc.ToggleLanguage();
             }
         }
 
@@ -852,7 +1083,9 @@ namespace CloseFight.Game.Controls
 
                 if (wild > 0) tags.Add(Loc.T("team.out_of_control") + $" ×{wild}");
                 if (pinned * 2 >= team.ActiveCount) tags.Add(Loc.T("activity.pinned"));
-                if (team.TotalAmmo == 0) tags.Add(Loc.T("ui.ammo_out"));
+                // Tanks and guns live on their shells (a StuG's crew carries no small arms at all).
+                bool outOfAmmo = team.Gun != null ? team.Gun.AmmoAp + team.Gun.AmmoHe == 0 : team.TotalAmmo == 0;
+                if (outOfAmmo) tags.Add(Loc.T("ui.ammo_out"));
                 if (now - team.LastRefusalAt < 5f) tags.Add(Loc.T(Loc.RefusalKey(team.LastRefusal)));
 
                 if (tags.Count == 0)
