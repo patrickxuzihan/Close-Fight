@@ -25,6 +25,7 @@ namespace CloseFight.Core.Battle
         /// <summary>AI commanders run every <see cref="AiIntervalTicks"/> ticks (the AI does not think every frame).</summary>
         public const int AiIntervalTicks = 20;
         public Gunnery Gunnery { get; }
+        public VictoryConditions Victory { get; }
         public Visibility Visibility { get; }
         public Combat Combat { get; }
         public Psychology Psychology { get; }
@@ -54,6 +55,7 @@ namespace CloseFight.Core.Battle
             Psychology = new Psychology(this, _movement, _pathfinder);
             _vehicleMovement = new VehicleMovement(map, _pathfinder);
             Gunnery = new Gunnery(this);
+            Victory = new VictoryConditions(this);
             _retreatEdges[Side.German] = MapEdge.South;
             _retreatEdges[Side.Soviet] = MapEdge.North;
         }
@@ -558,9 +560,14 @@ namespace CloseFight.Core.Battle
             }
         }
 
-        /// <summary>Runs exactly one simulation tick.</summary>
+        /// <summary>Runs exactly one simulation tick. Does nothing once the battle is over.</summary>
         public void Step()
         {
+            if (Victory.IsOver)
+            {
+                return;
+            }
+
             foreach (var soldier in _soldiers)
             {
                 soldier.PreviousPosition = soldier.Position;
@@ -591,6 +598,8 @@ namespace CloseFight.Core.Battle
                     commander.Think();
                 }
             }
+
+            Victory.Step();
             Clock.CountTick();
             Smoke.Expire(Clock.ElapsedSeconds);
             if (Clock.TickCount % Visibility.UpdateIntervalTicks == 0)

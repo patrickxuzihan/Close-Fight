@@ -49,6 +49,7 @@ namespace CloseFight.Core.Battle
             public float ImpactAt;
             public GunDefinition Gun;
             public bool Smoke;
+            public int ShooterId;
         }
 
         struct Aim
@@ -107,7 +108,7 @@ namespace CloseFight.Core.Battle
                     }
                     else
                     {
-                        Blast(shell.Point, shell.Gun, now);
+                        Blast(shell.Point, shell.Gun, now, _battle.Soldiers[shell.ShooterId]);
                     }
                 }
             }
@@ -405,7 +406,7 @@ namespace CloseFight.Core.Battle
 
                 float scatter = 4f + range * 0.03f;
                 float2 impact = aim.Point + RandomInDisk(scatter);
-                _shells.Add(new PendingShell { Point = impact, ImpactAt = now + 4f + range / 150f, Gun = gun, Smoke = aim.Smoke });
+                _shells.Add(new PendingShell { Point = impact, ImpactAt = now + 4f + range / 150f, Gun = gun, Smoke = aim.Smoke, ShooterId = op.Id });
                 return;
             }
 
@@ -417,7 +418,7 @@ namespace CloseFight.Core.Battle
                 weapon.AmmoAp--;
                 if (hit)
                 {
-                    bool pierced = ArmorHit(aim.Vehicle, from, gun.PenetrationAt(range), now);
+                    bool pierced = ArmorHit(aim.Vehicle, from, gun.PenetrationAt(range), now, op);
                     _battle.Combat.RecordShot(op.Id, from, aim.Vehicle.Position, pierced, WeaponClass.Cannon, now);
                 }
                 else
@@ -431,7 +432,7 @@ namespace CloseFight.Core.Battle
             weapon.AmmoHe--;
             float2 burst = hit ? aim.Point : aim.Point + RandomOffset(2f, 4f + range * 0.02f);
             _battle.Combat.RecordShot(op.Id, from, burst, hit, WeaponClass.Cannon, now);
-            Blast(burst, gun, now);
+            Blast(burst, gun, now, op);
         }
 
         float DirectHitChance(HeavyWeapon weapon, Soldier op, Aim aim, float range)
@@ -514,7 +515,7 @@ namespace CloseFight.Core.Battle
         }
 
         /// <summary>Resolves an armor-piercing hit. Returns true if it went through.</summary>
-        public bool ArmorHit(Vehicle vehicle, float2 from, float penetration, float now)
+        public bool ArmorHit(Vehicle vehicle, float2 from, float penetration, float now, Soldier by = null)
         {
             float armor = EffectiveArmor(vehicle.Definition, vehicle.HullHeading, vehicle.Position, from, out var facing);
             armor *= _battle.Random.Range(0.9f, 1.1f);
@@ -535,11 +536,11 @@ namespace CloseFight.Core.Battle
             float roll = _battle.Random.NextFloat();
             if (roll < 0.25f)
             {
-                Destroy(vehicle, now);
+                Destroy(vehicle, now, by);
             }
             else if (roll < 0.55f)
             {
-                HitCrew(vehicle, _battle.Random.Range(1, 3), now);
+                HitCrew(vehicle, _battle.Random.Range(1, 3), now, by);
             }
             else if (roll < 0.70f)
             {
@@ -565,7 +566,7 @@ namespace CloseFight.Core.Battle
             }
         }
 
-        void HitCrew(Vehicle vehicle, int count, float now)
+        void HitCrew(Vehicle vehicle, int count, float now, Soldier by = null)
         {
             for (int i = 0; i < count; i++)
             {
@@ -583,13 +584,18 @@ namespace CloseFight.Core.Battle
                     return;
                 }
 
-                _battle.Combat.InflictHit(aboard[_battle.Random.Range(0, aboard.Count)], 0.8f, now);
+                _battle.Combat.InflictHit(aboard[_battle.Random.Range(0, aboard.Count)], 0.8f, now, by);
             }
         }
 
-        void Destroy(Vehicle vehicle, float now)
+        void Destroy(Vehicle vehicle, float now, Soldier by = null)
         {
             vehicle.Destroyed = true;
+            if (by != null && by.Team.Side != vehicle.Team.Side)
+            {
+                by.VehiclesKnockedOut++;
+            }
+
             vehicle.IsMoving = false;
             foreach (var member in vehicle.Team.Members)
             {
@@ -598,6 +604,11 @@ namespace CloseFight.Core.Battle
                     if (_battle.Random.Chance(0.55f))
                     {
                         member.Status = SoldierStatus.Dead;
+                        if (by != null)
+                        {
+                            by.Kills++;
+                        }
+
                         _battle.Psychology.OnCasualty(member, SoldierStatus.Dead, now);
                     }
                     else
@@ -731,24 +742,24 @@ namespace CloseFight.Core.Battle
                 _explosions.Add(new ExplosionEvent(burst, 2f, now, false));
                 if (hit)
                 {
-                    CloseAssaultHit(vehicle, now);
+                    CloseAssaultHit(vehicle, now, thrower);
                 }
 
                 return;
             }
         }
 
-        void CloseAssaultHit(Vehicle vehicle, float now)
+        void CloseAssaultHit(Vehicle vehicle, float now, Soldier by)
         {
             ShakeCrew(vehicle, 50f, now);
             float roll = _battle.Random.NextFloat();
             if (roll < 0.2f)
             {
-                Destroy(vehicle, now);
+                Destroy(vehicle, now, by);
             }
             else if (roll < 0.45f)
             {
-                HitCrew(vehicle, 1, now);
+                HitCrew(vehicle, 1, now, by);
             }
             else if (roll < 0.55f)
             {
@@ -763,7 +774,7 @@ namespace CloseFight.Core.Battle
         // ------------------------------------------------------------ blast
 
         /// <summary>A high-explosive burst: casualties and suppression around it, damage to the building it lands in.</summary>
-        public void Blast(float2 point, GunDefinition gun, float now)
+        public void Blast(float2 point, GunDefinition gun, float now, Soldier by = null)
         {
             _explosions.Add(new ExplosionEvent(point, gun.HeLethalRadius, now, false));
             var map = _battle.Map;
@@ -795,7 +806,7 @@ namespace CloseFight.Core.Battle
 
                     if (_battle.Random.Chance(chance))
                     {
-                        _battle.Combat.InflictHit(soldier, 0.7f, now);
+                        _battle.Combat.InflictHit(soldier, 0.7f, now, by);
                     }
                 }
 

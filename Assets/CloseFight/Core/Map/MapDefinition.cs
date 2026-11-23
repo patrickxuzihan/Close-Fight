@@ -24,6 +24,23 @@ namespace CloseFight.Core.Map
         public List<AreaDefinition> areas = new List<AreaDefinition>();
         public List<BuildingDefinition> buildings = new List<BuildingDefinition>();
         public List<WallDefinition> walls = new List<WallDefinition>();
+        /// <summary>Solid objects: freight wagons, the station fountain, barricades.</summary>
+        public List<PropDefinition> props = new List<PropDefinition>();
+    }
+
+    /// <summary>
+    /// A solid object that is not a building: nobody can stand in it, but it
+    /// blocks sight up to its height and gives cover to whoever is behind it.
+    /// </summary>
+    [Serializable]
+    public sealed class PropDefinition
+    {
+        /// <summary>"wagon", "fountain", "barricade" (sets the color in the view).</summary>
+        public string kind = "wagon";
+        public List<MapPoint> polygon = new List<MapPoint>();
+        public float height = 3f;
+        /// <summary>Cover 0..100 for someone right behind it.</summary>
+        public float cover = 70f;
     }
 
     [Serializable]

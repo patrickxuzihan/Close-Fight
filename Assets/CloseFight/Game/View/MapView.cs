@@ -50,6 +50,7 @@ namespace CloseFight.Game.View
             BuildGround();
             BuildBuildings();
             BuildWalls();
+            BuildProps();
             BuildOverlay();
 
             if (!Application.isPlaying)
@@ -300,6 +301,39 @@ namespace CloseFight.Game.View
 
             AddWallMesh(solid, "Walls", TerrainPalette.Wall);
             AddWallMesh(fences, "Fences", TerrainPalette.Fence);
+        }
+
+        void BuildProps()
+        {
+            var byKind = new Dictionary<string, PrismMeshBuilder>();
+            var footprint = new List<float2>();
+            foreach (var prop in _map.Definition.props)
+            {
+                if (prop.polygon == null || prop.polygon.Count < 3)
+                {
+                    continue;
+                }
+
+                string kind = string.IsNullOrEmpty(prop.kind) ? "prop" : prop.kind;
+                if (!byKind.TryGetValue(kind, out var builder))
+                {
+                    builder = new PrismMeshBuilder();
+                    byKind[kind] = builder;
+                }
+
+                footprint.Clear();
+                foreach (var point in prop.polygon)
+                {
+                    footprint.Add(point);
+                }
+
+                builder.AddPrism(footprint, 0f, prop.height);
+            }
+
+            foreach (var pair in byKind)
+            {
+                AddWallMesh(pair.Value, "Props " + pair.Key, TerrainPalette.Prop(pair.Key));
+            }
         }
 
         void AddWallMesh(PrismMeshBuilder builder, string name, Color color)

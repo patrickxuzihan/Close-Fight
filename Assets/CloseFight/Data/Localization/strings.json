@@ -426,5 +426,133 @@
   "objective.crossroads": {
     "zh": "十字路口",
     "en": "Crossroads"
+  },
+  "map.stalingrad_station.name": {
+    "zh": "斯大林格勒第一火车站",
+    "en": "Stalingrad-1 Station"
+  },
+  "objective.signal_box": {
+    "zh": "信号楼",
+    "en": "Signal box"
+  },
+  "objective.square": {
+    "zh": "站前广场",
+    "en": "Station square"
+  },
+  "objective.east_corner": {
+    "zh": "东街角",
+    "en": "East corner"
+  },
+  "building.station": {
+    "zh": "火车站",
+    "en": "Railway station"
+  },
+  "building.station_tower": {
+    "zh": "钟楼",
+    "en": "Clock tower"
+  },
+  "building.warehouse": {
+    "zh": "仓库",
+    "en": "Warehouse"
+  },
+  "building.post_office": {
+    "zh": "邮局",
+    "en": "Post office"
+  },
+  "building.east_corner": {
+    "zh": "街角楼",
+    "en": "Corner house"
+  },
+  "building.signal_box": {
+    "zh": "信号楼",
+    "en": "Signal box"
+  },
+  "building.engine_shed": {
+    "zh": "机车库",
+    "en": "Engine shed"
+  },
+  "ui.objectives": {
+    "zh": "目标点",
+    "en": "Objectives"
+  },
+  "ui.force_morale": {
+    "zh": "全军士气",
+    "en": "Force morale"
+  },
+  "ui.ceasefire": {
+    "zh": "请求停火",
+    "en": "Request ceasefire"
+  },
+  "ui.ceasefire_confirm": {
+    "zh": "再点一次确认停火",
+    "en": "Click again to confirm"
+  },
+  "ui.contested": {
+    "zh": "争夺中",
+    "en": "contested"
+  },
+  "ui.losses": {
+    "zh": "伤亡",
+    "en": "Losses"
+  },
+  "ui.unhurt": {
+    "zh": "完好",
+    "en": "Unhurt"
+  },
+  "ui.vehicles_lost": {
+    "zh": "损失载具",
+    "en": "Vehicles lost"
+  },
+  "ui.your_men": {
+    "zh": "你的部下",
+    "en": "Your men"
+  },
+  "ui.kills": {
+    "zh": "击倒",
+    "en": "Kills"
+  },
+  "ui.tanks": {
+    "zh": "击毁坦克",
+    "en": "Tanks"
+  },
+  "ui.play_again": {
+    "zh": "再来一局",
+    "en": "Play again"
+  },
+  "ui.view_battlefield": {
+    "zh": "查看战场",
+    "en": "View battlefield"
+  },
+  "result.german_victory": {
+    "zh": "德军胜利",
+    "en": "German victory"
+  },
+  "result.soviet_victory": {
+    "zh": "苏军胜利",
+    "en": "Soviet victory"
+  },
+  "result.contested": {
+    "zh": "胜负未分：本区块仍在争夺中",
+    "en": "No decision: the sector remains contested"
+  },
+  "result.reason.german_morale": {
+    "zh": "德军全军士气崩溃，要求停火",
+    "en": "German force morale broke; they asked for a ceasefire"
+  },
+  "result.reason.soviet_morale": {
+    "zh": "苏军全军士气崩溃，要求停火",
+    "en": "Soviet force morale broke; they asked for a ceasefire"
+  },
+  "result.reason.time": {
+    "zh": "战斗时间结束，按目标点判定",
+    "en": "Time ran out; objectives decide"
+  },
+  "result.reason.german_ceasefire": {
+    "zh": "德军请求停火，按目标点判定",
+    "en": "The Germans requested a ceasefire; objectives decide"
+  },
+  "result.reason.soviet_ceasefire": {
+    "zh": "苏军请求停火，按目标点判定",
+    "en": "The Soviets requested a ceasefire; objectives decide"
   }
 }

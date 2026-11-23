@@ -125,7 +125,17 @@ namespace CloseFight.EditorTools
         /// </summary>
         static void RunDemo(BattleBootstrap bootstrap, BattleState battle, float seconds)
         {
-            var orders = new (string key, OrderType order, float x, float y)[]
+            bool station = battle.Map.Definition.id == "stalingrad_station";
+            var orders = station ? new (string key, OrderType order, float x, float y)[]
+            {
+                ("de_stug", OrderType.Move, 86f, 62f),        // along the southern avenue to the yard
+                ("de_mortar", OrderType.AreaFire, 79f, 130f), // shell the signal box
+                ("de_1", OrderType.Move, 86f, 40f),
+                ("de_2", OrderType.Move, 66f, 100f),
+                ("de_3", OrderType.Crawl, 60f, 160f),
+                ("de_mg1", OrderType.Move, 56f, 118f),
+                ("de_4", OrderType.Move, 80f, 232f),
+            } : new (string key, OrderType order, float x, float y)[]
             {
                 ("de_stug", OrderType.Move, 77f, 50f),        // the assault gun leads up the road
                 ("de_mortar", OrderType.AreaFire, 59f, 82f),  // mortar the concrete block
@@ -157,10 +167,17 @@ namespace CloseFight.EditorTools
             }
 
             int ticks = Mathf.CeilToInt(seconds / SimClock.TickSeconds);
-            for (int i = 0; i < ticks; i++)
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            for (int i = 0; i < ticks && !battle.Victory.IsOver; i++)
             {
                 battle.Step();
             }
+
+            watch.Stop();
+            Debug.Log($"Close Fight: simulated {battle.Clock.ElapsedSeconds:0} s of battle in {watch.ElapsedMilliseconds} ms " +
+                      $"({battle.Clock.TickCount * 1000f / math.max(1, watch.ElapsedMilliseconds):0} ticks/s; real time needs 10). " +
+                      $"Result {battle.Victory.Result} ({battle.Victory.EndReasonKey}), points DE {battle.Victory.Points(Side.German)} SU {battle.Victory.Points(Side.Soviet)}, " +
+                      $"force morale DE {battle.Victory.ForceMorale(Side.German):0} SU {battle.Victory.ForceMorale(Side.Soviet):0}");
 
             // Optional: shell the concrete block to show the collapse decal.
             if (Arg("-captureBlast", null) != null)

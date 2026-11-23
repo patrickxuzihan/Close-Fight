@@ -30,6 +30,8 @@ namespace CloseFight.Core.Battle
         public float Radius { get; }
         public int Value { get; }
         public Side Owner { get; internal set; }
+        /// <summary>Both sides have men inside: it does not change hands until one is driven out.</summary>
+        public bool Contested { get; internal set; }
 
         public Objective(ObjectiveDefinition definition)
         {

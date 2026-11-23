@@ -13,7 +13,8 @@ namespace CloseFight.Core.AI
     /// </summary>
     public sealed class DangerMap
     {
-        public const float CoarseCell = 4f;
+        /// <summary>Coarse cell size: 4 m on small maps, larger on big ones.</summary>
+        public float CoarseCell { get; }
         const float ThreatRange = 350f;
         const float EyeHeight = 1.0f;
 
@@ -26,6 +27,7 @@ namespace CloseFight.Core.AI
         {
             _map = map;
             var grid = map.Grid;
+            CoarseCell = math.max(4f, math.round(math.sqrt(grid.Width * grid.Height) * grid.CellSize / 50f));
             _width = (int)math.ceil(grid.Width * grid.CellSize / CoarseCell);
             _height = (int)math.ceil(grid.Height * grid.CellSize / CoarseCell);
             _danger = new float[_width * _height];

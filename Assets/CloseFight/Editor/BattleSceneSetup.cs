@@ -22,8 +22,9 @@ namespace CloseFight.EditorTools
     {
         public const string ScenePath = "Assets/CloseFight/Scenes/Battle.unity";
         const string MaterialFolder = "Assets/CloseFight/Art/Materials";
-        const string TestMapPath = "Assets/CloseFight/Data/Maps/test_block.json";
-        const string TestScenarioPath = "Assets/CloseFight/Data/Scenarios/test_block_skirmish.json";
+        // M8: the battle scene plays the station map; the test block stays for tests and experiments.
+        const string TestMapPath = "Assets/CloseFight/Data/Maps/stalingrad_station.json";
+        const string TestScenarioPath = "Assets/CloseFight/Data/Scenarios/stalingrad_station_sept14.json";
         const string LocalizationPath = "Assets/CloseFight/Data/Localization/strings.json";
 
         static TextAsset LoadText(string path)

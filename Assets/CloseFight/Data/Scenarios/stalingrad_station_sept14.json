@@ -1,0 +1,353 @@
+{
+  "id": "stalingrad_station_sept14",
+  "mapId": "stalingrad_station",
+  "seed": 19420914,
+  "playerSide": "German",
+  "timeLimitMinutes": 45,
+  "sides": [
+    {
+      "side": "German",
+      "retreatEdge": "West"
+    },
+    {
+      "side": "Soviet",
+      "retreatEdge": "East"
+    }
+  ],
+  "teams": [
+    {
+      "key": "de_hq",
+      "side": "German",
+      "type": "Headquarters",
+      "displayName": "Kompanietrupp",
+      "size": 0,
+      "position": {
+        "x": 14,
+        "y": 140
+      },
+      "facing": 90,
+      "experience": 60
+    },
+    {
+      "key": "de_1",
+      "side": "German",
+      "type": "Rifle",
+      "displayName": "1. Gruppe",
+      "size": 0,
+      "position": {
+        "x": 18,
+        "y": 32
+      },
+      "facing": 90,
+      "experience": 50
+    },
+    {
+      "key": "de_2",
+      "side": "German",
+      "type": "Rifle",
+      "displayName": "2. Gruppe",
+      "size": 0,
+      "position": {
+        "x": 18,
+        "y": 96
+      },
+      "facing": 90,
+      "experience": 50
+    },
+    {
+      "key": "de_3",
+      "side": "German",
+      "type": "Rifle",
+      "displayName": "3. Gruppe",
+      "size": 0,
+      "position": {
+        "x": 18,
+        "y": 170
+      },
+      "facing": 90,
+      "experience": 50
+    },
+    {
+      "key": "de_4",
+      "side": "German",
+      "type": "Rifle",
+      "displayName": "4. Gruppe",
+      "size": 0,
+      "position": {
+        "x": 18,
+        "y": 236
+      },
+      "facing": 90,
+      "experience": 50
+    },
+    {
+      "key": "de_mg1",
+      "side": "German",
+      "type": "MachineGun",
+      "displayName": "MG-Trupp 1",
+      "size": 0,
+      "position": {
+        "x": 24,
+        "y": 118
+      },
+      "facing": 90,
+      "experience": 55
+    },
+    {
+      "key": "de_mg2",
+      "side": "German",
+      "type": "MachineGun",
+      "displayName": "MG-Trupp 2",
+      "size": 0,
+      "position": {
+        "x": 24,
+        "y": 214
+      },
+      "facing": 90,
+      "experience": 55
+    },
+    {
+      "key": "de_mortar",
+      "side": "German",
+      "type": "Mortar",
+      "displayName": "Granatwerfer",
+      "size": 0,
+      "position": {
+        "x": 6,
+        "y": 152
+      },
+      "facing": 90,
+      "experience": 50,
+      "equipment": "grw34"
+    },
+    {
+      "key": "de_pak",
+      "side": "German",
+      "type": "AntiTankGun",
+      "displayName": "PaK 38",
+      "size": 0,
+      "position": {
+        "x": 12,
+        "y": 186
+      },
+      "facing": 90,
+      "experience": 50,
+      "equipment": "pak38"
+    },
+    {
+      "key": "de_stug",
+      "side": "German",
+      "type": "Vehicle",
+      "displayName": "Sturmgeschütz",
+      "size": 0,
+      "position": {
+        "x": 14,
+        "y": 62
+      },
+      "facing": 90,
+      "experience": 55,
+      "equipment": "stug3f"
+    },
+    {
+      "key": "su_1",
+      "side": "Soviet",
+      "type": "Rifle",
+      "displayName": "1-ye otdeleniye",
+      "size": 0,
+      "position": {
+        "x": 79,
+        "y": 130
+      },
+      "facing": 270,
+      "experience": 45,
+      "initialOrder": "Ambush"
+    },
+    {
+      "key": "su_2",
+      "side": "Soviet",
+      "type": "Rifle",
+      "displayName": "2-ye otdeleniye",
+      "size": 0,
+      "position": {
+        "x": 156,
+        "y": 145
+      },
+      "facing": 270,
+      "experience": 50,
+      "initialOrder": "Ambush"
+    },
+    {
+      "key": "su_3",
+      "side": "Soviet",
+      "type": "Rifle",
+      "displayName": "3-ye otdeleniye",
+      "size": 0,
+      "position": {
+        "x": 156,
+        "y": 114
+      },
+      "facing": 270,
+      "experience": 50,
+      "initialOrder": "Ambush"
+    },
+    {
+      "key": "su_mg1",
+      "side": "Soviet",
+      "type": "MachineGun",
+      "displayName": "Pulemyot 1",
+      "size": 0,
+      "position": {
+        "x": 175,
+        "y": 130
+      },
+      "facing": 270,
+      "experience": 50,
+      "initialOrder": "Ambush"
+    },
+    {
+      "key": "su_mg2",
+      "side": "Soviet",
+      "type": "MachineGun",
+      "displayName": "Pulemyot 2",
+      "size": 0,
+      "position": {
+        "x": 286,
+        "y": 160
+      },
+      "facing": 270,
+      "experience": 45,
+      "initialOrder": "Ambush"
+    },
+    {
+      "key": "su_at",
+      "side": "Soviet",
+      "type": "AntiTankGun",
+      "displayName": "Sorokapyatka",
+      "size": 0,
+      "position": {
+        "x": 208,
+        "y": 132
+      },
+      "facing": 270,
+      "experience": 50,
+      "initialOrder": "Ambush",
+      "equipment": "m1937_45"
+    },
+    {
+      "key": "su_4",
+      "side": "Soviet",
+      "type": "Rifle",
+      "displayName": "4-ye otdeleniye",
+      "size": 0,
+      "position": {
+        "x": 290,
+        "y": 100
+      },
+      "facing": 270,
+      "experience": 45,
+      "initialOrder": "Ambush"
+    },
+    {
+      "key": "su_5",
+      "side": "Soviet",
+      "type": "Rifle",
+      "displayName": "5-ye otdeleniye",
+      "size": 0,
+      "position": {
+        "x": 330,
+        "y": 150
+      },
+      "facing": 270,
+      "experience": 45,
+      "initialOrder": "Ambush"
+    },
+    {
+      "key": "su_hq",
+      "side": "Soviet",
+      "type": "Headquarters",
+      "displayName": "Shtab roty",
+      "size": 0,
+      "position": {
+        "x": 340,
+        "y": 100
+      },
+      "facing": 270,
+      "experience": 55
+    },
+    {
+      "key": "su_mortar",
+      "side": "Soviet",
+      "type": "Mortar",
+      "displayName": "Minomyot",
+      "size": 0,
+      "position": {
+        "x": 345,
+        "y": 200
+      },
+      "facing": 270,
+      "experience": 45,
+      "equipment": "bm37"
+    },
+    {
+      "key": "su_t60",
+      "side": "Soviet",
+      "type": "Vehicle",
+      "displayName": "T-60",
+      "size": 0,
+      "position": {
+        "x": 270,
+        "y": 62
+      },
+      "facing": 270,
+      "experience": 45,
+      "initialOrder": "Ambush",
+      "equipment": "t60"
+    }
+  ],
+  "objectives": [
+    {
+      "id": "signal_box",
+      "nameKey": "objective.signal_box",
+      "position": {
+        "x": 79,
+        "y": 130
+      },
+      "radius": 10,
+      "value": 1,
+      "owner": "Soviet"
+    },
+    {
+      "id": "station",
+      "nameKey": "objective.station",
+      "position": {
+        "x": 175,
+        "y": 130
+      },
+      "radius": 18,
+      "value": 3,
+      "owner": "Soviet"
+    },
+    {
+      "id": "square",
+      "nameKey": "objective.square",
+      "position": {
+        "x": 236,
+        "y": 132
+      },
+      "radius": 14,
+      "value": 2,
+      "owner": "Soviet"
+    },
+    {
+      "id": "east_corner",
+      "nameKey": "objective.east_corner",
+      "position": {
+        "x": 296,
+        "y": 99
+      },
+      "radius": 12,
+      "value": 1,
+      "owner": "Soviet"
+    }
+  ]
+}

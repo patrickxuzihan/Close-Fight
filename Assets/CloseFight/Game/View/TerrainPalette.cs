@@ -49,6 +49,17 @@ namespace CloseFight.Game.View
         }
 
         public static readonly Color Wall = new Color(0.50f, 0.45f, 0.40f);
+
+        public static Color Prop(string kind)
+        {
+            switch (kind)
+            {
+                case "wagon": return new Color(0.42f, 0.24f, 0.18f);     // oxide-red freight car
+                case "fountain": return new Color(0.70f, 0.68f, 0.62f);  // pale concrete
+                case "barricade": return new Color(0.36f, 0.30f, 0.24f);
+                default: return new Color(0.45f, 0.42f, 0.38f);
+            }
+        }
         public static readonly Color Fence = new Color(0.38f, 0.31f, 0.24f);
 
         /// <summary>Deterministic hash in [0, 1) for color variation.</summary>

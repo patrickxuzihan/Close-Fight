@@ -53,6 +53,11 @@ namespace CloseFight.Core.Units
         public bool IsPinned => Suppression >= PinnedThreshold;
         public bool IsWounded => Status == SoldierStatus.Wounded;
 
+        // Record (M8 after-action report)
+        /// <summary>Enemy soldiers this man killed or put out of action.</summary>
+        public int Kills { get; internal set; }
+        public int VehiclesKnockedOut { get; internal set; }
+
         // Crew (M6)
         public CrewRole Role { get; internal set; }
         /// <summary>The vehicle he is riding in, while it has not been abandoned.</summary>

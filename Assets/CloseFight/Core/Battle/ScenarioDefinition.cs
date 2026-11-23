@@ -15,6 +15,8 @@ namespace CloseFight.Core.Battle
         public string mapId = "";
         public ulong seed = 1;
         public Side playerSide = Side.German;
+        /// <summary>Battle length in game minutes (D33: adjustable, default 45).</summary>
+        public float timeLimitMinutes = VictoryConditions.DefaultTimeLimitMinutes;
         public List<SideDefinition> sides = new List<SideDefinition>();
         public List<TeamDefinition> teams = new List<TeamDefinition>();
         public List<ObjectiveDefinition> objectives = new List<ObjectiveDefinition>();
@@ -78,6 +80,7 @@ namespace CloseFight.Core.Battle
         public static BattleState CreateBattle(ScenarioDefinition scenario, TacticalMap map, bool withAi = true)
         {
             var battle = new BattleState(map, scenario.seed);
+            battle.Victory.TimeLimitSeconds = scenario.timeLimitMinutes * 60f;
             foreach (var side in scenario.sides)
             {
                 battle.SetRetreatEdge(side.side, side.retreatEdge);

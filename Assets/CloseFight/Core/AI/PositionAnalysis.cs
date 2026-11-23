@@ -17,9 +17,13 @@ namespace CloseFight.Core.AI
     /// </summary>
     public sealed class PositionAnalysis
     {
-        public const float CandidateSpacing = 4f;
-        public const float ApproachSpacing = 10f;
         public const float FieldOfFireRange = 350f;
+        /// <summary>Candidates further forward than this (ahead of the nearest objective) are not considered.</summary>
+        const float ForwardLimit = 100f;
+
+        /// <summary>Spacing grows with the map so analysis stays around a second on large maps.</summary>
+        public float CandidateSpacing { get; }
+        public float ApproachSpacing { get; }
 
         public sealed class Candidate
         {
@@ -64,6 +68,18 @@ namespace CloseFight.Core.AI
             float width = grid.Width * grid.CellSize;
             float height = grid.Height * grid.CellSize;
             float mapDepth = threatEdge == MapEdge.North || threatEdge == MapEdge.South ? height : width;
+            float size = math.sqrt(width * height);
+            CandidateSpacing = math.max(4f, math.round(size / 70f));
+            ApproachSpacing = math.max(10f, math.round(size / 24f));
+            float forwardMost = 0f;
+            if (objectives.Count > 0)
+            {
+                forwardMost = float.MaxValue;
+                foreach (var objective in objectives)
+                {
+                    forwardMost = math.min(forwardMost, Depth(objective.Position, width, height) - ForwardLimit);
+                }
+            }
 
             // The approach: ground in front of the objectives (or the near 60% of the map).
             float zoneDepth = mapDepth * 0.6f;
@@ -105,7 +121,7 @@ namespace CloseFight.Core.AI
                 {
                     var point = new float2(x, y);
                     int index = grid.IndexOf(grid.WorldToCell(point));
-                    if (!pathfinder.IsPassable(index, MovementClass.Infantry))
+                    if (!pathfinder.IsPassable(index, MovementClass.Infantry) || Depth(point, width, height) < forwardMost)
                     {
                         continue;
                     }

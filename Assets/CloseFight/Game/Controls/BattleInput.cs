@@ -8,6 +8,7 @@ using CloseFight.Game.View;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 namespace CloseFight.Game.Controls
 {
@@ -64,6 +65,8 @@ namespace CloseFight.Game.Controls
         GUIStyle _small;
         GUIStyle _center;
         GUIStyle _button;
+        GUIStyle _smallCenter;
+        GUIStyle _title;
         float _scale = 1f;
 
         public void Bind(BattleState battle, Side playerSide)
@@ -131,7 +134,7 @@ namespace CloseFight.Game.Controls
                 return;
             }
 
-            if (keyboard.spaceKey.wasPressedThisFrame)
+            if (keyboard.spaceKey.wasPressedThisFrame && !_battle.Victory.IsOver)
             {
                 _battle.Clock.Paused = !_battle.Clock.Paused;
             }
@@ -447,6 +450,11 @@ namespace CloseFight.Game.Controls
         bool IsOverUi(Vector2 screen)
         {
             var gui = ToGui(screen);
+            if (_battle.Victory.IsOver && !_reportHidden)
+            {
+                return true; // the after-action report covers the screen
+            }
+
             return (_menuOpen && _menuRect.Contains(gui)) || _rosterRect.Contains(gui) || _infoRect.Contains(gui);
         }
 
@@ -467,6 +475,8 @@ namespace CloseFight.Game.Controls
                 _small = new GUIStyle(_label) { fontSize = 12 };
                 _center = new GUIStyle(_label) { fontSize = 18, alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold };
                 _button = new GUIStyle(GUI.skin.button) { fontSize = 13, alignment = TextAnchor.MiddleLeft };
+                _smallCenter = new GUIStyle(_small) { alignment = TextAnchor.MiddleCenter };
+                _title = new GUIStyle(_center) { fontSize = 24 };
             }
         }
 
@@ -482,6 +492,7 @@ namespace CloseFight.Game.Controls
             float width = Screen.width / _scale;
             float height = Screen.height / _scale;
 
+            DrawObjectiveLabels();
             DrawTeamLabels();
             DrawTopBar(width);
             DrawInfoPanel(width, height);
@@ -491,20 +502,55 @@ namespace CloseFight.Game.Controls
             DrawSightLabel();
             DrawMenu(width, height);
             DrawToast(width, height);
+            DrawAfterAction(width, height);
+        }
+
+        float _ceasefireArmedUntil = float.NegativeInfinity;
+        bool _reportHidden;
+
+        static string Clock(float seconds)
+        {
+            int s = (int)seconds;
+            return $"{s / 60:00}:{s % 60:00}";
         }
 
         void DrawTopBar(float width)
         {
             Fill(new Rect(0, 0, width, 26), new Color(0f, 0f, 0f, 0.55f));
-            int seconds = (int)_battle.Clock.ElapsedSeconds;
-            GUI.Label(new Rect(10, 4, 220, 20), $"{Loc.T("ui.time")}  {seconds / 60:00}:{seconds % 60:00}", _label);
-            GUI.Label(new Rect(240, 5, width - 340, 20), Loc.T("ui.help"), _small);
+            var victory = _battle.Victory;
+            GUI.Label(new Rect(10, 4, 230, 20),
+                $"{Loc.T("ui.time")}  {Clock(_battle.Clock.ElapsedSeconds)} / {Clock(victory.TimeLimitSeconds)}", _label);
+
+            // Objective points and our own force morale (the enemy's stays hidden, as in CC).
+            var enemy = _playerSide == Side.German ? Side.Soviet : Side.German;
+            string score = $"{Loc.T("ui.objectives")} {Loc.T(SideKey(_playerSide))} {victory.Points(_playerSide)} : {victory.Points(enemy)} {Loc.T(SideKey(enemy))}";
+            GUI.Label(new Rect(250, 4, 230, 20), score, _label);
+            float morale = victory.ForceMorale(_playerSide);
+            GUI.Label(new Rect(490, 5, 80, 20), Loc.T("ui.force_morale"), _small);
+            DrawBar(new Rect(570, 10, 110, 8), morale / 100f, Color.Lerp(new Color(0.9f, 0.2f, 0.1f), new Color(0.3f, 0.8f, 0.3f), morale / 100f));
+            GUI.Label(new Rect(688, 5, 50, 20), $"{morale:0}%", _small);
+
+            GUI.Label(new Rect(745, 5, width - 1000, 20), Loc.T("ui.help"), _small);
+
+            bool armed = Time.unscaledTime < _ceasefireArmedUntil;
+            if (!victory.IsOver && GUI.Button(new Rect(width - 250, 2, 150, 22), Loc.T(armed ? "ui.ceasefire_confirm" : "ui.ceasefire")))
+            {
+                if (armed)
+                {
+                    victory.RequestCeasefire(_playerSide);
+                }
+                else
+                {
+                    _ceasefireArmedUntil = Time.unscaledTime + 3f; // click again within 3 s to confirm
+                }
+            }
+
             if (GUI.Button(new Rect(width - 90, 2, 80, 22), Loc.T("ui.language")))
             {
                 Loc.ToggleLanguage();
             }
 
-            if (_battle.Clock.Paused)
+            if (_battle.Clock.Paused && !victory.IsOver)
             {
                 Fill(new Rect(width * 0.5f - 160, 34, 320, 34), new Color(0.5f, 0.1f, 0.05f, 0.8f));
                 GUI.Label(new Rect(width * 0.5f - 160, 34, 320, 34), Loc.T("ui.paused"), _center);
@@ -634,6 +680,147 @@ namespace CloseFight.Game.Controls
             }
 
             return state;
+        }
+
+        static string SideKey(Side side) => side == Side.German ? "side.german" : "side.soviet";
+
+        /// <summary>Objective names over their rings, colored by who holds them.</summary>
+        void DrawObjectiveLabels()
+        {
+            foreach (var objective in _battle.Objectives)
+            {
+                Vector3 screen = worldCamera.WorldToScreenPoint(new Vector3(objective.Position.x, 0f, objective.Position.y + objective.Radius));
+                if (screen.z < 0f)
+                {
+                    continue;
+                }
+
+                Vector2 gui = ToGui(new Vector2(screen.x, screen.y));
+                string text = $"{Loc.T(objective.NameKey)} ({objective.Value})" + (objective.Contested ? " · " + Loc.T("ui.contested") : "");
+                var rect = new Rect(gui.x - 90, gui.y - 22, 180, 18);
+                var color = objective.Owner == Side.German ? new Color(0.25f, 0.25f, 0.25f, 0.8f) : new Color(0.55f, 0.08f, 0.05f, 0.8f);
+                Fill(rect, color);
+                GUI.Label(rect, text, _smallCenter);
+            }
+        }
+
+        /// <summary>
+        /// The after-action report (M8): result and why, objectives, both sides'
+        /// losses, and the player's men with what became of them.
+        /// </summary>
+        void DrawAfterAction(float width, float height)
+        {
+            var victory = _battle.Victory;
+            if (!victory.IsOver || _reportHidden)
+            {
+                return;
+            }
+
+            var panel = new Rect(width * 0.5f - 360, 60, 720, height - 170);
+            Fill(new Rect(0, 0, width, height), new Color(0f, 0f, 0f, 0.45f));
+            Fill(panel, new Color(0.10f, 0.10f, 0.09f, 0.96f));
+
+            string title;
+            switch (victory.Result)
+            {
+                case BattleResult.GermanVictory: title = Loc.T("result.german_victory"); break;
+                case BattleResult.SovietVictory: title = Loc.T("result.soviet_victory"); break;
+                default: title = Loc.T("result.contested"); break;
+            }
+
+            GUI.Label(new Rect(panel.x, panel.y + 10, panel.width, 30), title, _title);
+            GUI.Label(new Rect(panel.x, panel.y + 42, panel.width, 20),
+                $"{Loc.T(victory.EndReasonKey)} · {Loc.T("ui.time")} {Clock(victory.EndedAt)}", _smallCenter);
+
+            float y = panel.y + 72;
+            GUI.Label(new Rect(panel.x + 20, y, 300, 20), Loc.T("ui.objectives"), _label);
+            y += 20;
+            foreach (var objective in _battle.Objectives)
+            {
+                GUI.Label(new Rect(panel.x + 30, y, 400, 18), $"{Loc.T(objective.NameKey)} ({objective.Value}) — {Loc.T(SideKey(objective.Owner))}", _small);
+                y += 17;
+            }
+
+            y += 8;
+            GUI.Label(new Rect(panel.x + 20, y, 300, 20), Loc.T("ui.losses"), _label);
+            y += 22;
+            string[] headers = { "", "status.dead", "status.incapacitated", "status.wounded", "status.fled", "ui.unhurt", "ui.vehicles_lost" };
+            float[] columns = { 30, 150, 240, 340, 430, 530, 620 };
+            for (int i = 1; i < headers.Length; i++)
+            {
+                GUI.Label(new Rect(panel.x + columns[i], y, 95, 18), Loc.T(headers[i]), _small);
+            }
+
+            y += 18;
+            foreach (var side in new[] { Side.German, Side.Soviet })
+            {
+                int dead = 0, disabled = 0, wounded = 0, fled = 0, unhurt = 0, vehicles = 0;
+                foreach (var soldier in _battle.Soldiers)
+                {
+                    if (soldier.Team.Side != side) continue;
+                    switch (soldier.Status)
+                    {
+                        case SoldierStatus.Dead: dead++; break;
+                        case SoldierStatus.Incapacitated: disabled++; break;
+                        case SoldierStatus.Wounded: wounded++; break;
+                        case SoldierStatus.Fled: fled++; break;
+                        default: unhurt++; break;
+                    }
+                }
+
+                foreach (var vehicle in _battle.Vehicles)
+                {
+                    if (vehicle.Team.Side == side && !vehicle.IsOperational) vehicles++;
+                }
+
+                int[] values = { 0, dead, disabled, wounded, fled, unhurt, vehicles };
+                GUI.Label(new Rect(panel.x + columns[0], y, 120, 18), Loc.T(SideKey(side)), _small);
+                for (int i = 1; i < values.Length; i++)
+                {
+                    GUI.Label(new Rect(panel.x + columns[i], y, 90, 18), values[i].ToString(), _small);
+                }
+
+                y += 18;
+            }
+
+            y += 10;
+            GUI.Label(new Rect(panel.x + 20, y, 400, 20), Loc.T("ui.your_men"), _label);
+            y += 22;
+            var men = new List<Soldier>();
+            foreach (var soldier in _battle.Soldiers)
+            {
+                if (soldier.Team.Side == _playerSide) men.Add(soldier);
+            }
+
+            men.Sort((a, b) => (b.Kills * 10 + b.VehiclesKnockedOut * 30).CompareTo(a.Kills * 10 + a.VehiclesKnockedOut * 30));
+            float listBottom = panel.yMax - 50;
+            foreach (var soldier in men)
+            {
+                if (y > listBottom - 16)
+                {
+                    GUI.Label(new Rect(panel.x + 30, y, 300, 18), "…", _small);
+                    break;
+                }
+
+                string record = soldier.VehiclesKnockedOut > 0
+                    ? $"{Loc.T("ui.kills")} {soldier.Kills} · {Loc.T("ui.tanks")} {soldier.VehiclesKnockedOut}"
+                    : $"{Loc.T("ui.kills")} {soldier.Kills}";
+                GUI.Label(new Rect(panel.x + 30, y, 300, 18), $"{Loc.T(soldier.RankKey)} {soldier.FullName}", _small);
+                GUI.Label(new Rect(panel.x + 330, y, 160, 18), soldier.Team.DisplayName, _small);
+                GUI.Label(new Rect(panel.x + 490, y, 110, 18), Loc.T(Loc.StatusKey(soldier.Status)), _small);
+                GUI.Label(new Rect(panel.x + 600, y, 110, 18), record, _small);
+                y += 16;
+            }
+
+            if (GUI.Button(new Rect(panel.x + panel.width * 0.5f - 210, panel.yMax - 40, 200, 28), Loc.T("ui.play_again")))
+            {
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            }
+
+            if (GUI.Button(new Rect(panel.x + panel.width * 0.5f + 10, panel.yMax - 40, 200, 28), Loc.T("ui.view_battlefield")))
+            {
+                _reportHidden = true;
+            }
         }
 
         /// <summary>

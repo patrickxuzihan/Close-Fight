@@ -206,7 +206,7 @@ namespace CloseFight.Core.Battle
                 float2 impact = hit ? target.Position : target.Position + RandomOffset(0.8f, 3.5f);
                 if (hit)
                 {
-                    ApplyHit(target, weapon, now);
+                    ApplyHit(target, weapon, now, shooter);
                 }
 
                 ApplySuppression(impact, weapon.Suppression, shooter.Team.Side, now, target);
@@ -242,7 +242,7 @@ namespace CloseFight.Core.Battle
                     float chance = 0.25f * PostureFactor(victim.Posture) * (1f - cover / 100f * 0.85f);
                     if (_battle.Random.Chance(chance))
                     {
-                        ApplyHit(victim, weapon, now);
+                        ApplyHit(victim, weapon, now, shooter);
                         hit = true;
                         break;
                     }
@@ -375,14 +375,14 @@ namespace CloseFight.Core.Battle
             }
         }
 
-        void ApplyHit(Soldier target, WeaponDefinition weapon, float now) => InflictHit(target, weapon.Lethality, now);
+        void ApplyHit(Soldier target, WeaponDefinition weapon, float now, Soldier shooter) => InflictHit(target, weapon.Lethality, now, shooter);
 
         /// <summary>
         /// A hit on a soldier: wounds, disables or kills him depending on
         /// <paramref name="lethality"/>, and shakes the comrades around him.
         /// Shared by small arms, shell bursts and knocked-out tanks.
         /// </summary>
-        internal void InflictHit(Soldier target, float lethality, float now)
+        internal void InflictHit(Soldier target, float lethality, float now, Soldier by = null)
         {
             if (!target.IsActive)
             {
@@ -410,6 +410,11 @@ namespace CloseFight.Core.Battle
 
             target.Status = result;
             target.LastUnderFireAt = now;
+            if (by != null && by.Team.Side != target.Team.Side && (result == SoldierStatus.Dead || result == SoldierStatus.Incapacitated))
+            {
+                by.Kills++;
+            }
+
             _battle.Psychology.OnCasualty(target, result, now);
             if (!target.IsActive)
             {

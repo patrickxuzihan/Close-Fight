@@ -52,6 +52,12 @@ namespace CloseFight.Core.Map
                 ApplyWall(grid, wall);
             }
 
+            foreach (var prop in definition.props)
+            {
+                var p = prop;
+                FillPolygon(grid, p.polygon, scratch, index => ApplyProp(grid, index, p));
+            }
+
             return map;
         }
 
@@ -84,6 +90,18 @@ namespace CloseFight.Core.Map
             grid.SetFlags(index, CellFlags.Building | CellFlags.BlocksSight);
             grid.SetBuildingIndex(index, building.Index);
             building.Cells.Add(index);
+        }
+
+        static void ApplyProp(TacticalGrid grid, int index, PropDefinition prop)
+        {
+            if (grid.HasFlag(index, CellFlags.Building))
+            {
+                return;
+            }
+
+            grid.AddFlags(index, CellFlags.BlocksMovement);
+            grid.SetObstacleHeight(index, math.max(grid.GetObstacleHeight(index), prop.height));
+            grid.SetCover(index, (byte)math.clamp(prop.cover, 0f, 100f));
         }
 
         static void ApplyWall(TacticalGrid grid, WallDefinition wall)
