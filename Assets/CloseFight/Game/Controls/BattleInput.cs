@@ -918,9 +918,10 @@ namespace CloseFight.Game.Controls
         /// <summary>Objective names over their rings, colored by who holds them.</summary>
         void DrawObjectiveLabels()
         {
-            foreach (var objective in _battle.Objectives)
+            for (int i = 0; i < _battle.Objectives.Count; i++)
             {
-                Vector3 screen = worldCamera.WorldToScreenPoint(new Vector3(objective.Position.x, 0f, objective.Position.y + objective.Radius));
+                var objective = _battle.Objectives[i];
+                Vector3 screen = worldCamera.WorldToScreenPoint(unitsView.ObjectiveLabelPoint(i));
                 if (screen.z < 0f)
                 {
                     continue;

@@ -61,11 +61,11 @@ namespace CloseFight.Game.View
         readonly EquipmentRenderer _equipment = new EquipmentRenderer();
 
         // Objectives and the AI's plan (M7)
-        readonly List<SpriteRenderer> _objectiveRings = new List<SpriteRenderer>();
+        /// <summary>One flat, still flag per objective, of the side holding it (replaces the old rings).</summary>
+        readonly List<SpriteRenderer> _flags = new List<SpriteRenderer>();
         readonly List<LineRenderer> _planLines = new List<LineRenderer>();
         readonly List<SpriteRenderer> _planRings = new List<SpriteRenderer>();
-        static readonly Color SovietObjective = new Color(0.85f, 0.2f, 0.15f, 0.8f);
-        static readonly Color GermanObjective = new Color(0.85f, 0.85f, 0.85f, 0.8f);
+        const float FlagHeight = 23.5f;
         static readonly Color PlanPrimary = new Color(0.2f, 0.9f, 1f, 0.9f);
         static readonly Color PlanFallback = new Color(0.3f, 0.45f, 1f, 0.9f);
 
@@ -98,13 +98,15 @@ namespace CloseFight.Game.View
 
             _equipment.Build(_root.transform, battle);
 
-            foreach (var objective in battle.Objectives)
+            if (FlagSprites.Available)
             {
-                var ring = NewOverlaySprite("Objective " + objective.Id, MarkerSprites.Ring, 10);
-                ring.transform.position = new Vector3(objective.Position.x, 23.5f, objective.Position.y);
-                float size = objective.Radius * 2f / 0.94f; // the ring sprite's outer edge sits at ~0.47 units
-                ring.transform.localScale = new Vector3(size, size, 1f);
-                _objectiveRings.Add(ring);
+                foreach (var objective in battle.Objectives)
+                {
+                    var flag = NewOverlaySprite("Flag " + objective.Id, FlagSprites.Get(objective.Owner), 13);
+                    flag.sharedMaterial = FlagSprites.MaterialFor(flag.sharedMaterial);
+                    flag.transform.position = new Vector3(objective.Position.x, FlagHeight, objective.Position.y);
+                    _flags.Add(flag);
+                }
             }
 
             _sightClear = CreateLine("Sight (clear)");
@@ -267,12 +269,41 @@ namespace CloseFight.Game.View
             return sr;
         }
 
+        /// <summary>
+        /// Each objective shows the flag of the side holding it, lying still at its
+        /// centre; a little larger when zoomed out so it stays readable.
+        /// </summary>
         void SyncObjectives()
         {
-            for (int i = 0; i < _objectiveRings.Count && i < _battle.Objectives.Count; i++)
+            float scale = FlagScale();
+            for (int i = 0; i < _flags.Count && i < _battle.Objectives.Count; i++)
             {
-                _objectiveRings[i].color = _battle.Objectives[i].Owner == Side.Soviet ? SovietObjective : GermanObjective;
+                var flag = _flags[i];
+                flag.sprite = FlagSprites.Get(_battle.Objectives[i].Owner);
+                flag.transform.localScale = new Vector3(scale, scale, 1f);
             }
+        }
+
+        Camera _camera;
+
+        /// <summary>Flag size: the cloth about 8–22 m wide, growing as the camera zooms out.</summary>
+        float FlagScale()
+        {
+            if (_camera == null)
+            {
+                _camera = Camera.main;
+            }
+
+            float ortho = _camera != null && _camera.orthographic ? _camera.orthographicSize : 60f;
+            return math.clamp(ortho * 0.1f, 8f, 22f) / FlagSprites.ClothWidth;
+        }
+
+        /// <summary>World point just above an objective's flag, for its name label.</summary>
+        public Vector3 ObjectiveLabelPoint(int index)
+        {
+            var objective = _battle.Objectives[index];
+            float top = FlagSprites.ClothHeight * 0.5f * FlagScale() + 1f;
+            return new Vector3(objective.Position.x, 0f, objective.Position.y + top);
         }
 
         void SyncAiPlan()
@@ -764,7 +795,7 @@ namespace CloseFight.Game.View
         {
             _zones = null;
             _equipment.Clear();
-            _objectiveRings.Clear();
+            _flags.Clear();
             _planLines.Clear();
             _planRings.Clear();
             _tracerPool.Clear();

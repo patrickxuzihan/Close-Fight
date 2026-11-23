@@ -78,6 +78,24 @@ namespace CloseFight.EditorTools
                 RunDemo(bootstrap, battle, demoSeconds);
             }
 
+            // Check the German flag: put a (harmless) German team on the first objective nobody holds.
+            if (Arg("-captureGermanFlag", null) != null)
+            {
+                foreach (var objective in battle.Objectives)
+                {
+                    if (battle.Soldiers.Any(s => s.IsActive && objective.Contains(s.Position)))
+                    {
+                        continue;
+                    }
+
+                    battle.AddTeam("flag_test", Side.German, TeamType.Rifle, "", objective.Position, 0f, 2, 50);
+                    battle.Victory.UpdateControl();
+                    bootstrap.UnitsView.Sync(1f);
+                    Debug.Log($"Close Fight: {objective.Id} now held by {objective.Owner}");
+                    break;
+                }
+            }
+
             string views = Arg("-captureViews", null);
             if (!string.IsNullOrEmpty(views))
             {
