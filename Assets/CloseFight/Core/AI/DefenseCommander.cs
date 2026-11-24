@@ -108,6 +108,7 @@ namespace CloseFight.Core.AI
             EnsurePlanned();
             _danger.Rebuild(KnownThreats());
             CallSupport();
+            FireFlares();
             foreach (var plan in _plans)
             {
                 if (plan.Team.ActiveCount > 0)
@@ -219,6 +220,60 @@ namespace CloseFight.Core.AI
             }
 
             return false;
+        }
+
+        // ------------------------------------------------------------ flares (M14)
+
+        float _lastFlareAt = float.NegativeInfinity;
+
+        /// <summary>Heard enemies further than this from our men are left alone: a flare is for what is coming at us.</summary>
+        const float FlareThreatRange = 160f;
+
+        /// <summary>
+        /// At night: movement or fire heard close to our positions but nobody seen
+        /// there: put a flare up over the nearest such noise, so our guns can see
+        /// what is coming (D35). Not over guns firing from far back, and not where
+        /// a flare is already burning.
+        /// </summary>
+        void FireFlares()
+        {
+            if (!_view.IsNight || _view.FlaresLeft <= 0 || _view.Time - _lastFlareAt < 45f)
+            {
+                return;
+            }
+
+            SoundMarker? nearest = null;
+            float nearestDistance = FlareThreatRange;
+            foreach (var marker in _view.HeardEnemies)
+            {
+                float d = NearestOwnDistance(marker.Position);
+                if (d > nearestDistance || NearestEnemyDistance(marker.Position) < 40f || _view.IsLit(marker.Position))
+                {
+                    continue; // too far to matter, already in sight, or already lit
+                }
+
+                nearest = marker;
+                nearestDistance = d;
+            }
+
+            if (nearest.HasValue && _view.FireFlare(nearest.Value.Position))
+            {
+                _lastFlareAt = _view.Time;
+            }
+        }
+
+        float NearestOwnDistance(float2 from)
+        {
+            float best = float.MaxValue;
+            foreach (var team in _view.OwnTeams)
+            {
+                if (team.ActiveCount > 0)
+                {
+                    best = math.min(best, math.distance(team.Centroid, from));
+                }
+            }
+
+            return best;
         }
 
         // ------------------------------------------------------------ off-map support (M13)

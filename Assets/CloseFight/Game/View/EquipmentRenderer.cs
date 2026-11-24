@@ -235,8 +235,11 @@ namespace CloseFight.Game.View
             return new GunSprites { Gun = gun, Mount = mount, Carriage = carriage, Barrel = barrel };
         }
 
-        public void Sync(float alpha, bool fog, Side viewSide, HashSet<Team> selected)
+        System.Func<float2, float> _light = _ => 1f;
+
+        public void Sync(float alpha, bool fog, Side viewSide, HashSet<Team> selected, System.Func<float2, float> light = null)
         {
+            _light = light ?? (_ => 1f);
             if (_battle == null)
             {
                 return;
@@ -287,11 +290,16 @@ namespace CloseFight.Game.View
             if (sprites.Painted)
             {
                 var tint = vehicle.Destroyed ? WreckTint : vehicle.Abandoned ? AbandonedTint : Color.white;
+                float lit = _light(vehicle.Position);
+                tint = new Color(tint.r * lit, tint.g * lit, tint.b * lit, 1f);
+                // Moonlight casts no shadow worth drawing: the drop shadow fades with the light.
+                sprites.HullShadow.color = new Color(0f, 0f, 0f, ShadowColor.a * (lit < 1f ? lit * 0.3f : 1f));
                 sprites.HullSprite.color = tint;
                 sprites.HullShadow.transform.position = sprites.Hull.position + _shadowDirection * VehicleShadow - Vector3.up * 0.05f;
                 if (sprites.TurretSprite != null)
                 {
                     sprites.TurretSprite.color = tint;
+                    sprites.TurretShadow.color = sprites.HullShadow.color;
                     sprites.TurretShadow.transform.position = sprites.Turret.position + _shadowDirection * TurretShadow - Vector3.up * 0.03f;
                 }
 
@@ -347,7 +355,10 @@ namespace CloseFight.Game.View
             sprites.Mount.rotation = Quaternion.Euler(90f, heading, 0f);
             if (sprites.Painted)
             {
-                sprites.Carriage.color = gun.Destroyed ? WreckTint : !crewAlive ? AbandonedTint : Color.white;
+                var gunTint = gun.Destroyed ? WreckTint : !crewAlive ? AbandonedTint : Color.white;
+                float gunLit = _light(gun.Position);
+                sprites.Carriage.color = new Color(gunTint.r * gunLit, gunTint.g * gunLit, gunTint.b * gunLit, 1f);
+                sprites.Shadow.color = new Color(0f, 0f, 0f, ShadowColor.a * (gunLit < 1f ? gunLit * 0.3f : 1f));
                 sprites.Shadow.transform.position = sprites.Mount.position + _shadowDirection * GunShadow - Vector3.up * 0.03f;
                 return;
             }

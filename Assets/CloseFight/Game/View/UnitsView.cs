@@ -248,7 +248,8 @@ namespace CloseFight.Game.View
             SyncSoundMarkers();
             SyncTracers();
             SyncSmoke();
-            _equipment.Sync(alpha, _fogEnabled, _viewSide, _selected);
+            _equipment.Sync(alpha, _fogEnabled, _viewSide, _selected, NightLight);
+            SyncFlares();
             SyncObjectives();
             SyncMineFields();
             SyncMissions();
@@ -306,6 +307,76 @@ namespace CloseFight.Game.View
             var objective = _battle.Objectives[index];
             float top = FlagSprites.ClothHeight * 0.5f * FlagScale() + 1f;
             return new Vector3(objective.Position.x, 0f, objective.Position.y + top);
+        }
+
+        // ------------------------------------------------------------ night (M14)
+
+        /// <summary>Brightness for sprites at a point: 1 by day; dim at night, full in a flare's light.</summary>
+        float NightLight(float2 p)
+        {
+            if (_battle == null || !_battle.IsNight)
+            {
+                return 1f;
+            }
+
+            float light = _battle.Illumination.LightAt(p) / CloseFight.Core.Battle.Illumination.LitThreshold;
+            return Mathf.Lerp(0.4f, 1f, Mathf.Clamp01(light));
+        }
+
+        sealed class FlareView
+        {
+            public Light Light;
+            public SpriteRenderer Glow;
+        }
+
+        readonly List<FlareView> _flareViews = new List<FlareView>();
+        static readonly Color FlareColor = new Color(1f, 0.93f, 0.78f);
+
+        /// <summary>
+        /// Each burning flare is a point light at its height: the ground under it
+        /// lights up, and the buildings' shadows swing and lengthen as it drifts and
+        /// sinks (D35: plain to see). A bright glow marks the flare itself.
+        /// </summary>
+        void SyncFlares()
+        {
+            float now = _battle.Clock.ElapsedSeconds;
+            int used = 0;
+            foreach (var flare in _battle.Illumination.Flares)
+            {
+                if (used == _flareViews.Count)
+                {
+                    var go = new GameObject("Flare");
+                    go.transform.SetParent(_root.transform, false);
+                    var light = go.AddComponent<Light>();
+                    light.type = LightType.Point;
+                    light.color = FlareColor;
+                    light.shadows = LightShadows.Soft;
+                    light.shadowStrength = 0.85f;
+                    var glow = NewOverlaySprite("Flare glow", MarkerSprites.SoftDisc, 14);
+                    _flareViews.Add(new FlareView { Light = light, Glow = glow });
+                }
+
+                var view = _flareViews[used++];
+                float h = flare.Height(now);
+                float2 p = flare.Position(now);
+                // A little flicker, as a burning magnesium flare does.
+                float flicker = 1f + 0.06f * Mathf.Sin(now * 23f + used) + 0.04f * Mathf.Sin(now * 7f);
+                view.Light.enabled = true;
+                view.Light.transform.position = new Vector3(p.x, h, p.y);
+                view.Light.range = h * 2.6f;
+                view.Light.intensity = 1.3f * h * h * flicker;
+                view.Glow.enabled = true;
+                view.Glow.transform.position = new Vector3(p.x, 25f, p.y);
+                float size = 5f + 3f * flicker;
+                view.Glow.transform.localScale = new Vector3(size, size, 1f);
+                view.Glow.color = new Color(1f, 0.95f, 0.8f, 0.9f);
+            }
+
+            for (int i = used; i < _flareViews.Count; i++)
+            {
+                _flareViews[i].Light.enabled = false;
+                _flareViews[i].Glow.enabled = false;
+            }
         }
 
         static readonly Color OwnMines = new Color(1f, 0.85f, 0.25f, 0.85f);
@@ -696,6 +767,14 @@ namespace CloseFight.Game.View
                 default: marker.Body.color = baseColor; break;
             }
 
+            // At night a man in the dark is only a dim shape; in a flare's light he shows plainly.
+            float light = NightLight(p);
+            if (light < 1f)
+            {
+                var c = marker.Body.color;
+                marker.Body.color = new Color(c.r * light, c.g * light, c.b * light, c.a);
+            }
+
             bool shown = !_fogEnabled || _battle.Visibility.CanSee(_viewSide, soldier);
             if (shown && soldier.IsActive)
             {
@@ -886,6 +965,7 @@ namespace CloseFight.Game.View
             _equipment.Clear();
             _flags.Clear();
             _minePool.Clear();
+            _flareViews.Clear();
             _missionPool.Clear();
             _planLines.Clear();
             _planRings.Clear();

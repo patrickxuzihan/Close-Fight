@@ -78,6 +78,9 @@ namespace CloseFight.Game.Controls
         bool _supportOpen;
         Rect _supportRect;
         SupportAsset _pendingSupport;
+        // Night (M14): a flare waiting for its point; the briefing's scenario switch.
+        bool _pendingFlare;
+        System.Action<int> _cycleScenario;
         Rect _rosterRect;
         Rect _infoRect;
         Texture2D _white;
@@ -94,8 +97,12 @@ namespace CloseFight.Game.Controls
         /// first and reports the side the player picks; otherwise deployment (if the
         /// battle is deploying) or the battle itself starts right away.
         /// </summary>
-        public void Bind(BattleState battle, Side playerSide, string scenarioId, System.Action<Side> chooseSide)
+        public void Bind(BattleState battle, Side playerSide, string scenarioId, System.Action<Side> chooseSide, System.Action<int> cycleScenario = null)
         {
+            _cycleScenario = cycleScenario;
+            _pendingFlare = false;
+            _pendingSupport = null;
+            _supportOpen = false;
             _battle = battle;
             _playerSide = playerSide;
             _scenarioId = scenarioId ?? "";
@@ -137,6 +144,12 @@ namespace CloseFight.Game.Controls
                 _chooseSide(side);
             }
         }
+
+        /// <summary>For <see cref="Battle.AutoScreenshot"/>: switch scenario in the briefing.</summary>
+        internal void DebugCycleScenario(int delta) => _cycleScenario?.Invoke(delta);
+
+        /// <summary>For <see cref="Battle.AutoScreenshot"/>: fire a flare for the player.</summary>
+        internal void DebugFlare(float2 point) => _battle.Illumination.Fire(_playerSide, point, out _);
 
         internal void DebugStartBattle()
         {
@@ -324,12 +337,13 @@ namespace CloseFight.Game.Controls
 
             if (keyboard.escapeKey.wasPressedThisFrame)
             {
-                if (_pendingOrder != OrderType.None || _menuOpen || _pendingSupport != null || _supportOpen)
+                if (_pendingOrder != OrderType.None || _menuOpen || _pendingSupport != null || _supportOpen || _pendingFlare)
                 {
                     _pendingOrder = OrderType.None;
                     _menuOpen = false;
                     _pendingSupport = null;
                     _supportOpen = false;
+                    _pendingFlare = false;
                 }
                 else
                 {
@@ -410,6 +424,23 @@ namespace CloseFight.Game.Controls
             bool overUi = IsOverUi(screen);
             if (_stage == Stage.Briefing)
             {
+                return;
+            }
+
+            if (_pendingFlare)
+            {
+                if (mouse.rightButton.wasPressedThisFrame)
+                {
+                    _pendingFlare = false;
+                }
+                else if (mouse.leftButton.wasPressedThisFrame && !overUi)
+                {
+                    var flare = _battle.Illumination.Fire(_playerSide, ScreenToMap(screen), out var why);
+                    ShowToast(Loc.T(flare != null ? "flare.fired" : why == FlareRefusal.Daylight ? "flare.daylight"
+                        : why == FlareRefusal.NoFlaresLeft ? "flare.none_left" : "flare.out_of_reach"));
+                    _pendingFlare = false;
+                }
+
                 return;
             }
 
@@ -775,9 +806,10 @@ namespace CloseFight.Game.Controls
         {
             Fill(new Rect(0, 0, width, 26), new Color(0f, 0f, 0f, 0.55f));
             var victory = _battle.Victory;
-            GUI.Label(new Rect(10, 4, 230, 20), _stage == Stage.Deployment
-                ? $"{Loc.T("ui.deployment")}  ·  {Clock(victory.TimeLimitSeconds)}"
-                : $"{Loc.T("ui.time")}  {Clock(_battle.Clock.ElapsedSeconds)} / {Clock(victory.TimeLimitSeconds)}", _label);
+            string night = _battle.IsNight ? " · " + Loc.T("ui.night") : "";
+            GUI.Label(new Rect(10, 4, 240, 20), _stage == Stage.Deployment
+                ? $"{Loc.T("ui.deployment")}  ·  {Clock(victory.TimeLimitSeconds)}{night}"
+                : $"{Loc.T("ui.time")}  {Clock(_battle.Clock.ElapsedSeconds)} / {Clock(victory.TimeLimitSeconds)}{night}", _label);
 
             // Objective points and our own force morale (the enemy's stays hidden, as in CC).
             var enemy = _playerSide == Side.German ? Side.Soviet : Side.German;
@@ -788,7 +820,15 @@ namespace CloseFight.Game.Controls
             DrawBar(new Rect(570, 10, 110, 8), morale / 100f, Color.Lerp(new Color(0.9f, 0.2f, 0.1f), new Color(0.3f, 0.8f, 0.3f), morale / 100f));
             GUI.Label(new Rect(688, 5, 50, 20), $"{morale:0}%", _small);
 
-            GUI.Label(new Rect(745, 5, width - 1290, 20), Loc.T("ui.help"), _small);
+            GUI.Label(new Rect(745, 5, width - 1400, 20), Loc.T("ui.help"), _small);
+
+            if (_stage == Stage.Battle && _battle.IsNight
+                && GUI.Button(new Rect(width - 640, 2, 100, 22), $"{Loc.T("ui.flares")} {_battle.Illumination.FlaresLeft(_playerSide)}"))
+            {
+                _pendingFlare = true;
+                _supportOpen = false;
+                _menuOpen = false;
+            }
 
             if (_stage == Stage.Battle && _battle.Support.Assets(_playerSide).Count > 0
                 && GUI.Button(new Rect(width - 535, 2, 100, 22), $"{Loc.T("ui.support")} {_battle.Support.Points(_playerSide)}"))
@@ -889,6 +929,19 @@ namespace CloseFight.Game.Controls
             if (GUI.Button(new Rect(panel.xMax - 90, panel.y + 10, 80, 22), Loc.T("ui.language")))
             {
                 Loc.ToggleLanguage();
+            }
+
+            if (_cycleScenario != null)
+            {
+                if (GUI.Button(new Rect(panel.x + 10, panel.y + 10, 130, 22), Loc.T("ui.previous_scenario")))
+                {
+                    _cycleScenario(-1);
+                }
+
+                if (GUI.Button(new Rect(panel.x + 10, panel.y + 36, 130, 22), Loc.T("ui.next_scenario")))
+                {
+                    _cycleScenario(1);
+                }
             }
         }
 
@@ -1467,6 +1520,15 @@ namespace CloseFight.Game.Controls
 
         void DrawPendingHint()
         {
+            if (_pendingFlare && Mouse.current != null)
+            {
+                Vector2 f = ToGui(Mouse.current.position.ReadValue());
+                var flareBox = new Rect(f.x + 16, f.y + 12, 380, 22);
+                Fill(flareBox, new Color(0.3f, 0.3f, 0.1f, 0.85f));
+                GUI.Label(new Rect(flareBox.x + 6, flareBox.y + 2, flareBox.width - 12, 20), Loc.T("flare.choose_target"), _small);
+                return;
+            }
+
             if (_pendingSupport != null && Mouse.current != null)
             {
                 Vector2 m = ToGui(Mouse.current.position.ReadValue());

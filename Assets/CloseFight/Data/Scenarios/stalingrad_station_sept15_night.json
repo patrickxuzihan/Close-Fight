@@ -1,0 +1,506 @@
+{
+  "id": "stalingrad_station_sept15_night",
+  "mapId": "stalingrad_station",
+  "seed": 19420915,
+  "playerSide": "Soviet",
+  "attacker": "Soviet",
+  "night": true,
+  "timeLimitMinutes": 45,
+  "sides": [
+    {
+      "side": "German",
+      "retreatEdge": "West",
+      "deployZone": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 275,
+          "y": 0
+        },
+        {
+          "x": 275,
+          "y": 280
+        },
+        {
+          "x": 0,
+          "y": 280
+        }
+      ],
+      "supportPoints": 8,
+      "support": [
+        "lefh18",
+        "sfh18"
+      ],
+      "flares": 8
+    },
+    {
+      "side": "Soviet",
+      "retreatEdge": "East",
+      "deployZone": [
+        {
+          "x": 315,
+          "y": 0
+        },
+        {
+          "x": 360,
+          "y": 0
+        },
+        {
+          "x": 360,
+          "y": 280
+        },
+        {
+          "x": 315,
+          "y": 280
+        }
+      ],
+      "supportPoints": 12,
+      "support": [
+        "ml20",
+        "katyusha",
+        "po2"
+      ],
+      "flares": 3
+    }
+  ],
+  "teams": [
+    {
+      "key": "de_hq",
+      "side": "German",
+      "type": "Headquarters",
+      "displayName": "Kompanietrupp",
+      "size": 0,
+      "position": {
+        "x": 120,
+        "y": 150
+      },
+      "facing": 90,
+      "experience": 55,
+      "equipment": "",
+      "initialOrder": "None"
+    },
+    {
+      "key": "de_1",
+      "side": "German",
+      "type": "Rifle",
+      "displayName": "1. Gruppe",
+      "size": 0,
+      "position": {
+        "x": 90,
+        "y": 130
+      },
+      "facing": 90,
+      "experience": 55,
+      "equipment": "",
+      "initialOrder": "None"
+    },
+    {
+      "key": "de_2",
+      "side": "German",
+      "type": "Rifle",
+      "displayName": "2. Gruppe",
+      "size": 0,
+      "position": {
+        "x": 160,
+        "y": 108
+      },
+      "facing": 90,
+      "experience": 55,
+      "equipment": "",
+      "initialOrder": "None"
+    },
+    {
+      "key": "de_3",
+      "side": "German",
+      "type": "Rifle",
+      "displayName": "3. Gruppe",
+      "size": 0,
+      "position": {
+        "x": 160,
+        "y": 160
+      },
+      "facing": 90,
+      "experience": 55,
+      "equipment": "",
+      "initialOrder": "None"
+    },
+    {
+      "key": "de_4",
+      "side": "German",
+      "type": "Rifle",
+      "displayName": "4. Gruppe",
+      "size": 0,
+      "position": {
+        "x": 236,
+        "y": 132
+      },
+      "facing": 90,
+      "experience": 55,
+      "equipment": "",
+      "initialOrder": "None"
+    },
+    {
+      "key": "de_mg1",
+      "side": "German",
+      "type": "MachineGun",
+      "displayName": "MG-Trupp 1",
+      "size": 0,
+      "position": {
+        "x": 175,
+        "y": 130
+      },
+      "facing": 90,
+      "experience": 55,
+      "equipment": "",
+      "initialOrder": "None"
+    },
+    {
+      "key": "de_mg2",
+      "side": "German",
+      "type": "MachineGun",
+      "displayName": "MG-Trupp 2",
+      "size": 0,
+      "position": {
+        "x": 240,
+        "y": 100
+      },
+      "facing": 90,
+      "experience": 55,
+      "equipment": "",
+      "initialOrder": "None"
+    },
+    {
+      "key": "de_mortar",
+      "side": "German",
+      "type": "Mortar",
+      "displayName": "Granatwerfer",
+      "size": 0,
+      "position": {
+        "x": 50,
+        "y": 180
+      },
+      "facing": 90,
+      "experience": 55,
+      "equipment": "grw34",
+      "initialOrder": "None"
+    },
+    {
+      "key": "de_pak",
+      "side": "German",
+      "type": "AntiTankGun",
+      "displayName": "PaK 38",
+      "size": 0,
+      "position": {
+        "x": 200,
+        "y": 95
+      },
+      "facing": 90,
+      "experience": 55,
+      "equipment": "pak38",
+      "initialOrder": "None"
+    },
+    {
+      "key": "de_stug",
+      "side": "German",
+      "type": "Vehicle",
+      "displayName": "Sturmgeschütz",
+      "size": 0,
+      "position": {
+        "x": 110,
+        "y": 62
+      },
+      "facing": 90,
+      "experience": 55,
+      "equipment": "stug3f",
+      "initialOrder": "None"
+    },
+    {
+      "key": "de_sniper",
+      "side": "German",
+      "type": "Sniper",
+      "displayName": "Scharfschützen",
+      "size": 0,
+      "position": {
+        "x": 150,
+        "y": 200
+      },
+      "facing": 90,
+      "experience": 70,
+      "equipment": "",
+      "initialOrder": "None"
+    },
+    {
+      "key": "de_pio",
+      "side": "German",
+      "type": "Engineer",
+      "displayName": "Pioniergruppe",
+      "size": 0,
+      "position": {
+        "x": 200,
+        "y": 150
+      },
+      "facing": 90,
+      "experience": 55,
+      "equipment": "",
+      "initialOrder": "None"
+    },
+    {
+      "key": "de_fo",
+      "side": "German",
+      "type": "Observer",
+      "displayName": "Artilleriebeobachter",
+      "size": 0,
+      "position": {
+        "x": 180,
+        "y": 140
+      },
+      "facing": 90,
+      "experience": 55,
+      "equipment": "",
+      "initialOrder": "None"
+    },
+    {
+      "key": "su_hq",
+      "side": "Soviet",
+      "type": "Headquarters",
+      "displayName": "Shtab roty",
+      "size": 0,
+      "position": {
+        "x": 345,
+        "y": 140
+      },
+      "facing": 270,
+      "experience": 60,
+      "equipment": "",
+      "initialOrder": "None"
+    },
+    {
+      "key": "su_1",
+      "side": "Soviet",
+      "type": "Rifle",
+      "displayName": "1-ye otdeleniye",
+      "size": 0,
+      "position": {
+        "x": 330,
+        "y": 60
+      },
+      "facing": 270,
+      "experience": 60,
+      "equipment": "",
+      "initialOrder": "None"
+    },
+    {
+      "key": "su_2",
+      "side": "Soviet",
+      "type": "Rifle",
+      "displayName": "2-ye otdeleniye",
+      "size": 0,
+      "position": {
+        "x": 330,
+        "y": 110
+      },
+      "facing": 270,
+      "experience": 60,
+      "equipment": "",
+      "initialOrder": "None"
+    },
+    {
+      "key": "su_3",
+      "side": "Soviet",
+      "type": "Rifle",
+      "displayName": "3-ye otdeleniye",
+      "size": 0,
+      "position": {
+        "x": 330,
+        "y": 160
+      },
+      "facing": 270,
+      "experience": 60,
+      "equipment": "",
+      "initialOrder": "None"
+    },
+    {
+      "key": "su_4",
+      "side": "Soviet",
+      "type": "Rifle",
+      "displayName": "4-ye otdeleniye",
+      "size": 0,
+      "position": {
+        "x": 330,
+        "y": 210
+      },
+      "facing": 270,
+      "experience": 60,
+      "equipment": "",
+      "initialOrder": "None"
+    },
+    {
+      "key": "su_5",
+      "side": "Soviet",
+      "type": "Rifle",
+      "displayName": "5-ye otdeleniye",
+      "size": 0,
+      "position": {
+        "x": 345,
+        "y": 250
+      },
+      "facing": 270,
+      "experience": 60,
+      "equipment": "",
+      "initialOrder": "None"
+    },
+    {
+      "key": "su_mg1",
+      "side": "Soviet",
+      "type": "MachineGun",
+      "displayName": "Pulemyot 1",
+      "size": 0,
+      "position": {
+        "x": 340,
+        "y": 120
+      },
+      "facing": 270,
+      "experience": 60,
+      "equipment": "",
+      "initialOrder": "None"
+    },
+    {
+      "key": "su_mg2",
+      "side": "Soviet",
+      "type": "MachineGun",
+      "displayName": "Pulemyot 2",
+      "size": 0,
+      "position": {
+        "x": 340,
+        "y": 180
+      },
+      "facing": 270,
+      "experience": 60,
+      "equipment": "",
+      "initialOrder": "None"
+    },
+    {
+      "key": "su_mortar",
+      "side": "Soviet",
+      "type": "Mortar",
+      "displayName": "Minomyot",
+      "size": 0,
+      "position": {
+        "x": 345,
+        "y": 125
+      },
+      "facing": 270,
+      "experience": 60,
+      "equipment": "bm37",
+      "initialOrder": "None"
+    },
+    {
+      "key": "su_at",
+      "side": "Soviet",
+      "type": "AntiTankGun",
+      "displayName": "Sorokapyatka",
+      "size": 0,
+      "position": {
+        "x": 338,
+        "y": 200
+      },
+      "facing": 270,
+      "experience": 60,
+      "equipment": "m1937_45",
+      "initialOrder": "None"
+    },
+    {
+      "key": "su_sniper",
+      "side": "Soviet",
+      "type": "Sniper",
+      "displayName": "Snaypery",
+      "size": 0,
+      "position": {
+        "x": 350,
+        "y": 200
+      },
+      "facing": 270,
+      "experience": 70,
+      "equipment": "",
+      "initialOrder": "None"
+    },
+    {
+      "key": "su_sap",
+      "side": "Soviet",
+      "type": "Engineer",
+      "displayName": "Sapyory",
+      "size": 0,
+      "position": {
+        "x": 325,
+        "y": 140
+      },
+      "facing": 270,
+      "experience": 60,
+      "equipment": "",
+      "initialOrder": "None"
+    },
+    {
+      "key": "su_fo",
+      "side": "Soviet",
+      "type": "Observer",
+      "displayName": "Artnablyudateli",
+      "size": 0,
+      "position": {
+        "x": 338,
+        "y": 90
+      },
+      "facing": 270,
+      "experience": 60,
+      "equipment": "",
+      "initialOrder": "None"
+    }
+  ],
+  "objectives": [
+    {
+      "id": "signal_box",
+      "nameKey": "objective.signal_box",
+      "position": {
+        "x": 79,
+        "y": 130
+      },
+      "radius": 10,
+      "value": 1,
+      "owner": "German"
+    },
+    {
+      "id": "station",
+      "nameKey": "objective.station",
+      "position": {
+        "x": 175,
+        "y": 130
+      },
+      "radius": 18,
+      "value": 3,
+      "owner": "German"
+    },
+    {
+      "id": "square",
+      "nameKey": "objective.square",
+      "position": {
+        "x": 236,
+        "y": 132
+      },
+      "radius": 14,
+      "value": 2,
+      "owner": "German"
+    },
+    {
+      "id": "east_corner",
+      "nameKey": "objective.east_corner",
+      "position": {
+        "x": 296,
+        "y": 99
+      },
+      "radius": 12,
+      "value": 1,
+      "owner": "German"
+    }
+  ]
+}

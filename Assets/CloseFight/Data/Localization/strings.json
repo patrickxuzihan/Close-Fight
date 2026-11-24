@@ -806,5 +806,61 @@
   "team.observer": {
     "zh": "炮兵观察组",
     "en": "Forward observers"
+  },
+  "scenario.stalingrad_station_sept15_night.title": {
+    "zh": "近卫军反击",
+    "en": "The Guards Counterattack"
+  },
+  "scenario.stalingrad_station_sept15_night.date": {
+    "zh": "1942 年 9 月 15 日夜 · 第一火车站",
+    "en": "Night of 15 September 1942 · Railway Station No. 1"
+  },
+  "scenario.stalingrad_station_sept15_night.brief": {
+    "zh": "9 月 14 日到 15 日的夜里，罗季姆采夫的近卫第 13 步兵师冒着炮火渡过伏尔加河，上岸后立刻反击。近卫第 42 团的部队在黑暗中扑向德军白天刚刚拿下的第一火车站。第 71 步兵师的士兵守在站房和周围的废墟里，只能靠照明弹看清扑过来的人。",
+    "en": "On the night of 14–15 September Rodimtsev's 13th Guards Rifle Division crossed the Volga under fire and went straight into the attack. Men of the 42nd Guards Regiment rushed in the dark at Railway Station No. 1, taken by the Germans that day. The soldiers of the 71st Infantry Division held the station building and the ruins around it, and saw what was coming only by the light of their flares."
+  },
+  "scenario.stalingrad_station_sept15_night.goal_german": {
+    "zh": "守住车站一带的目标点直到天亮（45 分钟）。照明弹有限，要用在刀刃上；夜里看得到的距离只有 50–100 米，开枪会暴露位置。",
+    "en": "Hold the objectives around the station until dawn (45 minutes). Flares are few: use them well. At night men are seen only 50–100 m away, and firing gives them away."
+  },
+  "scenario.stalingrad_station_sept15_night.goal_soviet": {
+    "zh": "趁着夜色夺回东角、车站广场、车站和信号楼。德军的照明弹一亮，暗处的优势就没了。",
+    "en": "Use the darkness to retake the east corner, the square, the station and the signal box. Once a German flare goes up, the dark no longer hides you."
+  },
+  "ui.flares": {
+    "zh": "照明弹",
+    "en": "Flares"
+  },
+  "ui.night": {
+    "zh": "夜间",
+    "en": "Night"
+  },
+  "flare.choose_target": {
+    "zh": "照明弹 — 左键点击要照亮的地方（右键或 Esc 取消）",
+    "en": "Flare — left-click where to light up (right-click or Esc to cancel)"
+  },
+  "flare.daylight": {
+    "zh": "白天用不着照明弹",
+    "en": "No need for flares by day"
+  },
+  "flare.none_left": {
+    "zh": "照明弹打完了",
+    "en": "No flares left"
+  },
+  "flare.out_of_reach": {
+    "zh": "太远了：照明弹要打在自己人 200 米以内",
+    "en": "Too far: a flare goes up within 200 m of our men"
+  },
+  "flare.fired": {
+    "zh": "照明弹升空",
+    "en": "Flare up"
+  },
+  "ui.next_scenario": {
+    "zh": "下一个剧本 ▶",
+    "en": "Next scenario ▶"
+  },
+  "ui.previous_scenario": {
+    "zh": "◀ 上一个剧本",
+    "en": "◀ Previous scenario"
   }
 }

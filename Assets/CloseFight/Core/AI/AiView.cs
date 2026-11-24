@@ -152,6 +152,16 @@ namespace CloseFight.Core.AI
             return _battle.Support.Request(Side, asset.Id, target, out refusal) != null;
         }
 
+        /// <summary>Night battle, and our flares (M14).</summary>
+        public bool IsNight => _battle.IsNight;
+        public int FlaresLeft => _battle.Illumination.FlaresLeft(Side);
+
+        /// <summary>Fires a flare over a point within reach of one of our men.</summary>
+        public bool FireFlare(float2 point) => _battle.Illumination.Fire(Side, point, out _) != null;
+
+        /// <summary>Whether a flare (anyone's: everybody sees them) lights the point now.</summary>
+        public bool IsLit(float2 point) => _battle.Illumination.IsLit(point);
+
         /// <summary>Whether one of our officers or observers can see the point (needed to call fire on it).</summary>
         public bool CanObserve(float2 point) => _battle.Support.ObserverFor(Side, point) != null;
 

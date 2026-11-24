@@ -42,6 +42,12 @@ namespace CloseFight.Game.Battle
         IEnumerator Start()
         {
             yield return null;
+            if (int.TryParse(Arg("-cfScenario"), out int scenario))
+            {
+                for (int i = 0; i < scenario; i++) _input.DebugCycleScenario(1);
+                yield return null;
+            }
+
             if (_stage != "briefing")
             {
                 _input.DebugChooseSide(_side);
@@ -62,6 +68,18 @@ namespace CloseFight.Game.Battle
             if (HasArg("-cfSupport"))
             {
                 _input.DebugSupport();
+            }
+
+            var flareAt = Arg("-cfFlare");
+            if (!string.IsNullOrEmpty(flareAt))
+            {
+                // One or more points: -cfFlare 250,140 or -cfFlare "250,140;180,120"
+                var inv = System.Globalization.CultureInfo.InvariantCulture;
+                foreach (var point in flareAt.Split(';'))
+                {
+                    var parts = point.Split(',');
+                    _input.DebugFlare(new Unity.Mathematics.float2(float.Parse(parts[0], inv), float.Parse(parts[1], inv)));
+                }
             }
 
             yield return new WaitForSecondsRealtime(_seconds);

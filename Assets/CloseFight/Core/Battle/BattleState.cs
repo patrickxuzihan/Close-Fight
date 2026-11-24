@@ -52,8 +52,10 @@ namespace CloseFight.Core.Battle
         public Engineering Engineering { get; }
         /// <summary>Off-map artillery, rockets and aircraft (M13).</summary>
         public OffMapSupport Support { get; }
-        /// <summary>A night battle (M14 builds on it): no Stukas, Soviet night bombers fly.</summary>
+        /// <summary>A night battle (M14): short sight, muzzle flashes carry, flares; no Stukas, Soviet night bombers fly.</summary>
         public bool IsNight { get; set; }
+        /// <summary>Flares and the light at night (M14).</summary>
+        public Illumination Illumination { get; }
 
         readonly List<Team> _teams = new List<Team>();
         readonly List<Soldier> _soldiers = new List<Soldier>();
@@ -85,6 +87,7 @@ namespace CloseFight.Core.Battle
             _vehicleMovement = new VehicleMovement(map, _pathfinder);
             Engineering = new Engineering(this, _movement, _pathfinder);
             Support = new OffMapSupport(this);
+            Illumination = new Illumination(this);
             _movement.SideCost = Engineering.KnownMineCostFor;
             _vehicleMovement.SideCost = Engineering.KnownMineCostFor;
             Gunnery = new Gunnery(this);
@@ -812,6 +815,7 @@ namespace CloseFight.Core.Battle
             Gunnery.Step(SimClock.TickSeconds);
             Engineering.Step(SimClock.TickSeconds);
             Support.Step(Clock.ElapsedSeconds);
+            Illumination.Step(Clock.ElapsedSeconds);
 
             if (Clock.TickCount % AiIntervalTicks == 0)
             {

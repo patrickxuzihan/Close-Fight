@@ -159,6 +159,11 @@ namespace CloseFight.Core.Battle
                 }
 
                 float range = SpottingRange(target, map, now);
+                if (_battle.IsNight)
+                {
+                    range = _battle.Illumination.NightRange(target, range, now - target.LastFiredAt < 3f);
+                }
+
                 foreach (var observer in _battle.Soldiers)
                 {
                     if (observer.Team.Side != side || !observer.IsActive)
@@ -202,6 +207,11 @@ namespace CloseFight.Core.Battle
                 if (vehicle.IsOperational && !firedRecently && !vehicle.IsMoving && (order == OrderType.Hide || order == OrderType.Ambush))
                 {
                     range *= 0.5f; // stopped, engine off, camouflaged
+                }
+
+                if (_battle.IsNight)
+                {
+                    range = _battle.Illumination.NightVehicleRange(vehicle.Position, range, firedRecently);
                 }
 
                 foreach (var observer in _battle.Soldiers)

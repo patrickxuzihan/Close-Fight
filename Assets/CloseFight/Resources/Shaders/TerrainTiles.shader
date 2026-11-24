@@ -2,7 +2,8 @@
 // type. Two weight maps (one texel per 1 m cell, bilinear) say how much of each
 // tile shows; the GPU's filtering gives soft one-metre transitions between
 // terrain types. Tiles repeat every _TileMeters metres in world space.
-// Lit by the main light (with building shadows) and the ambient light.
+// Lit by the main light (with building shadows), the ambient light and point
+// lights such as the flares at night (with their moving shadows).
 Shader "CloseFight/TerrainTiles"
 {
     Properties
@@ -32,6 +33,9 @@ Shader "CloseFight/TerrainTiles"
             #pragma vertex Vert
             #pragma fragment Frag
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
+            #pragma multi_compile _ _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS
+            #pragma multi_compile _ _CLUSTER_LIGHT_LOOP
+            #pragma multi_compile_fragment _ _ADDITIONAL_LIGHT_SHADOWS
             #pragma multi_compile_fragment _ _SHADOWS_SOFT _SHADOWS_SOFT_LOW _SHADOWS_SOFT_MEDIUM _SHADOWS_SOFT_HIGH
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
@@ -95,6 +99,21 @@ Shader "CloseFight/TerrainTiles"
                 half3 normal = half3(0.0h, 1.0h, 0.0h);
                 half ndotl = saturate(dot(normal, light.direction));
                 half3 lighting = light.color * (ndotl * light.shadowAttenuation) + SampleSH(normal);
+
+                // Point lights: the flares at night (M14), with their shadows.
+            #if defined(_ADDITIONAL_LIGHTS)
+                InputData inputData = (InputData)0;
+                inputData.positionWS = input.positionWS;
+                inputData.normalWS = normal;
+                inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
+                half4 shadowMask = half4(1.0h, 1.0h, 1.0h, 1.0h);
+                uint pixelLightCount = GetAdditionalLightsCount();
+                LIGHT_LOOP_BEGIN(pixelLightCount)
+                    Light extra = GetAdditionalLight(lightIndex, input.positionWS, shadowMask);
+                    lighting += extra.color * (extra.distanceAttenuation * extra.shadowAttenuation * saturate(dot(normal, extra.direction)));
+                LIGHT_LOOP_END
+            #endif
+
                 return half4(color * lighting, 1.0h);
             }
             ENDHLSL

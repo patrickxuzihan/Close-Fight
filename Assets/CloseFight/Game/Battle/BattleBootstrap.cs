@@ -5,6 +5,7 @@ using CloseFight.Game.CameraControl;
 using CloseFight.Game.Controls;
 using CloseFight.Game.UI;
 using CloseFight.Game.View;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace CloseFight.Game.Battle
@@ -21,6 +22,8 @@ namespace CloseFight.Game.Battle
     {
         [SerializeField] TextAsset mapJson;
         [SerializeField] TextAsset scenarioJson;
+        [Tooltip("More scenarios on the same map, offered in the briefing (M14: the night counterattack).")]
+        [SerializeField] TextAsset[] extraScenarios;
         [SerializeField] TextAsset localizationJson;
         [SerializeField] MapView mapView;
         [SerializeField] UnitsView unitsView;
@@ -31,6 +34,51 @@ namespace CloseFight.Game.Battle
         public BattleState Battle { get; private set; }
         public ScenarioDefinition Scenario { get; private set; }
         public UnitsView UnitsView => unitsView;
+
+        int _scenarioIndex;
+        // Daylight as the scene was set up, to restore after a night battle.
+        bool _lightCaptured;
+        Color _dayAmbient;
+        Color _daySunColor;
+        float _daySunIntensity;
+
+        int ScenarioCount => 1 + (extraScenarios == null ? 0 : extraScenarios.Length);
+
+        TextAsset ScenarioAt(int index) => index == 0 ? scenarioJson : extraScenarios[index - 1];
+
+        /// <summary>From the briefing: the next or previous scenario.</summary>
+        void CycleScenario(int delta)
+        {
+            _scenarioIndex = ((_scenarioIndex + delta) % ScenarioCount + ScenarioCount) % ScenarioCount;
+            Build(null, true);
+        }
+
+        /// <summary>
+        /// Night (D35): moonlight and a dark blue ambient, so the flares' light
+        /// (point lights casting shadows) is what shows the ground. Day restores the sun.
+        /// </summary>
+        void ApplyTimeOfDay(bool night)
+        {
+            var sun = RenderSettings.sun;
+            if (!_lightCaptured)
+            {
+                _dayAmbient = RenderSettings.ambientLight;
+                if (sun != null)
+                {
+                    _daySunColor = sun.color;
+                    _daySunIntensity = sun.intensity;
+                }
+
+                _lightCaptured = true;
+            }
+
+            RenderSettings.ambientLight = night ? new Color(0.07f, 0.08f, 0.13f) : _dayAmbient;
+            if (sun != null)
+            {
+                sun.color = night ? new Color(0.55f, 0.65f, 0.9f) : _daySunColor;
+                sun.intensity = night ? 0.12f : _daySunIntensity;
+            }
+        }
 
         void OnEnable()
         {
@@ -122,7 +170,8 @@ namespace CloseFight.Game.Battle
             Battle = null;
             if (scenarioJson != null && unitsView != null)
             {
-                Scenario = ScenarioLoader.FromJson(scenarioJson.text);
+                var json = ScenarioAt(math.clamp(_scenarioIndex, 0, ScenarioCount - 1));
+                Scenario = ScenarioLoader.FromJson(json.text);
                 if (!string.IsNullOrEmpty(Scenario.mapId) && Scenario.mapId != definition.id)
                 {
                     Debug.LogWarning($"Scenario '{Scenario.id}' is meant for map '{Scenario.mapId}', but '{definition.id}' is loaded.", this);
@@ -130,6 +179,7 @@ namespace CloseFight.Game.Battle
 
                 var side = playerSide ?? Scenario.playerSide;
                 Battle = ScenarioLoader.CreateBattle(Scenario, Map, playerSide: side, deployment: Application.isPlaying);
+                ApplyTimeOfDay(Battle.IsNight);
                 unitsView.Build(Battle);
 
                 if (Application.isPlaying)
@@ -137,7 +187,8 @@ namespace CloseFight.Game.Battle
                     unitsView.SetViewSide(side);
                     if (battleInput != null)
                     {
-                        battleInput.Bind(Battle, side, Scenario.id, briefing ? ChooseSide : (System.Action<Side>)null);
+                        battleInput.Bind(Battle, side, Scenario.id, briefing ? ChooseSide : (System.Action<Side>)null,
+                            briefing && ScenarioCount > 1 ? CycleScenario : (System.Action<int>)null);
                     }
                 }
             }

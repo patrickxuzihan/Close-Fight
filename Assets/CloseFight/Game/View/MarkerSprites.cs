@@ -91,7 +91,9 @@ namespace CloseFight.Game.View
             _ring.name = "UnitRing";
             _ring.hideFlags = HideFlags.DontSave;
 
-            _softDisc = Sprite.Create(_atlas, new Rect(Cell * 2, 0, Cell, Cell), new Vector2(0.5f, 0.5f), Cell, 0, SpriteMeshType.FullRect);
+            // Inset by a pixel like the box: bilinear filtering at the edge would otherwise pick up
+            // the box's border next door, a faint line beside every flare glow.
+            _softDisc = Sprite.Create(_atlas, new Rect(Cell * 2 + 1, 1, Cell - 2, Cell - 2), new Vector2(0.5f, 0.5f), Cell - 2, 0, SpriteMeshType.FullRect);
             _softDisc.name = "SoftDisc";
             _softDisc.hideFlags = HideFlags.DontSave;
 

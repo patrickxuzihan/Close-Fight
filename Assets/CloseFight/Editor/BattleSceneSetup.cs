@@ -114,6 +114,7 @@ namespace CloseFight.EditorTools
 
             Assign(bootstrap, "mapJson", LoadText(TestMapPath));
             Assign(bootstrap, "scenarioJson", LoadText(TestScenarioPath));
+            AssignArray(bootstrap, "extraScenarios", ExtraScenarios());
             Assign(bootstrap, "localizationJson", LoadText(LocalizationPath));
             Assign(bootstrap, "mapView", mapView);
             Assign(bootstrap, "unitsView", unitsView);
@@ -150,7 +151,13 @@ namespace CloseFight.EditorTools
                 var resolution = serialized.FindProperty("m_MainLightShadowmapResolution");
                 if (resolution != null)
                 {
-                    resolution.intValue = 4096;
+                    resolution.intValue = 2048; // enough for blurry building shadows; 4096 cost laptops dearly
+                }
+
+                var additional = serialized.FindProperty("m_AdditionalLightShadowsSupported");
+                if (additional != null)
+                {
+                    additional.boolValue = true; // flares at night cast moving shadows (M14)
                     serialized.ApplyModifiedPropertiesWithoutUndo();
                 }
 
@@ -172,6 +179,41 @@ namespace CloseFight.EditorTools
             material.SetFloat("_Smoothness", smoothness);
             EditorUtility.SetDirty(material);
             return material;
+        }
+
+        /// <summary>The other scenarios on the battle map, offered in the briefing.</summary>
+        static Object[] ExtraScenarios()
+        {
+            var list = new System.Collections.Generic.List<Object>();
+            foreach (var guid in AssetDatabase.FindAssets("t:TextAsset", new[] { "Assets/CloseFight/Data/Scenarios" }))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                if (path != TestScenarioPath && path.EndsWith(".json") && path.Contains("stalingrad_station"))
+                {
+                    list.Add(AssetDatabase.LoadAssetAtPath<TextAsset>(path));
+                }
+            }
+
+            list.Sort((a, b) => string.CompareOrdinal(a.name, b.name));
+            return list.ToArray();
+        }
+
+        static void AssignArray(Object target, string field, Object[] values)
+        {
+            var serialized = new SerializedObject(target);
+            var property = serialized.FindProperty(field);
+            if (property == null)
+            {
+                throw new InvalidOperationException($"{target.GetType().Name}.{field} not found.");
+            }
+
+            property.arraySize = values.Length;
+            for (int i = 0; i < values.Length; i++)
+            {
+                property.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
+            }
+
+            serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
         static void Assign(Object target, string field, Object value)

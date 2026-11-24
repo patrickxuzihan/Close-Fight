@@ -37,6 +37,8 @@ namespace CloseFight.Core.Battle
         public int supportPoints;
         /// <summary>Off-map assets the side may call, by id (see SupportAssets), e.g. "lefh18", "stuka", "katyusha".</summary>
         public List<string> support = new List<string>();
+        /// <summary>Parachute flares for a night battle (D35: a limited resource).</summary>
+        public int flares;
     }
 
     [Serializable]
@@ -109,6 +111,7 @@ namespace CloseFight.Core.Battle
                 }
 
                 battle.Support.Configure(side.side, side.supportPoints, side.support);
+                battle.Illumination.SetFlares(side.side, side.flares);
             }
 
             foreach (var team in scenario.teams)

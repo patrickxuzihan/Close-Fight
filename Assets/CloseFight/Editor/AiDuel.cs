@@ -55,7 +55,14 @@ namespace CloseFight.EditorTools
                 float traceUntil = float.Parse(Arg("-duelTrace", "0"), CultureInfo.InvariantCulture) * 60f;
                 for (int i = 0; i < ticks && !battle.Victory.IsOver; i++)
                 {
+                    int flaresBefore = battle.Illumination.Flares.Count;
                     battle.Step();
+                    if (battle.Illumination.Flares.Count > flaresBefore)
+                    {
+                        var flare = battle.Illumination.Flares[battle.Illumination.Flares.Count - 1];
+                        log.AppendLine($"  {Clock(battle.Clock.ElapsedSeconds)} flare {flare.FiredBy} over ({flare.LaunchPoint.x:0},{flare.LaunchPoint.y:0})");
+                    }
+
                     if (attack != null)
                     {
                         for (; events < attack.Events.Count; events++)
@@ -85,6 +92,11 @@ namespace CloseFight.EditorTools
 
                 watch.Stop();
                 log.AppendLine($"  support points left: DE {battle.Support.Points(Side.German)} SU {battle.Support.Points(Side.Soviet)}");
+                if (battle.IsNight)
+                {
+                    log.AppendLine($"  flares left: DE {battle.Illumination.FlaresLeft(Side.German)} SU {battle.Illumination.FlaresLeft(Side.Soviet)}");
+                }
+
                 log.AppendLine($"  minefields left: {battle.Engineering.MineFields.Count} ({string.Join(" ", battle.Engineering.MineFields.Select(f => $"{f.Owner} {f.Mines} known DE {f.KnownTo(Side.German)}"))})");
                 log.AppendLine($"  END {Clock(battle.Clock.ElapsedSeconds)} result {battle.Victory.Result} ({battle.Victory.EndReasonKey}) {Status(battle)} — {watch.ElapsedMilliseconds} ms");
                 foreach (var team in battle.Teams)

@@ -190,6 +190,11 @@ namespace CloseFight.Core.AI
                 CallSupport();
             }
 
+            if (_phase == AttackPhase.Suppress)
+            {
+                FireFlare();
+            }
+
             switch (_phase)
             {
                 case AttackPhase.Assemble: Assemble(); break;
@@ -1338,6 +1343,44 @@ namespace CloseFight.Core.AI
             float2 ab = b - a;
             float t = math.saturate(math.dot(p - a, ab) / math.max(math.lengthsq(ab), 1e-4f));
             return math.distance(p, a + ab * t);
+        }
+
+        // ------------------------------------------------------------ flares (M14)
+
+        Objective _flareFor;
+        float _flareAt = float.NegativeInfinity;
+
+        /// <summary>
+        /// At night, when the base of fire has the enemy's sound but not his shape:
+        /// a flare beyond the objective, so the defenders stand in the light while
+        /// our own men stay in the dark (at most one a minute for an objective).
+        /// </summary>
+        void FireFlare()
+        {
+            if (!_view.IsNight || _view.FlaresLeft <= 0 || (_flareFor == _target && _view.Time - _flareAt < 60f))
+            {
+                return;
+            }
+
+            foreach (var enemy in _view.VisibleEnemies)
+            {
+                if (math.distance(enemy.Position, _target.Position) < _target.Radius + 40f)
+                {
+                    return; // already seen: no need to light ourselves up too
+                }
+            }
+
+            if (!ContactNear(_target.Position, _target.Radius + 60f))
+            {
+                return;
+            }
+
+            float2 beyond = _target.Position + EnemyDirection() * 40f;
+            if (_view.FireFlare(beyond) || _view.FireFlare(_target.Position))
+            {
+                _flareFor = _target;
+                _flareAt = _view.Time;
+            }
         }
 
         // ------------------------------------------------------------ off-map support (M13)
