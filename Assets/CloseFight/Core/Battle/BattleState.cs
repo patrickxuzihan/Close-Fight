@@ -50,6 +50,10 @@ namespace CloseFight.Core.Battle
         public SmokeField Smoke { get; } = new SmokeField();
         /// <summary>Demolition charges and minefields (M12).</summary>
         public Engineering Engineering { get; }
+        /// <summary>Off-map artillery, rockets and aircraft (M13).</summary>
+        public OffMapSupport Support { get; }
+        /// <summary>A night battle (M14 builds on it): no Stukas, Soviet night bombers fly.</summary>
+        public bool IsNight { get; set; }
 
         readonly List<Team> _teams = new List<Team>();
         readonly List<Soldier> _soldiers = new List<Soldier>();
@@ -80,6 +84,7 @@ namespace CloseFight.Core.Battle
             Psychology = new Psychology(this, _movement, _pathfinder);
             _vehicleMovement = new VehicleMovement(map, _pathfinder);
             Engineering = new Engineering(this, _movement, _pathfinder);
+            Support = new OffMapSupport(this);
             _movement.SideCost = Engineering.KnownMineCostFor;
             _vehicleMovement.SideCost = Engineering.KnownMineCostFor;
             Gunnery = new Gunnery(this);
@@ -109,6 +114,7 @@ namespace CloseFight.Core.Battle
                 case TeamType.Rifle: return 6;
                 case TeamType.Engineer: return 5;
                 case TeamType.Sniper: return 2;
+                case TeamType.Observer: return 2;
                 default: return 3;
             }
         }
@@ -805,6 +811,7 @@ namespace CloseFight.Core.Battle
             Combat.Step(SimClock.TickSeconds);
             Gunnery.Step(SimClock.TickSeconds);
             Engineering.Step(SimClock.TickSeconds);
+            Support.Step(Clock.ElapsedSeconds);
 
             if (Clock.TickCount % AiIntervalTicks == 0)
             {

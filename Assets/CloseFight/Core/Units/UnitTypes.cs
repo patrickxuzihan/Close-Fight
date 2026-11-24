@@ -19,6 +19,8 @@ namespace CloseFight.Core.Units
         Sniper = 6,
         /// <summary>Assault engineers / sappers: charges, mines, a flamethrower (M12).</summary>
         Engineer = 7,
+        /// <summary>Artillery forward observers with a radio: they direct off-map fire (M13, D36).</summary>
+        Observer = 8,
     }
 
     public enum SoldierStatus : byte

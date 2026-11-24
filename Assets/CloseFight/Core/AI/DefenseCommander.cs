@@ -17,6 +17,8 @@ namespace CloseFight.Core.AI
         Reserve,
         /// <summary>Sniper (M12): high, concealed, long view; stays hidden and picks officers and gunners.</summary>
         Sniper,
+        /// <summary>Forward observer (M13): the longest view of the approach, hidden; directs the guns, does not shoot.</summary>
+        Observer,
     }
 
     /// <summary>When a team gives ground (D22).</summary>
@@ -105,6 +107,7 @@ namespace CloseFight.Core.AI
         {
             EnsurePlanned();
             _danger.Rebuild(KnownThreats());
+            CallSupport();
             foreach (var plan in _plans)
             {
                 if (plan.Team.ActiveCount > 0)
@@ -218,6 +221,98 @@ namespace CloseFight.Core.AI
             return false;
         }
 
+        // ------------------------------------------------------------ off-map support (M13)
+
+        float _lastSupportAt = float.NegativeInfinity;
+
+        /// <summary>
+        /// The guns across the Volga on the enemy where he bunches up: at least five
+        /// men seen together (or a tank), far enough from our own positions that the
+        /// scatter will not hit our men. Rockets for the bigger crowds.
+        /// </summary>
+        void CallSupport()
+        {
+            if (_view.SupportPoints <= 0 || _view.Time - _lastSupportAt < 90f)
+            {
+                return;
+            }
+
+            var seen = new List<float2>();
+            foreach (var enemy in _view.VisibleEnemies)
+            {
+                seen.Add(enemy.Position);
+            }
+
+            foreach (var vehicle in _view.VisibleEnemyVehicles)
+            {
+                for (int i = 0; i < 4; i++) seen.Add(vehicle.Position); // a tank is worth a crowd
+            }
+
+            float2 best = float2.zero;
+            int bestCount = 0;
+            foreach (var p in seen)
+            {
+                int count = 0;
+                float2 sum = float2.zero;
+                foreach (var q in seen)
+                {
+                    if (math.distance(p, q) < 35f)
+                    {
+                        count++;
+                        sum += q;
+                    }
+                }
+
+                if (count > bestCount)
+                {
+                    bestCount = count;
+                    best = sum / count;
+                }
+            }
+
+            if (bestCount < 5)
+            {
+                return;
+            }
+
+            SupportAsset choice = null;
+            foreach (var asset in _view.SupportAssets)
+            {
+                if (asset.Cost > _view.SupportPoints || !_view.SupportAvailable(asset) || !SafeFromScatter(best, asset))
+                {
+                    continue;
+                }
+
+                bool rockets = asset.Rounds >= 10;
+                if (choice == null || (bestCount >= 10 ? rockets && choice.Rounds < 10 : !rockets && choice.Rounds >= 10))
+                {
+                    choice = asset;
+                }
+            }
+
+            if (choice != null && _view.RequestSupport(choice, best, out _))
+            {
+                _lastSupportAt = _view.Time;
+            }
+        }
+
+        bool SafeFromScatter(float2 target, SupportAsset asset)
+        {
+            float safe = asset.Spread + asset.Round.HeLethalRadius + 20f;
+            foreach (var team in _view.OwnTeams)
+            {
+                foreach (var member in team.Members)
+                {
+                    if (member.IsActive && math.distance(member.Position, target) < safe)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
         // ------------------------------------------------------------ planning
 
         static DefenseRole RoleOf(Team team)
@@ -230,6 +325,7 @@ namespace CloseFight.Core.AI
                 case TeamType.Mortar: return DefenseRole.Mortar;
                 case TeamType.Headquarters: return DefenseRole.Headquarters;
                 case TeamType.Sniper: return DefenseRole.Sniper;
+                case TeamType.Observer: return DefenseRole.Observer;
                 default: return DefenseRole.Rifle; // engineers fight as riflemen once their mines are down
             }
         }
@@ -240,6 +336,7 @@ namespace CloseFight.Core.AI
             {
                 case DefenseRole.MachineGun: return 0;
                 case DefenseRole.Sniper: return 1;
+                case DefenseRole.Observer: return 1;
                 case DefenseRole.AntiTank: return 1;
                 case DefenseRole.Armor: return 2;
                 case DefenseRole.Rifle: return 3;
@@ -503,6 +600,8 @@ namespace CloseFight.Core.AI
                     return -120f * c.Exposure + 0.2f * c.Cover + 0.15f * c.Depth + 4f * c.ObjectiveScore;
                 case DefenseRole.Sniper:
                     return 70f * c.Coverage + 0.3f * c.Cover + 6f * height + 14f * concealed + 4f * c.ObjectiveScore;
+                case DefenseRole.Observer:
+                    return 90f * c.Coverage + 0.2f * c.Cover + 8f * height + 14f * concealed - 20f * c.Exposure;
                 default: // headquarters and reserve: hidden, covered, near what matters
                     return -60f * c.Exposure + 0.4f * c.Cover + 20f * c.ObjectiveScore;
             }
@@ -601,8 +700,11 @@ namespace CloseFight.Core.AI
         void TakeUpPosition(TeamPlan plan)
         {
             var team = plan.Team;
-            // Wait in ambush unless the enemy is already in the open (mortars fire whenever they can).
-            var stance = plan.Role == DefenseRole.Mortar ? OrderType.Defend : OrderType.Ambush;
+            // Wait in ambush unless the enemy is already in the open (mortars fire whenever they can);
+            // observers hide: their job is to watch and call the guns, not to give themselves away.
+            var stance = plan.Role == DefenseRole.Mortar ? OrderType.Defend
+                : plan.Role == DefenseRole.Observer ? OrderType.Hide
+                : OrderType.Ambush;
             _view.Order(team, stance, team.Centroid);
             SetState(plan, PlanState.Holding);
         }

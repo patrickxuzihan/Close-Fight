@@ -84,6 +84,7 @@ namespace CloseFight.EditorTools
                 }
 
                 watch.Stop();
+                log.AppendLine($"  support points left: DE {battle.Support.Points(Side.German)} SU {battle.Support.Points(Side.Soviet)}");
                 log.AppendLine($"  minefields left: {battle.Engineering.MineFields.Count} ({string.Join(" ", battle.Engineering.MineFields.Select(f => $"{f.Owner} {f.Mines} known DE {f.KnownTo(Side.German)}"))})");
                 log.AppendLine($"  END {Clock(battle.Clock.ElapsedSeconds)} result {battle.Victory.Result} ({battle.Victory.EndReasonKey}) {Status(battle)} — {watch.ElapsedMilliseconds} ms");
                 foreach (var team in battle.Teams)

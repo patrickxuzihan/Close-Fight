@@ -60,6 +60,7 @@ namespace CloseFight.Game.UI
                 case TeamType.Mortar: return "team.mortar";
                 case TeamType.Sniper: return "team.sniper";
                 case TeamType.Engineer: return "team.engineer";
+                case TeamType.Observer: return "team.observer";
                 default: return "team.rifle";
             }
         }

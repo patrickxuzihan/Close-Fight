@@ -141,6 +141,32 @@ namespace CloseFight.Core.AI
             return _battle.LayMinesBeforeBattle(team, point);
         }
 
+        /// <summary>Our off-map support points and the assets we may call (M13).</summary>
+        public int SupportPoints => _battle.Support.Points(Side);
+        public IReadOnlyList<SupportAsset> SupportAssets => _battle.Support.Assets(Side);
+        public bool SupportAvailable(SupportAsset asset) => _battle.Support.Available(asset);
+
+        /// <summary>Calls off-map support; it needs one of our officers to see the target, as for a player.</summary>
+        public bool RequestSupport(SupportAsset asset, float2 target, out SupportRefusal refusal)
+        {
+            return _battle.Support.Request(Side, asset.Id, target, out refusal) != null;
+        }
+
+        /// <summary>Whether one of our officers or observers can see the point (needed to call fire on it).</summary>
+        public bool CanObserve(float2 point) => _battle.Support.ObserverFor(Side, point) != null;
+
+        /// <summary>Our own missions on their way (we know where we called them).</summary>
+        public IEnumerable<SupportMission> OwnMissions
+        {
+            get
+            {
+                foreach (var mission in _battle.Support.Missions)
+                {
+                    if (mission.Side == Side) yield return mission;
+                }
+            }
+        }
+
         /// <summary>Our own deployment zones (we know where we may set up).</summary>
         public IReadOnlyList<float2[]> OwnDeployZones => _battle.DeployZones(Side);
         public bool IsDeploying => _battle.IsDeploying;

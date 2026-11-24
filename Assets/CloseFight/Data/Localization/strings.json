@@ -726,5 +726,85 @@
   "deploy.mines_refused": {
     "zh": "那里布不了雷：要选工兵组，还有地雷，离他们 150 米以内的空地",
     "en": "Cannot lay mines there: select engineers with mines left, and open ground within 150 m of them"
+  },
+  "ui.support": {
+    "zh": "支援",
+    "en": "Support"
+  },
+  "support.title": {
+    "zh": "场外支援 · 剩余 {0} 点",
+    "en": "Off-map support · {0} points left"
+  },
+  "support.hint": {
+    "zh": "呼叫时需要连部或炮兵观察组有人看得到目标；1–3 分钟后到达，落点有偏差，离自己人太近会误伤",
+    "en": "An HQ man or forward observer must see the target; it arrives 1–3 min later, scatters, and can hit our own men nearby"
+  },
+  "support.points": {
+    "zh": "点",
+    "en": "pts"
+  },
+  "support.minutes": {
+    "zh": "分钟",
+    "en": "min"
+  },
+  "support.choose_target": {
+    "zh": "左键点击目标（右键或 Esc 取消）",
+    "en": "left-click the target (right-click or Esc to cancel)"
+  },
+  "support.called": {
+    "zh": "{0} 已由 {1} 呼叫，预计 {2} 后到达",
+    "en": "{0} called by {1}; arrives in about {2}"
+  },
+  "support.firing": {
+    "zh": "落弹中",
+    "en": "Incoming"
+  },
+  "support.no_observer": {
+    "zh": "连部和观察组都看不到那里，呼叫不了",
+    "en": "Neither the HQ nor the observers can see that spot"
+  },
+  "support.no_points": {
+    "zh": "支援点数不够",
+    "en": "Not enough support points"
+  },
+  "support.wrong_time": {
+    "zh": "这个时间出动不了（斯图卡只在白天，夜间轰炸只在夜里）",
+    "en": "Not available now (Stukas fly by day, night bombers by night)"
+  },
+  "support.wrong_time_short": {
+    "zh": "现在出动不了",
+    "en": "not available now"
+  },
+  "support.impossible": {
+    "zh": "无法呼叫",
+    "en": "Cannot call that"
+  },
+  "support.lefh18": {
+    "zh": "105 毫米榴弹炮",
+    "en": "105 mm howitzers"
+  },
+  "support.sfh18": {
+    "zh": "150 毫米重榴弹炮",
+    "en": "150 mm heavy howitzers"
+  },
+  "support.stuka": {
+    "zh": "斯图卡俯冲轰炸",
+    "en": "Stuka dive-bombers"
+  },
+  "support.ml20": {
+    "zh": "152 毫米重炮（伏尔加河东岸）",
+    "en": "152 mm guns (east bank)"
+  },
+  "support.katyusha": {
+    "zh": "喀秋莎火箭炮",
+    "en": "Katyusha rockets"
+  },
+  "support.po2": {
+    "zh": "Po-2 夜间轰炸",
+    "en": "Po-2 night bombers"
+  },
+  "team.observer": {
+    "zh": "炮兵观察组",
+    "en": "Forward observers"
   }
 }

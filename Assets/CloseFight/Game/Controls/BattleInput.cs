@@ -74,6 +74,10 @@ namespace CloseFight.Game.Controls
         float _toastUntil;
 
         Rect _menuRect;
+        // Off-map support (M13): the panel, and an asset waiting for its target.
+        bool _supportOpen;
+        Rect _supportRect;
+        SupportAsset _pendingSupport;
         Rect _rosterRect;
         Rect _infoRect;
         Texture2D _white;
@@ -170,6 +174,18 @@ namespace CloseFight.Game.Controls
                     _battle.LayMinesBeforeBattle(team, ahead);
                 }
             }
+        }
+
+        /// <summary>For <see cref="Battle.AutoScreenshot"/>: open the support panel and call the first asset on the first objective.</summary>
+        internal void DebugSupport()
+        {
+            var assets = _battle.Support.Assets(_playerSide);
+            if (assets.Count > 0 && _battle.Objectives.Count > 0)
+            {
+                CallSupport(assets[0], _battle.Objectives[0].Position);
+            }
+
+            _supportOpen = true;
         }
 
         void ShowZones() => unitsView.ShowDeployZones(_battle.DeployZones(_playerSide), ZoneFill, ZoneOutline);
@@ -308,10 +324,12 @@ namespace CloseFight.Game.Controls
 
             if (keyboard.escapeKey.wasPressedThisFrame)
             {
-                if (_pendingOrder != OrderType.None || _menuOpen)
+                if (_pendingOrder != OrderType.None || _menuOpen || _pendingSupport != null || _supportOpen)
                 {
                     _pendingOrder = OrderType.None;
                     _menuOpen = false;
+                    _pendingSupport = null;
+                    _supportOpen = false;
                 }
                 else
                 {
@@ -392,6 +410,21 @@ namespace CloseFight.Game.Controls
             bool overUi = IsOverUi(screen);
             if (_stage == Stage.Briefing)
             {
+                return;
+            }
+
+            if (_pendingSupport != null)
+            {
+                if (mouse.rightButton.wasPressedThisFrame)
+                {
+                    _pendingSupport = null;
+                }
+                else if (mouse.leftButton.wasPressedThisFrame && !overUi)
+                {
+                    CallSupport(_pendingSupport, ScreenToMap(screen));
+                    _pendingSupport = null;
+                }
+
                 return;
             }
 
@@ -669,7 +702,8 @@ namespace CloseFight.Game.Controls
                 return true; // top bar
             }
 
-            return (_menuOpen && _menuRect.Contains(gui)) || _rosterRect.Contains(gui) || _infoRect.Contains(gui);
+            return (_menuOpen && _menuRect.Contains(gui)) || (_supportOpen && _supportRect.Contains(gui))
+                || _rosterRect.Contains(gui) || _infoRect.Contains(gui);
         }
 
         // ---------------------------------------------------------------- drawing
@@ -721,6 +755,8 @@ namespace CloseFight.Game.Controls
             DrawBoxSelection();
             DrawPendingHint();
             DrawSightLabel();
+            DrawSupportMarkers();
+            DrawSupportPanel(width);
             DrawMenu(width, height);
             DrawToast(width, height);
             DrawAfterAction(width, height);
@@ -752,7 +788,14 @@ namespace CloseFight.Game.Controls
             DrawBar(new Rect(570, 10, 110, 8), morale / 100f, Color.Lerp(new Color(0.9f, 0.2f, 0.1f), new Color(0.3f, 0.8f, 0.3f), morale / 100f));
             GUI.Label(new Rect(688, 5, 50, 20), $"{morale:0}%", _small);
 
-            GUI.Label(new Rect(745, 5, width - 1180, 20), Loc.T("ui.help"), _small);
+            GUI.Label(new Rect(745, 5, width - 1290, 20), Loc.T("ui.help"), _small);
+
+            if (_stage == Stage.Battle && _battle.Support.Assets(_playerSide).Count > 0
+                && GUI.Button(new Rect(width - 535, 2, 100, 22), $"{Loc.T("ui.support")} {_battle.Support.Points(_playerSide)}"))
+            {
+                _supportOpen = !_supportOpen;
+                _menuOpen = false;
+            }
 
             if (GUI.Button(new Rect(width - 425, 2, 70, 22), $"{GameSettings.FrameCap} FPS"))
             {
@@ -1340,8 +1383,99 @@ namespace CloseFight.Game.Controls
             Fill(new Rect(rect.xMax - 1, rect.y, 1, rect.height), new Color(1f, 0.85f, 0.2f, 0.9f));
         }
 
+        void CallSupport(SupportAsset asset, float2 target)
+        {
+            var mission = _battle.Support.Request(_playerSide, asset.Id, target, out var refusal);
+            if (mission == null)
+            {
+                ShowToast(Loc.T(SupportRefusalKey(refusal)));
+                return;
+            }
+
+            float wait = mission.ArrivesAt - _battle.Clock.ElapsedSeconds;
+            ShowToast(string.Format(Loc.T("support.called"), Loc.T(asset.NameKey), mission.Observer.FullName, Clock(wait)));
+        }
+
+        static string SupportRefusalKey(SupportRefusal refusal)
+        {
+            switch (refusal)
+            {
+                case SupportRefusal.NoObserver: return "support.no_observer";
+                case SupportRefusal.NotEnoughPoints: return "support.no_points";
+                case SupportRefusal.WrongTimeOfDay: return "support.wrong_time";
+                default: return "support.impossible";
+            }
+        }
+
+        /// <summary>The support panel: each asset with its cost and how long it takes to arrive.</summary>
+        void DrawSupportPanel(float width)
+        {
+            if (!_supportOpen || _stage != Stage.Battle)
+            {
+                _supportRect = Rect.zero;
+                return;
+            }
+
+            var assets = _battle.Support.Assets(_playerSide);
+            int points = _battle.Support.Points(_playerSide);
+            _supportRect = new Rect(width - 420, 30, 410, 74 + assets.Count * 30);
+            Fill(_supportRect, new Color(0.1f, 0.1f, 0.09f, 0.95f));
+            GUI.Label(new Rect(_supportRect.x + 10, _supportRect.y + 6, 390, 20), string.Format(Loc.T("support.title"), points), _label);
+            GUI.Label(new Rect(_supportRect.x + 10, _supportRect.y + 26, 390, 36), Loc.T("support.hint"), new GUIStyle(_small) { wordWrap = true });
+            for (int i = 0; i < assets.Count; i++)
+            {
+                var asset = assets[i];
+                bool available = _battle.Support.Available(asset);
+                GUI.enabled = available && points >= asset.Cost;
+                string when = available ? $"{asset.DelayMin / 60f:0.#}–{asset.DelayMax / 60f:0.#} {Loc.T("support.minutes")}" : Loc.T("support.wrong_time_short");
+                string label = $"{Loc.T(asset.NameKey)}   {asset.Cost} {Loc.T("support.points")} · {when}";
+                if (GUI.Button(new Rect(_supportRect.x + 8, _supportRect.y + 66 + i * 30, 394, 26), label, _button))
+                {
+                    _pendingSupport = asset;
+                    _supportOpen = false;
+                }
+            }
+
+            GUI.enabled = true;
+        }
+
+        /// <summary>Our own called missions: where they will land and how long until they do.</summary>
+        void DrawSupportMarkers()
+        {
+            float now = _battle.Clock.ElapsedSeconds;
+            foreach (var mission in _battle.Support.Missions)
+            {
+                if (mission.Side != _playerSide)
+                {
+                    continue;
+                }
+
+                Vector3 screen = worldCamera.WorldToScreenPoint(new Vector3(mission.Target.x, 0f, mission.Target.y));
+                if (screen.z < 0f)
+                {
+                    continue;
+                }
+
+                Vector2 gui = ToGui(new Vector2(screen.x, screen.y));
+                string text = mission.Firing ? $"{Loc.T(mission.Asset.NameKey)} · {Loc.T("support.firing")}"
+                    : $"{Loc.T(mission.Asset.NameKey)} · {Clock(mission.ArrivesAt - now)}";
+                var rect = new Rect(gui.x - 110, gui.y - 30, 220, 18);
+                Fill(rect, new Color(0.5f, 0.25f, 0.05f, 0.85f));
+                GUI.Label(rect, text, _smallCenter);
+            }
+        }
+
         void DrawPendingHint()
         {
+            if (_pendingSupport != null && Mouse.current != null)
+            {
+                Vector2 m = ToGui(Mouse.current.position.ReadValue());
+                var box = new Rect(m.x + 16, m.y + 12, 380, 22);
+                Fill(box, new Color(0.35f, 0.15f, 0f, 0.8f));
+                GUI.Label(new Rect(box.x + 6, box.y + 2, box.width - 12, 20), Loc.T(_pendingSupport.NameKey) + " — " + Loc.T("support.choose_target"), _small);
+                return;
+            }
+
             if (_pendingOrder == OrderType.None || Mouse.current == null)
             {
                 return;

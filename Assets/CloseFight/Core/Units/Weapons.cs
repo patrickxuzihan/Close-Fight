@@ -175,6 +175,9 @@ namespace CloseFight.Core.Units
                     // The sniper and his spotter (who carries a submachine gun for close defence).
                     return index == 0 ? (german ? Kar98kScoped : MosinScoped) : (german ? Mp40 : Ppsh41);
 
+                case TeamType.Observer:
+                    return index == 0 ? (german ? Mp40 : Ppsh41) : (german ? Kar98k : Mosin);
+
                 case TeamType.Engineer:
                     if (index == 0)
                     {

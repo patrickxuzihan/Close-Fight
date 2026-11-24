@@ -26,6 +26,12 @@
           "x": 0,
           "y": 280
         }
+      ],
+      "supportPoints": 12,
+      "support": [
+        "lefh18",
+        "sfh18",
+        "stuka"
       ]
     },
     {
@@ -48,6 +54,12 @@
           "x": 68,
           "y": 280
         }
+      ],
+      "supportPoints": 12,
+      "support": [
+        "ml20",
+        "katyusha",
+        "po2"
       ]
     }
   ],
@@ -397,6 +409,36 @@
       },
       "facing": 270,
       "experience": 55,
+      "equipment": "",
+      "initialOrder": "None"
+    },
+    {
+      "key": "de_fo",
+      "side": "German",
+      "type": "Observer",
+      "displayName": "Artilleriebeobachter",
+      "size": 0,
+      "position": {
+        "x": 20,
+        "y": 110
+      },
+      "facing": 90,
+      "experience": 60,
+      "equipment": "",
+      "initialOrder": "None"
+    },
+    {
+      "key": "su_fo",
+      "side": "Soviet",
+      "type": "Observer",
+      "displayName": "Artnablyudateli",
+      "size": 0,
+      "position": {
+        "x": 250,
+        "y": 150
+      },
+      "facing": 270,
+      "experience": 60,
       "equipment": "",
       "initialOrder": "None"
     }

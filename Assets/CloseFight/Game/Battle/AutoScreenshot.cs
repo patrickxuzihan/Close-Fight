@@ -59,6 +59,10 @@ namespace CloseFight.Game.Battle
             }
 
             _input.DebugView(HasArg("-cfAiPlan"), Arg("-cfZoom"), Arg("-cfCenter"));
+            if (HasArg("-cfSupport"))
+            {
+                _input.DebugSupport();
+            }
 
             yield return new WaitForSecondsRealtime(_seconds);
             yield return new WaitForEndOfFrame();

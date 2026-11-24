@@ -17,6 +17,8 @@ namespace CloseFight.Core.Battle
         public Side playerSide = Side.German;
         /// <summary>The side on the offensive; its AI attacks (M10), the other side's AI defends (M7).</summary>
         public Side attacker = Side.German;
+        /// <summary>Fought at night (M14): changes which aircraft can fly.</summary>
+        public bool night;
         /// <summary>Battle length in game minutes (D33: adjustable, default 45).</summary>
         public float timeLimitMinutes = VictoryConditions.DefaultTimeLimitMinutes;
         public List<SideDefinition> sides = new List<SideDefinition>();
@@ -31,6 +33,10 @@ namespace CloseFight.Core.Battle
         public MapEdge retreatEdge = MapEdge.South;
         /// <summary>Polygon the side may place its teams in before the battle (empty: no deployment phase).</summary>
         public List<MapPoint> deployZone = new List<MapPoint>();
+        /// <summary>Off-map support points for the battle (D36: later set by the strategic layer's supply).</summary>
+        public int supportPoints;
+        /// <summary>Off-map assets the side may call, by id (see SupportAssets), e.g. "lefh18", "stuka", "katyusha".</summary>
+        public List<string> support = new List<string>();
     }
 
     [Serializable]
@@ -92,7 +98,7 @@ namespace CloseFight.Core.Battle
             Side? playerSide = null, bool deployment = false, bool allAi = false)
         {
             var player = playerSide ?? scenario.playerSide;
-            var battle = new BattleState(map, scenario.seed);
+            var battle = new BattleState(map, scenario.seed) { IsNight = scenario.night };
             battle.Victory.TimeLimitSeconds = scenario.timeLimitMinutes * 60f;
             foreach (var side in scenario.sides)
             {
@@ -101,6 +107,8 @@ namespace CloseFight.Core.Battle
                 {
                     battle.AddDeployZone(side.side, side.deployZone.ConvertAll(p => (Unity.Mathematics.float2)p));
                 }
+
+                battle.Support.Configure(side.side, side.supportPoints, side.support);
             }
 
             foreach (var team in scenario.teams)

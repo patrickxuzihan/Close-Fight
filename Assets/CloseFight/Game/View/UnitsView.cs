@@ -251,6 +251,7 @@ namespace CloseFight.Game.View
             _equipment.Sync(alpha, _fogEnabled, _viewSide, _selected);
             SyncObjectives();
             SyncMineFields();
+            SyncMissions();
             SyncAiPlan();
         }
 
@@ -339,6 +340,39 @@ namespace CloseFight.Game.View
             for (int i = used; i < _minePool.Count; i++)
             {
                 _minePool[i].enabled = false;
+            }
+        }
+
+        readonly List<SpriteRenderer> _missionPool = new List<SpriteRenderer>();
+        static readonly Color MissionColor = new Color(1f, 0.45f, 0.1f, 0.9f);
+
+        /// <summary>The viewing side's own called fire missions: a ring the size of the expected scatter.</summary>
+        void SyncMissions()
+        {
+            int used = 0;
+            foreach (var mission in _battle.Support.Missions)
+            {
+                if (_fogEnabled && mission.Side != _viewSide)
+                {
+                    continue;
+                }
+
+                if (used == _missionPool.Count)
+                {
+                    _missionPool.Add(NewOverlaySprite("Fire mission", MarkerSprites.Ring, 9));
+                }
+
+                var ring = _missionPool[used++];
+                ring.enabled = true;
+                ring.color = MissionColor;
+                float size = mission.Asset.Spread * 2f / 0.94f;
+                ring.transform.position = new Vector3(mission.Target.x, 23f, mission.Target.y);
+                ring.transform.localScale = new Vector3(size, size, 1f);
+            }
+
+            for (int i = used; i < _missionPool.Count; i++)
+            {
+                _missionPool[i].enabled = false;
             }
         }
 
@@ -852,6 +886,7 @@ namespace CloseFight.Game.View
             _equipment.Clear();
             _flags.Clear();
             _minePool.Clear();
+            _missionPool.Clear();
             _planLines.Clear();
             _planRings.Clear();
             _tracerPool.Clear();

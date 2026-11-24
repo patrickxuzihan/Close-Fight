@@ -19,6 +19,8 @@ namespace CloseFight.Core.AI
         Garrison,
         /// <summary>Sniper (M12): beside the base of fire, hidden, picking officers and gunners.</summary>
         Sniper,
+        /// <summary>Forward observer (M13): a hidden spot that sees the objective, to direct the guns.</summary>
+        Observer,
     }
 
     /// <summary>Where the attack on the current objective stands.</summary>
@@ -130,6 +132,7 @@ namespace CloseFight.Core.AI
         float2 _jumpOff;
         float2 _armorSpot;
         float2 _sniperSpot;
+        float2 _observerSpot;
         float _armorSpotAt = float.NegativeInfinity;
         bool _hasGeometry;
         float _geometryAt = float.NegativeInfinity;
@@ -182,6 +185,11 @@ namespace CloseFight.Core.AI
                 ComputeGeometry(keepOverwatch: true);
             }
 
+            if (_phase == AttackPhase.Advance || _phase == AttackPhase.Suppress || _phase == AttackPhase.Assault)
+            {
+                CallSupport();
+            }
+
             switch (_phase)
             {
                 case AttackPhase.Assemble: Assemble(); break;
@@ -202,6 +210,7 @@ namespace CloseFight.Core.AI
                 {
                     case AttackRole.Support: RunSupport(plan); break;
                     case AttackRole.Sniper: RunSniper(plan); break;
+                    case AttackRole.Observer: RunObserver(plan); break;
                     case AttackRole.Armor: RunArmor(plan); break;
                     case AttackRole.AntiTank: RunAntiTank(plan); break;
                     case AttackRole.Mortar: RunMortar(plan); break;
@@ -252,6 +261,9 @@ namespace CloseFight.Core.AI
                         break;
                     case AttackRole.Sniper:
                         Place(team, SniperSpot(), facing, taken, false);
+                        break;
+                    case AttackRole.Observer:
+                        Place(team, ObserverSpot(), facing, taken, false);
                         break;
                     case AttackRole.Armor:
                         Place(team, _armorSpot, facing, taken, true);
@@ -410,6 +422,7 @@ namespace CloseFight.Core.AI
                 case TeamType.Mortar: return AttackRole.Mortar;
                 case TeamType.Headquarters: return AttackRole.Headquarters;
                 case TeamType.Sniper: return AttackRole.Sniper;
+                case TeamType.Observer: return AttackRole.Observer;
                 default: return AttackRole.Assault; // engineers go in with the assault teams
             }
         }
@@ -535,6 +548,7 @@ namespace CloseFight.Core.AI
             }
 
             _target = best;
+            _supportCalledFor = null;
             _hasGeometry = false;
             _smokeForAssault = false;
             _breach = BreachState.None;
@@ -602,6 +616,14 @@ namespace CloseFight.Core.AI
             {
                 float2 sniperAt = Anchor(sniper.Team);
                 _sniperSpot = BestPoint(o, toFront, 120f, 320f, 85f, p => SniperScore(p, o, sniperAt), sniperAt, MovementClass.Infantry);
+            }
+
+            var observer = FirstOf(AttackRole.Observer);
+            if (observer != null)
+            {
+                float2 observerAt = Anchor(observer.Team);
+                _observerSpot = BestPoint(o, toFront, 110f, 320f, 85f,
+                    p => SniperScore(p, o, observerAt) - (math.distance(p, _sniperSpot) < 20f ? 10f : 0f), observerAt, MovementClass.Infantry);
             }
 
             var armor = FirstOf(AttackRole.Armor);
@@ -975,6 +997,7 @@ namespace CloseFight.Core.AI
                 TakeCover(plan);
             }
 
+            _supportCalledFor = null; // another try may call the guns again
             if (failed + 1 >= 2 || why == "no covered way forward")
             {
                 SetPhase(AttackPhase.Consolidate, why);
@@ -1317,10 +1340,118 @@ namespace CloseFight.Core.AI
             return math.distance(p, a + ab * t);
         }
 
+        // ------------------------------------------------------------ off-map support (M13)
+
+        Objective _supportCalledFor;
+        float _supportCalledAt = float.NegativeInfinity;
+        float _supportTriedAt = float.NegativeInfinity;
+
+        /// <summary>
+        /// While moving up and in the firefight (every 150 s at most): artillery on the
+        /// strongest enemy known around the objective, or Stukas on a building he
+        /// holds. The rounds come a minute or more later, about when the assault
+        /// is ready. Never so close to our own men that the scatter would hit them.
+        /// </summary>
+        void CallSupport()
+        {
+            // At most one mission every two and a half minutes for the same objective.
+            if ((_supportCalledFor == _target && _view.Time - _supportCalledAt < 150f) || _view.SupportPoints <= 0 || _view.Time - _supportTriedAt < 15f)
+            {
+                return;
+            }
+
+            _supportTriedAt = _view.Time;
+
+            // The most dangerous known enemy that bears on this attack and that an officer or observer can see.
+            Contact best = null;
+            float bestScore = float.MinValue;
+            foreach (var c in _contacts.All)
+            {
+                float relevance = math.min(math.distance(c.Position, _target.Position), math.distance(c.Position, Front()));
+                if (relevance > 200f || c.Heard)
+                {
+                    continue;
+                }
+
+                float score = c.Weight * 3f - relevance * 0.03f - (_view.Time - c.SeenAt) * 0.05f;
+                if (score > bestScore && _view.CanObserve(c.Position))
+                {
+                    bestScore = score;
+                    best = c;
+                }
+            }
+
+            if (best == null)
+            {
+                return;
+            }
+
+            SupportAsset choice = null;
+            bool building = BuildingAt(best.Position);
+            foreach (var asset in _view.SupportAssets)
+            {
+                if (asset.Cost > _view.SupportPoints || !_view.SupportAvailable(asset) || !SafeFromScatter(best.Position, asset))
+                {
+                    continue;
+                }
+
+                // Bombs for a building the enemy holds; otherwise the heaviest guns we can pay for.
+                float score = asset.Round.StructureDamage * (building && asset.IsAircraft ? 2f : 1f) + asset.Rounds * asset.Round.HeLethalRadius * 3f;
+                if (choice == null || score > ScoreOf(choice, building))
+                {
+                    choice = asset;
+                }
+            }
+
+            if (choice != null && _view.RequestSupport(choice, best.Position, out _))
+            {
+                _supportCalledFor = _target;
+                _supportCalledAt = _view.Time;
+            }
+        }
+
+        static float ScoreOf(SupportAsset asset, bool building) =>
+            asset.Round.StructureDamage * (building && asset.IsAircraft ? 2f : 1f) + asset.Rounds * asset.Round.HeLethalRadius * 3f;
+
+        /// <summary>None of our men within reach of the rounds' scatter and blast.</summary>
+        bool SafeFromScatter(float2 target, SupportAsset asset)
+        {
+            float safe = asset.Spread + asset.Round.HeLethalRadius + 10f;
+            foreach (var team in _view.OwnTeams)
+            {
+                foreach (var member in team.Members)
+                {
+                    if (member.IsActive && math.distance(member.Position, target) < safe)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
         // ------------------------------------------------------------ snipers (M12)
 
         /// <summary>The sniper's nest for this objective (see <see cref="SniperScore"/>), in the best cover right there.</summary>
         float2 SniperSpot() => CoverNear(_sniperSpot, 6f, MovementClass.Infantry, false);
+
+        float2 ObserverSpot() => CoverNear(_observerSpot, 6f, MovementClass.Infantry, false);
+
+        /// <summary>The observers go where they can see the objective, and lie hidden there (they call the guns, see CallSupport).</summary>
+        void RunObserver(AttackTeamPlan plan)
+        {
+            var team = plan.Team;
+            if (_target != null && _hasGeometry && _phase != AttackPhase.Hold && MoveTo(plan, ObserverSpot(), OrderType.Move, 8f))
+            {
+                return;
+            }
+
+            if (team.Activity == TeamActivity.Idle && team.Order.Type != OrderType.Hide)
+            {
+                _view.Order(team, OrderType.Hide, team.Centroid);
+            }
+        }
 
         void RunSniper(AttackTeamPlan plan)
         {
