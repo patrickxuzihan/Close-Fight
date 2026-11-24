@@ -5,6 +5,15 @@ using Unity.Mathematics;
 
 namespace CloseFight.Core.Battle
 {
+    /// <summary>What caused a casualty: snipers and flamethrowers frighten men more (D39, M12).</summary>
+    public enum HitCause : byte
+    {
+        Gunfire,
+        Sniper,
+        Flame,
+        Blast,
+    }
+
     /// <summary>One round fired, kept briefly so the view can draw tracers.</summary>
     public readonly struct ShotEvent
     {
@@ -46,6 +55,10 @@ namespace CloseFight.Core.Battle
         public const float HideRange = 15f;
         const float ShotHistorySeconds = 1f;
         const float SoundFuzz = 15f;
+        /// <summary>A sniper's single shot is hard to place by ear.</summary>
+        const float SniperSoundFuzz = 45f;
+        /// <summary>Flame engulfs everyone this close to where the jet lands.</summary>
+        public const float FlameRadius = 3.5f;
 
         readonly BattleState _battle;
         readonly List<ShotEvent> _recentShots = new List<ShotEvent>();
@@ -111,8 +124,26 @@ namespace CloseFight.Core.Battle
                 : float.PositiveInfinity;
             holdRange = math.min(holdRange, team.SmallArmsHoldRange);
 
-            var target = ChooseTarget(shooter, holdRange);
-            if (target != null)
+            // A sniper lying in wait still takes the shots that matter: officers and machine gunners.
+            bool sniper = shooter.Weapon.Class == WeaponClass.SniperRifle;
+            bool priorityOnly = false;
+            if (sniper && (order == OrderType.Ambush || order == OrderType.Hide))
+            {
+                holdRange = shooter.Weapon.EffectiveRange;
+                priorityOnly = true;
+            }
+
+            var target = ChooseTarget(shooter, holdRange, priorityOnly);
+            if (target == null)
+            {
+                return;
+            }
+
+            if (shooter.Weapon.Class == WeaponClass.Flamethrower)
+            {
+                FlameAt(shooter, target, now);
+            }
+            else
             {
                 FireAt(shooter, target, now, moving);
             }
@@ -130,7 +161,7 @@ namespace CloseFight.Core.Battle
             _recentShots.Add(new ShotEvent(shooterId, from, impact, hit, weapon, now));
         }
 
-        Soldier ChooseTarget(Soldier shooter, float holdRange)
+        Soldier ChooseTarget(Soldier shooter, float holdRange, bool priorityOnly = false)
         {
             var team = shooter.Team;
             Soldier best = null;
@@ -141,7 +172,7 @@ namespace CloseFight.Core.Battle
             {
                 foreach (var enemy in team.FireTarget.Members)
                 {
-                    Consider(shooter, enemy, shooter.Weapon.MaxRange, holdRange, ref best, ref bestScore);
+                    Consider(shooter, enemy, shooter.Weapon.MaxRange, holdRange, false, ref best, ref bestScore);
                 }
 
                 if (best != null)
@@ -154,14 +185,14 @@ namespace CloseFight.Core.Battle
             {
                 if (enemy.Team.Side != team.Side)
                 {
-                    Consider(shooter, enemy, shooter.Weapon.EffectiveRange, holdRange, ref best, ref bestScore);
+                    Consider(shooter, enemy, shooter.Weapon.EffectiveRange, holdRange, priorityOnly, ref best, ref bestScore);
                 }
             }
 
             return best;
         }
 
-        void Consider(Soldier shooter, Soldier enemy, float range, float holdRange, ref Soldier best, ref float bestScore)
+        void Consider(Soldier shooter, Soldier enemy, float range, float holdRange, bool priorityOnly, ref Soldier best, ref float bestScore)
         {
             // Rifles and machine guns cannot hurt the crew inside a tank.
             if (!enemy.IsActive || enemy.IsMounted || !_battle.Visibility.CanSee(shooter.Team.Side, enemy))
@@ -177,6 +208,17 @@ namespace CloseFight.Core.Battle
 
             // Machine guns are the most dangerous thing on the field: shoot them first.
             float score = enemy.Weapon != null && enemy.Weapon.Class == WeaponClass.MachineGun ? distance * 0.7f : distance;
+            if (shooter.Weapon.Class == WeaponClass.SniperRifle)
+            {
+                // D39: snipers pick officers, machine gunners and gun crews.
+                float priority = SniperPriority(enemy);
+                if (priorityOnly && priority >= 1f && distance > AmbushRange)
+                {
+                    return;
+                }
+
+                score = distance * priority;
+            }
             if (score >= bestScore || !HasLineOfFire(shooter.Position, shooter.Posture, enemy.Position, enemy.Posture, range))
             {
                 return;
@@ -184,6 +226,16 @@ namespace CloseFight.Core.Battle
 
             best = enemy;
             bestScore = score;
+        }
+
+        /// <summary>Multiplier on distance when a sniper picks a target: lower is more wanted.</summary>
+        public static float SniperPriority(Soldier enemy)
+        {
+            if (enemy.IsLeader) return 0.25f;
+            if (enemy.Weapon != null && enemy.Weapon.Class == WeaponClass.MachineGun) return 0.3f;
+            if (enemy.Role == CrewRole.Gunner) return 0.35f;
+            if (enemy.Weapon != null && enemy.Weapon.Class == WeaponClass.SniperRifle) return 0.4f;
+            return 1f;
         }
 
         bool HasLineOfFire(float2 from, Posture fromPosture, float2 to, Posture toPosture, float range)
@@ -200,13 +252,14 @@ namespace CloseFight.Core.Battle
             float cover = CoverOf(target, shooter.Position);
             float chance = HitChance(weapon, range, shooter, target, cover, moving);
 
+            var cause = weapon.Class == WeaponClass.SniperRifle ? HitCause.Sniper : HitCause.Gunfire;
             for (int i = 0; i < rounds; i++)
             {
                 bool hit = target.IsActive && _battle.Random.Chance(chance);
                 float2 impact = hit ? target.Position : target.Position + RandomOffset(0.8f, 3.5f);
                 if (hit)
                 {
-                    ApplyHit(target, weapon, now, shooter);
+                    InflictHit(target, weapon.Lethality, now, shooter, cause);
                 }
 
                 ApplySuppression(impact, weapon.Suppression, shooter.Team.Side, now, target);
@@ -214,6 +267,45 @@ namespace CloseFight.Core.Battle
             }
 
             FinishBurst(shooter, rounds, now, Soldier.HeadingOf(target.Position - shooter.Position), moving);
+        }
+
+        /// <summary>
+        /// A flamethrower burst (M12, D38): everyone within a few metres of the target
+        /// is caught. Walls and windows help little against flame poured in, and the
+        /// terror spreads further than the fire; nothing keeps burning afterwards.
+        /// </summary>
+        void FlameAt(Soldier shooter, Soldier target, float now)
+        {
+            var weapon = shooter.Weapon;
+            float2 point = target.Position;
+            foreach (var victim in _battle.Soldiers)
+            {
+                if (victim.Team.Side == shooter.Team.Side || !victim.IsActive || victim.IsMounted)
+                {
+                    continue;
+                }
+
+                float d = math.distance(victim.Position, point);
+                if (d <= FlameRadius)
+                {
+                    float cover = CoverOf(victim, shooter.Position);
+                    float chance = weapon.Accuracy * (1f - d / FlameRadius * 0.4f) * (1f - cover / 100f * 0.3f);
+                    if (_battle.Random.Chance(chance))
+                    {
+                        InflictHit(victim, weapon.Lethality, now, shooter, HitCause.Flame);
+                    }
+                }
+
+                if (victim.IsActive && d <= FlameRadius * 2.5f)
+                {
+                    victim.Suppression = math.min(100f, victim.Suppression + weapon.Suppression * (1f - d / (FlameRadius * 2.5f) * 0.5f));
+                    victim.Morale = math.max(0f, victim.Morale - Psychology.FlameTerrorLoss * 0.5f * Psychology.Nerve(victim));
+                    victim.LastUnderFireAt = now;
+                }
+            }
+
+            _recentShots.Add(new ShotEvent(shooter.Id, shooter.Position, point, true, weapon.Class, now));
+            FinishBurst(shooter, 1, now, Soldier.HeadingOf(point - shooter.Position), false);
         }
 
         /// <summary>Area fire: rake a point to keep heads down, whether or not anyone is seen there.</summary>
@@ -268,13 +360,15 @@ namespace CloseFight.Core.Battle
             }
 
             // An ambush or a hiding team that opens fire has given itself away: it now fights normally.
+            // A sniper's single shot from cover does not: he stays hidden and keeps picking targets.
             var team = shooter.Team;
-            if (team.Order.Type == OrderType.Ambush || team.Order.Type == OrderType.Hide)
+            bool sniper = weapon.Class == WeaponClass.SniperRifle;
+            if (!sniper && (team.Order.Type == OrderType.Ambush || team.Order.Type == OrderType.Hide))
             {
                 team.Order = new TeamOrder(OrderType.Defend, team.Centroid);
             }
 
-            _battle.Visibility.ReportSound(shooter, shooter.Position, weapon.AudibleRange, SoundFuzz);
+            _battle.Visibility.ReportSound(shooter, shooter.Position, weapon.AudibleRange, sniper ? SniperSoundFuzz : SoundFuzz);
         }
 
         /// <summary>Chance that one round hits. Public so tests and the info panel can explain it.</summary>
@@ -375,14 +469,15 @@ namespace CloseFight.Core.Battle
             }
         }
 
-        void ApplyHit(Soldier target, WeaponDefinition weapon, float now, Soldier shooter) => InflictHit(target, weapon.Lethality, now, shooter);
+        void ApplyHit(Soldier target, WeaponDefinition weapon, float now, Soldier shooter) =>
+            InflictHit(target, weapon.Lethality, now, shooter, weapon.Class == WeaponClass.SniperRifle ? HitCause.Sniper : HitCause.Gunfire);
 
         /// <summary>
         /// A hit on a soldier: wounds, disables or kills him depending on
         /// <paramref name="lethality"/>, and shakes the comrades around him.
         /// Shared by small arms, shell bursts and knocked-out tanks.
         /// </summary>
-        internal void InflictHit(Soldier target, float lethality, float now, Soldier by = null)
+        internal void InflictHit(Soldier target, float lethality, float now, Soldier by = null, HitCause cause = HitCause.Gunfire)
         {
             if (!target.IsActive)
             {
@@ -415,7 +510,7 @@ namespace CloseFight.Core.Battle
                 by.Kills++;
             }
 
-            _battle.Psychology.OnCasualty(target, result, now);
+            _battle.Psychology.OnCasualty(target, result, now, cause);
             if (!target.IsActive)
             {
                 target.IsMoving = false;

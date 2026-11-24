@@ -112,6 +112,35 @@ namespace CloseFight.Core.AI
             return _battle.TryIssueOrderAvoiding(team, order, target, pathCost, out _);
         }
 
+        /// <summary>Minefields we know about: our own, and the enemy's we have found (M12).</summary>
+        public IEnumerable<MineField> KnownMineFields
+        {
+            get
+            {
+                foreach (var field in _battle.Engineering.MineFields)
+                {
+                    if (field.KnownTo(Side))
+                    {
+                        yield return field;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Deployment only: our engineers lay a minefield prepared before the battle
+        /// (within 150 m of the team). False if not allowed or no mines are left.
+        /// </summary>
+        public bool LayMinesBeforeBattle(Team team, float2 point)
+        {
+            if (team.Side != Side)
+            {
+                throw new InvalidOperationException("An AI may only command its own side.");
+            }
+
+            return _battle.LayMinesBeforeBattle(team, point);
+        }
+
         /// <summary>Our own deployment zones (we know where we may set up).</summary>
         public IReadOnlyList<float2[]> OwnDeployZones => _battle.DeployZones(Side);
         public bool IsDeploying => _battle.IsDeploying;

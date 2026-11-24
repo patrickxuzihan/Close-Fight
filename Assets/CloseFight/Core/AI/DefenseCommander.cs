@@ -15,6 +15,8 @@ namespace CloseFight.Core.AI
         Mortar,
         Headquarters,
         Reserve,
+        /// <summary>Sniper (M12): high, concealed, long view; stays hidden and picks officers and gunners.</summary>
+        Sniper,
     }
 
     /// <summary>When a team gives ground (D22).</summary>
@@ -141,6 +143,79 @@ namespace CloseFight.Core.AI
                     _view.Redeploy(plan.Team, plan.Primary, facing);
                 }
             }
+
+            LayMines();
+        }
+
+        /// <summary>
+        /// Before the battle our engineers mine the approaches our guns cover best
+        /// (D39): the enemy has to cross them under fire or stop to clear them.
+        /// Tank lanes count double. Chosen from the map alone, like the positions.
+        /// </summary>
+        void LayMines()
+        {
+            var fire = new List<float2>();
+            foreach (var plan in _plans)
+            {
+                if (plan.Role == DefenseRole.MachineGun || plan.Role == DefenseRole.Rifle || plan.Role == DefenseRole.AntiTank || plan.Role == DefenseRole.Armor)
+                {
+                    fire.Add(plan.Primary);
+                }
+            }
+
+            var chosen = new List<float2>();
+            foreach (var plan in _plans)
+            {
+                var team = plan.Team;
+                while (team.Type == TeamType.Engineer && team.MineLoads > 0)
+                {
+                    float best = 0f;
+                    float2 spot = float2.zero;
+                    var points = _analysis.ApproachPoints;
+                    for (int i = 0; i < points.Count; i++)
+                    {
+                        float2 p = points[i];
+                        if (math.distance(p, team.Centroid) > 145f || TooClose(p, chosen, 35f) || TooClose(p, fire, 30f))
+                        {
+                            continue;
+                        }
+
+                        int covering = 0;
+                        foreach (var f in fire)
+                        {
+                            float d = math.distance(f, p);
+                            if (d < 250f && LineOfSight.Check(_view.Map, f, LineOfSight.EyeHeightAt(_view.Map, f, Posture.Kneeling), p, LineOfSight.EyeKneeling).Visible)
+                            {
+                                covering++;
+                            }
+                        }
+
+                        float score = covering * (_analysis.ApproachForVehicles[i] ? 2f : 1f);
+                        if (score > best)
+                        {
+                            best = score;
+                            spot = p;
+                        }
+                    }
+
+                    if (best <= 0f || !_view.LayMinesBeforeBattle(team, spot))
+                    {
+                        break;
+                    }
+
+                    chosen.Add(spot);
+                }
+            }
+        }
+
+        static bool TooClose(float2 p, List<float2> others, float distance)
+        {
+            foreach (var o in others)
+            {
+                if (math.distance(o, p) < distance) return true;
+            }
+
+            return false;
         }
 
         // ------------------------------------------------------------ planning
@@ -154,7 +229,8 @@ namespace CloseFight.Core.AI
                 case TeamType.Vehicle: return DefenseRole.Armor;
                 case TeamType.Mortar: return DefenseRole.Mortar;
                 case TeamType.Headquarters: return DefenseRole.Headquarters;
-                default: return DefenseRole.Rifle;
+                case TeamType.Sniper: return DefenseRole.Sniper;
+                default: return DefenseRole.Rifle; // engineers fight as riflemen once their mines are down
             }
         }
 
@@ -163,6 +239,7 @@ namespace CloseFight.Core.AI
             switch (role)
             {
                 case DefenseRole.MachineGun: return 0;
+                case DefenseRole.Sniper: return 1;
                 case DefenseRole.AntiTank: return 1;
                 case DefenseRole.Armor: return 2;
                 case DefenseRole.Rifle: return 3;
@@ -318,6 +395,7 @@ namespace CloseFight.Core.AI
                 case DefenseRole.MachineGun:
                 case DefenseRole.Rifle:
                 case DefenseRole.Armor:
+                case DefenseRole.Sniper:
                     return DefensePosture.Elastic;
                 default:
                     return DefensePosture.Hold;
@@ -423,6 +501,8 @@ namespace CloseFight.Core.AI
                     return 60f * c.VehicleCoverage + 0.3f * c.Cover - 15f * c.Exposure + 6f * c.ObjectiveScore;
                 case DefenseRole.Mortar:
                     return -120f * c.Exposure + 0.2f * c.Cover + 0.15f * c.Depth + 4f * c.ObjectiveScore;
+                case DefenseRole.Sniper:
+                    return 70f * c.Coverage + 0.3f * c.Cover + 6f * height + 14f * concealed + 4f * c.ObjectiveScore;
                 default: // headquarters and reserve: hidden, covered, near what matters
                     return -60f * c.Exposure + 0.4f * c.Cover + 20f * c.ObjectiveScore;
             }

@@ -1,5 +1,8 @@
 # Task 06: Crawl cycle (2 frames) — Soviet rifleman
 
+
+> **Camera check (added 2026-11-24 after a rejected delivery):** the soldier lies **face down** and we look at his **back** from directly above: helmet top, back of the tunic or coat, the pack, the backs of the legs, boot soles toward the bottom edge. **No face, chest, buttons or belt buckle may be visible.** A front view of a standing figure is not a prone pose.
+
 Before starting, read `docs/art/codex/00-style-guide.md` and `docs/art/codex/su-infantry/00-character.md`.
 Use `ArtSource/codex/su_infantry/su_rifleman_01_stand.png` as the visual reference for every generation in this task.
 If that reference image does not exist, stop and say so.

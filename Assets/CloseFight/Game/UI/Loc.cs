@@ -42,6 +42,9 @@ namespace CloseFight.Game.UI
                 case OrderType.AssaultBuilding: return "order.assault_building";
                 case OrderType.Retreat: return "order.retreat";
                 case OrderType.Reverse: return "order.reverse";
+                case OrderType.Demolish: return "order.demolish";
+                case OrderType.LayMines: return "order.lay_mines";
+                case OrderType.ClearMines: return "order.clear_mines";
                 default: return "order.none";
             }
         }
@@ -55,6 +58,8 @@ namespace CloseFight.Game.UI
                 case TeamType.Vehicle: return "team.vehicle";
                 case TeamType.AntiTankGun: return "team.anti_tank_gun";
                 case TeamType.Mortar: return "team.mortar";
+                case TeamType.Sniper: return "team.sniper";
+                case TeamType.Engineer: return "team.engineer";
                 default: return "team.rifle";
             }
         }

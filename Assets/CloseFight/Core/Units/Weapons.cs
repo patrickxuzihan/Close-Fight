@@ -11,6 +11,10 @@ namespace CloseFight.Core.Units
         /// <summary>Tank and anti-tank guns (used for tracers and sounds).</summary>
         Cannon = 4,
         Mortar = 5,
+        /// <summary>Scoped rifle: slow, accurate at long range, picks its targets (D39).</summary>
+        SniperRifle = 6,
+        /// <summary>Flamethrower: 30 m reach, burns whoever is around the target; no lasting fire (D38).</summary>
+        Flamethrower = 7,
     }
 
     /// <summary>
@@ -98,6 +102,24 @@ namespace CloseFight.Core.Units
             burst: 6, interval: 1.5f, accuracy: 0.12f, falloff: 230f, effectiveRange: 600f, maxRange: 900f,
             startingAmmo: 600, suppression: 6f, lethality: 0.45f, audibleRange: 650f, needsSetup: true);
 
+        // Snipers (M12): one aimed shot every few seconds, accurate far beyond a rifleman's reach.
+        public static readonly WeaponDefinition Kar98kScoped = new WeaponDefinition("kar98k_zf39", "weapon.kar98k_zf39", WeaponClass.SniperRifle,
+            burst: 1, interval: 7f, accuracy: 0.6f, falloff: 650f, effectiveRange: 650f, maxRange: 900f,
+            startingAmmo: 40, suppression: 12f, lethality: 0.85f, audibleRange: 450f, needsSetup: false);
+
+        public static readonly WeaponDefinition MosinScoped = new WeaponDefinition("mosin_pu", "weapon.mosin_pu", WeaponClass.SniperRifle,
+            burst: 1, interval: 7.5f, accuracy: 0.6f, falloff: 650f, effectiveRange: 650f, maxRange: 900f,
+            startingAmmo: 40, suppression: 12f, lethality: 0.85f, audibleRange: 450f, needsSetup: false);
+
+        // Flamethrowers (M12): a few long bursts; each one engulfs the target and the men around him.
+        public static readonly WeaponDefinition Flammenwerfer41 = new WeaponDefinition("flammenwerfer41", "weapon.flammenwerfer41", WeaponClass.Flamethrower,
+            burst: 1, interval: 3f, accuracy: 0.8f, falloff: 40f, effectiveRange: 28f, maxRange: 30f,
+            startingAmmo: 8, suppression: 55f, lethality: 0.8f, audibleRange: 250f, needsSetup: false);
+
+        public static readonly WeaponDefinition Roks3 = new WeaponDefinition("roks3", "weapon.roks3", WeaponClass.Flamethrower,
+            burst: 1, interval: 3f, accuracy: 0.8f, falloff: 40f, effectiveRange: 28f, maxRange: 30f,
+            startingAmmo: 8, suppression: 55f, lethality: 0.8f, audibleRange: 250f, needsSetup: false);
+
         // Vehicle-mounted machine guns: fixed mounts, so they may fire on the move.
         public static readonly WeaponDefinition Mg34Coax = new WeaponDefinition("mg34_coax", "weapon.mg34", WeaponClass.MachineGun,
             burst: 8, interval: 1.4f, accuracy: 0.12f, falloff: 260f, effectiveRange: 600f, maxRange: 900f,
@@ -148,6 +170,18 @@ namespace CloseFight.Core.Units
                     }
 
                     return german ? Kar98k : Mosin;
+
+                case TeamType.Sniper:
+                    // The sniper and his spotter (who carries a submachine gun for close defence).
+                    return index == 0 ? (german ? Kar98kScoped : MosinScoped) : (german ? Mp40 : Ppsh41);
+
+                case TeamType.Engineer:
+                    if (index == 0)
+                    {
+                        return german ? Mp40 : Ppsh41;
+                    }
+
+                    return index == 1 ? (german ? Flammenwerfer41 : Roks3) : (german ? Kar98k : Mosin);
 
                 default:
                     // German squad leaders carried the MP40; Soviet rifle sections often had two PPSh.

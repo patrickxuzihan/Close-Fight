@@ -15,6 +15,10 @@ namespace CloseFight.Core.Units
         Vehicle = 3,
         AntiTankGun = 4,
         Mortar = 5,
+        /// <summary>Sniper and spotter (M12).</summary>
+        Sniper = 6,
+        /// <summary>Assault engineers / sappers: charges, mines, a flamethrower (M12).</summary>
+        Engineer = 7,
     }
 
     public enum SoldierStatus : byte
@@ -71,6 +75,12 @@ namespace CloseFight.Core.Units
         Retreat,
         /// <summary>Vehicles only: back away while keeping the thick front armor toward the enemy.</summary>
         Reverse,
+        /// <summary>Engineers: plant a demolition charge on a wall or building and blow it.</summary>
+        Demolish,
+        /// <summary>Engineers: lay a minefield at the target.</summary>
+        LayMines,
+        /// <summary>Engineers: clear a known minefield.</summary>
+        ClearMines,
     }
 
     public enum TeamActivity : byte

@@ -37,6 +37,11 @@ namespace CloseFight.Core.Battle
         public const float ComradeDownLoss = 6f;
         public const float ComradeWoundedLoss = 2f;
         public const float LeaderDownLoss = 12f;
+        /// <summary>Extra morale loss to the comrades of a man a hidden sniper drops (D39).</summary>
+        public const float SniperFearLoss = 6f;
+        public const float SniperFearRange = 40f;
+        /// <summary>Morale loss from flame: for those caught near it, and extra for the comrades of a man it kills.</summary>
+        public const float FlameTerrorLoss = 12f;
         public const float TankTerrorRange = 60f;
         public const float TankTerrorPerSecond = 0.6f;
 
@@ -376,7 +381,7 @@ namespace CloseFight.Core.Battle
         // ------------------------------------------------------------ events
 
         /// <summary>A soldier was hit: he and the comrades around him lose nerve; losing the leader hurts most.</summary>
-        public void OnCasualty(Soldier victim, SoldierStatus result, float now)
+        public void OnCasualty(Soldier victim, SoldierStatus result, float now, HitCause cause = HitCause.Gunfire)
         {
             if (result == SoldierStatus.Wounded)
             {
@@ -400,6 +405,19 @@ namespace CloseFight.Core.Battle
                 if (leaderDown)
                 {
                     loss += LeaderDownLoss;
+                }
+
+                float distance = math.distance(mate.Position, victim.Position);
+                if (cause == HitCause.Sniper && distance < SniperFearRange)
+                {
+                    // An unseen killer picking men off one by one: everyone keeps his head down.
+                    loss += SniperFearLoss;
+                    mate.Suppression = math.min(100f, mate.Suppression + 15f);
+                    mate.LastUnderFireAt = now;
+                }
+                else if (cause == HitCause.Flame && distance < 15f)
+                {
+                    loss += FlameTerrorLoss;
                 }
 
                 mate.Morale = math.max(0f, mate.Morale - loss * Nerve(mate));

@@ -568,8 +568,8 @@
     "en": "Deployment"
   },
   "ui.deploy_hint": {
-    "zh": "选中小组，在黄色区域内左键点击放置 · 准备好后按 Enter 或点「开始战斗」",
-    "en": "Select teams and left-click inside the yellow zone to place them · press Enter or Start battle when ready"
+    "zh": "选中小组，在黄色区域内左键点击放置 · 工兵可以右键（或按 Y）预先布雷 · 准备好后按 Enter 或点「开始战斗」",
+    "en": "Select teams and left-click inside the yellow zone to place them · engineers can lay mines in advance (right-click or Y) · press Enter or Start battle when ready"
   },
   "ui.start_battle": {
     "zh": "开始战斗",
@@ -654,5 +654,77 @@
   "ui.side_hint": {
     "zh": "另一方由 AI 指挥：苏军 AI 会布防死守，德军 AI 会侦察、压制、放烟幕、迂回之后集中突破。",
     "en": "The AI commands the other side: the Soviet AI digs in; the German AI scouts, suppresses, lays smoke and flanks before massing for the assault."
+  },
+  "order.demolish": {
+    "zh": "爆破",
+    "en": "Demolish"
+  },
+  "order.lay_mines": {
+    "zh": "布雷",
+    "en": "Lay mines"
+  },
+  "order.clear_mines": {
+    "zh": "排雷",
+    "en": "Clear mines"
+  },
+  "work.demolish": {
+    "zh": "安放炸药",
+    "en": "Planting charge"
+  },
+  "work.lay_mines": {
+    "zh": "布雷中",
+    "en": "Laying mines"
+  },
+  "work.clear_mines": {
+    "zh": "排雷中",
+    "en": "Clearing mines"
+  },
+  "team.sniper": {
+    "zh": "狙击组",
+    "en": "Sniper team"
+  },
+  "team.engineer": {
+    "zh": "工兵组",
+    "en": "Engineer squad"
+  },
+  "weapon.kar98k_zf39": {
+    "zh": "Kar98k 狙击步枪",
+    "en": "Kar98k sniper rifle"
+  },
+  "weapon.mosin_pu": {
+    "zh": "莫辛纳甘狙击步枪",
+    "en": "Mosin-Nagant sniper rifle"
+  },
+  "weapon.flammenwerfer41": {
+    "zh": "41 式火焰喷射器",
+    "en": "Flammenwerfer 41"
+  },
+  "weapon.roks3": {
+    "zh": "ROKS-3 火焰喷射器",
+    "en": "ROKS-3 flamethrower"
+  },
+  "weapon.charge": {
+    "zh": "炸药包",
+    "en": "Demolition charge"
+  },
+  "weapon.mine": {
+    "zh": "地雷",
+    "en": "Mine"
+  },
+  "ui.charges": {
+    "zh": "炸药",
+    "en": "Charges"
+  },
+  "ui.mines": {
+    "zh": "地雷",
+    "en": "Mines"
+  },
+  "ui.minefield": {
+    "zh": "雷区",
+    "en": "Minefield"
+  },
+  "deploy.mines_refused": {
+    "zh": "那里布不了雷：要选工兵组，还有地雷，离他们 150 米以内的空地",
+    "en": "Cannot lay mines there: select engineers with mines left, and open ground within 150 m of them"
   }
 }

@@ -33,6 +33,9 @@ namespace CloseFight.Core.Path
         /// </summary>
         public Func<int, float> ExtraCost { get; set; }
 
+        /// <summary>Extra cost the moving side adds itself, such as its known minefields (set per move).</summary>
+        public Func<int, float> SideCost { get; set; }
+
         /// <summary>Safety cap on expanded nodes per search.</summary>
         public int MaxExpandedNodes { get; set; } = 200000;
 
@@ -73,6 +76,11 @@ namespace CloseFight.Core.Path
                         }
                     }
                 }
+            }
+
+            if (SideCost != null)
+            {
+                cost += math.max(0f, SideCost(index));
             }
 
             if (ExtraCost != null)

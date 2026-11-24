@@ -17,6 +17,8 @@ namespace CloseFight.Core.AI
         Headquarters,
         Reserve,
         Garrison,
+        /// <summary>Sniper (M12): beside the base of fire, hidden, picking officers and gunners.</summary>
+        Sniper,
     }
 
     /// <summary>Where the attack on the current objective stands.</summary>
@@ -127,6 +129,7 @@ namespace CloseFight.Core.AI
         float2 _overwatch;
         float2 _jumpOff;
         float2 _armorSpot;
+        float2 _sniperSpot;
         float _armorSpotAt = float.NegativeInfinity;
         bool _hasGeometry;
         float _geometryAt = float.NegativeInfinity;
@@ -198,6 +201,7 @@ namespace CloseFight.Core.AI
                 switch (plan.Role)
                 {
                     case AttackRole.Support: RunSupport(plan); break;
+                    case AttackRole.Sniper: RunSniper(plan); break;
                     case AttackRole.Armor: RunArmor(plan); break;
                     case AttackRole.AntiTank: RunAntiTank(plan); break;
                     case AttackRole.Mortar: RunMortar(plan); break;
@@ -245,6 +249,9 @@ namespace CloseFight.Core.AI
                 {
                     case AttackRole.Support:
                         Place(team, _overwatch + Spread(IndexInRole(plan), CountRole(AttackRole.Support), 12f), facing, taken, false);
+                        break;
+                    case AttackRole.Sniper:
+                        Place(team, SniperSpot(), facing, taken, false);
                         break;
                     case AttackRole.Armor:
                         Place(team, _armorSpot, facing, taken, true);
@@ -376,10 +383,18 @@ namespace CloseFight.Core.AI
                 }
             }
 
-            // With three or more rifle teams, the last is kept back as the reserve.
+            // With three or more rifle teams, the last plain rifle team is kept back as the reserve
+            // (engineers stay with the assault: their charges and flamethrower are needed up front).
             if (rifles.Count >= 3)
             {
-                rifles[rifles.Count - 1].Role = AttackRole.Reserve;
+                for (int i = rifles.Count - 1; i >= 0; i--)
+                {
+                    if (rifles[i].Team.Type == TeamType.Rifle)
+                    {
+                        rifles[i].Role = AttackRole.Reserve;
+                        break;
+                    }
+                }
             }
 
             _phaseSince = _view.Time;
@@ -394,7 +409,8 @@ namespace CloseFight.Core.AI
                 case TeamType.AntiTankGun: return AttackRole.AntiTank;
                 case TeamType.Mortar: return AttackRole.Mortar;
                 case TeamType.Headquarters: return AttackRole.Headquarters;
-                default: return AttackRole.Assault;
+                case TeamType.Sniper: return AttackRole.Sniper;
+                default: return AttackRole.Assault; // engineers go in with the assault teams
             }
         }
 
@@ -521,6 +537,7 @@ namespace CloseFight.Core.AI
             _target = best;
             _hasGeometry = false;
             _smokeForAssault = false;
+            _breach = BreachState.None;
             _blockedSince = float.NegativeInfinity;
             if (best == null)
             {
@@ -578,6 +595,13 @@ namespace CloseFight.Core.AI
             if (!overwatchStillGood)
             {
                 _overwatch = BestPoint(o, toFront, 90f, 240f, 75f, p => OverwatchScore(p, o, supportAt), supportAt, MovementClass.Infantry);
+            }
+
+            var sniper = FirstOf(AttackRole.Sniper);
+            if (sniper != null)
+            {
+                float2 sniperAt = Anchor(sniper.Team);
+                _sniperSpot = BestPoint(o, toFront, 120f, 320f, 85f, p => SniperScore(p, o, sniperAt), sniperAt, MovementClass.Infantry);
             }
 
             var armor = FirstOf(AttackRole.Armor);
@@ -655,6 +679,33 @@ namespace CloseFight.Core.AI
                     && LineOfSight.Check(_view.Map, p, eye, c.Position, LineOfSight.EyeKneeling).Visible)
                 {
                     score += 8f; // can reach a known enemy with fire
+                }
+            }
+
+            return score;
+        }
+
+        /// <summary>A sniper's nest: sees the objective, upstairs and in cover if possible, apart from the machine guns.</summary>
+        float SniperScore(float2 p, float2 objective, float2 from)
+        {
+            float eye = LineOfSight.EyeHeightAt(_view.Map, p, Posture.Kneeling);
+            if (!LineOfSight.Check(_view.Map, p, eye, objective, LineOfSight.EyeKneeling).Visible)
+            {
+                return float.MinValue;
+            }
+
+            float score = CoverScore(p) * 1.5f - math.distance(p, from) * 0.04f - _danger.At(p) * 0.5f;
+            if (math.distance(p, _overwatch) < 25f)
+            {
+                score -= 15f; // do not share the machine guns' spot: they draw fire
+            }
+
+            foreach (var c in _contacts.All)
+            {
+                if (math.distance(c.Position, p) < 500f
+                    && LineOfSight.Check(_view.Map, p, eye, c.Position, LineOfSight.EyeKneeling).Visible)
+                {
+                    score += 8f;
                 }
             }
 
@@ -786,7 +837,13 @@ namespace CloseFight.Core.AI
                 return;
             }
 
-            MoveGroup(assault, NextBound(Front(), _jumpOff, BoundLength), OrderType.Move);
+            float2 next = NextBound(Front(), _jumpOff, BoundLength);
+            if (ClearMinesOnTheWay(assault, Front(), next))
+            {
+                return;
+            }
+
+            MoveGroup(assault, next, OrderType.Move);
         }
 
         /// <summary>
@@ -816,6 +873,11 @@ namespace CloseFight.Core.AI
                     return;
                 }
 
+                if (Breach(assault))
+                {
+                    return; // engineers are blowing the building open first
+                }
+
                 // The last stretch: smoke on whoever watches it, go when it blinds them (or it did not come).
                 var watching = Watchers(_jumpOff, _target.Position);
                 if (watching.Count > 0 && !_smokeForAssault)
@@ -842,6 +904,11 @@ namespace CloseFight.Core.AI
 
             float2 from = Front();
             float2 bound = NextBound(from, _jumpOff, RushLength);
+            if (ClearMinesOnTheWay(assault, from, bound))
+            {
+                return;
+            }
+
             var watchers = Watchers(from, bound);
             if (watchers.Count == 0)
             {
@@ -1097,6 +1164,176 @@ namespace CloseFight.Core.AI
                     plan.HasGoal = true;
                     plan.LastOrderAt = _view.Time;
                 }
+            }
+        }
+
+        // ------------------------------------------------------------ engineers (M12)
+
+        enum BreachState : byte { None, Ordered, Planted, Done }
+
+        BreachState _breach;
+        AttackTeamPlan _breacher;
+        int _chargesBefore;
+        float _blastAt;
+        float _breachOrderedAt;
+
+        /// <summary>
+        /// Before the assault on a building the enemy holds, engineers plant a
+        /// charge on it (D39): the blast wrecks the rooms and the men in them, and
+        /// the assault goes in right after. True while the group should wait for it.
+        /// </summary>
+        bool Breach(List<AttackTeamPlan> assault)
+        {
+            switch (_breach)
+            {
+                case BreachState.None:
+                {
+                    Contact inBuilding = null;
+                    foreach (var c in _contacts.All)
+                    {
+                        if (!c.Heard && math.distance(c.Position, _target.Position) < _target.Radius + 15f && BuildingAt(c.Position)
+                            && (inBuilding == null || c.Weight > inBuilding.Weight))
+                        {
+                            inBuilding = c;
+                        }
+                    }
+
+                    if (inBuilding == null)
+                    {
+                        _breach = BreachState.Done;
+                        return false;
+                    }
+
+                    foreach (var plan in assault)
+                    {
+                        var team = plan.Team;
+                        if (team.Type == TeamType.Engineer && team.DemolitionCharges > 0 && team.Task == null
+                            && math.distance(Anchor(team), inBuilding.Position) < 80f
+                            && _view.Order(team, OrderType.Demolish, inBuilding.Position, _danger.PathCost(4f)))
+                        {
+                            _breacher = plan;
+                            _chargesBefore = team.DemolitionCharges;
+                            _breachOrderedAt = _view.Time;
+                            plan.LastOrderAt = _view.Time;
+                            _breach = BreachState.Ordered;
+                            return true;
+                        }
+                    }
+
+                    _breach = BreachState.Done; // no engineers at hand
+                    return false;
+                }
+
+                case BreachState.Ordered:
+                {
+                    var team = _breacher.Team;
+                    if (team.DemolitionCharges < _chargesBefore)
+                    {
+                        _blastAt = _view.Time + Engineering.FuseSeconds + 1f;
+                        _breach = BreachState.Planted;
+                        return true;
+                    }
+
+                    if (team.Task == null || team.ActiveCount == 0 || _view.Time - _breachOrderedAt > 120f)
+                    {
+                        _breach = BreachState.Done; // the attempt failed: go without it
+                        return false;
+                    }
+
+                    return true;
+                }
+
+                case BreachState.Planted:
+                    if (_view.Time < _blastAt)
+                    {
+                        return true;
+                    }
+
+                    _breach = BreachState.Done;
+                    return false;
+
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// A known enemy minefield across the next bound: the engineers clear it
+        /// while the rest wait (without engineers the route planner goes round it).
+        /// True while the group should wait.
+        /// </summary>
+        bool ClearMinesOnTheWay(List<AttackTeamPlan> assault, float2 from, float2 to)
+        {
+            MineField blocking = null;
+            foreach (var field in _view.KnownMineFields)
+            {
+                if (field.Owner != Side && DistanceToSegment(field.Center, from, to) < field.Radius + 8f)
+                {
+                    blocking = field;
+                    break;
+                }
+            }
+
+            if (blocking == null)
+            {
+                return false;
+            }
+
+            AttackTeamPlan engineers = null;
+            foreach (var plan in assault)
+            {
+                if (plan.Team.Type == TeamType.Engineer)
+                {
+                    engineers = plan;
+                    break;
+                }
+            }
+
+            if (engineers == null)
+            {
+                return false;
+            }
+
+            var task = engineers.Team.Task;
+            if (task != null && task.Type == OrderType.ClearMines)
+            {
+                return true; // still clearing
+            }
+
+            if (engineers.Team.Activity == TeamActivity.Idle && _view.Time - engineers.LastOrderAt > 4f
+                && _view.Order(engineers.Team, OrderType.ClearMines, blocking.Center, _danger.PathCost(4f)))
+            {
+                engineers.LastOrderAt = _view.Time;
+                return true;
+            }
+
+            return false;
+        }
+
+        static float DistanceToSegment(float2 p, float2 a, float2 b)
+        {
+            float2 ab = b - a;
+            float t = math.saturate(math.dot(p - a, ab) / math.max(math.lengthsq(ab), 1e-4f));
+            return math.distance(p, a + ab * t);
+        }
+
+        // ------------------------------------------------------------ snipers (M12)
+
+        /// <summary>The sniper's nest for this objective (see <see cref="SniperScore"/>), in the best cover right there.</summary>
+        float2 SniperSpot() => CoverNear(_sniperSpot, 6f, MovementClass.Infantry, false);
+
+        void RunSniper(AttackTeamPlan plan)
+        {
+            var team = plan.Team;
+            if (_target != null && _hasGeometry && _phase != AttackPhase.Hold && MoveTo(plan, SniperSpot(), OrderType.Move, 8f))
+            {
+                return;
+            }
+
+            // Lie in wait: a hidden sniper still takes officers and machine gunners (see Combat).
+            if (team.Activity == TeamActivity.Idle && team.Order.Type != OrderType.Ambush)
+            {
+                _view.Order(team, OrderType.Ambush, team.Centroid);
             }
         }
 

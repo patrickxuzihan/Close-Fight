@@ -32,6 +32,9 @@ namespace CloseFight.Game.View
         bool[] _hadWall;
         static readonly Color32 RubbleDecal = new Color32(128, 112, 96, 255);
         Material _groundInstance;
+        /// <summary>Terrain weights for the tiled ground (null when the plain ground is used).</summary>
+        Texture2D _weightsA;
+        Texture2D _weightsB;
         GameObject _root;
         readonly List<Mesh> _meshes = new List<Mesh>();
 
@@ -87,6 +90,12 @@ namespace CloseFight.Game.View
                 _groundInstance.hideFlags = HideFlags.DontSave;
             }
 
+            if (_weightsA != null)
+            {
+                _weightsA.hideFlags = HideFlags.DontSave;
+                _weightsB.hideFlags = HideFlags.DontSave;
+            }
+
             if (_overlayTexture != null)
             {
                 _overlayTexture.hideFlags = HideFlags.DontSave;
@@ -96,6 +105,11 @@ namespace CloseFight.Game.View
 
         void BuildGround()
         {
+            if (BuildTiledGround())
+            {
+                return;
+            }
+
             var grid = _map.Grid;
             _groundTexture = new Texture2D(grid.Width, grid.Height, TextureFormat.RGBA32, false)
             {
@@ -132,6 +146,95 @@ namespace CloseFight.Game.View
             _groundInstance.SetColor(BaseColorId, Color.white);
 
             CreateRendererObject("Ground", mesh, _groundInstance, castShadows: false);
+        }
+
+        /// <summary>
+        /// Ground made of the Codex terrain tiles (shader CloseFight/TerrainTiles):
+        /// two weight textures, one texel per cell, say which tile shows where.
+        /// False when the shader or a tile is missing; the plain ground is used then.
+        /// </summary>
+        bool BuildTiledGround()
+        {
+            var shader = TerrainArt.GroundShader;
+            if (shader == null || !shader.isSupported || !TerrainArt.HasGroundTiles)
+            {
+                return false;
+            }
+
+            var grid = _map.Grid;
+            _weightsA = new Texture2D(grid.Width, grid.Height, TextureFormat.RGBA32, false, true)
+            {
+                name = "TerrainWeightsA", filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp,
+            };
+            _weightsB = new Texture2D(grid.Width, grid.Height, TextureFormat.RGBA32, false, true)
+            {
+                name = "TerrainWeightsB", filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp,
+            };
+            var a = new Color32[grid.CellCount];
+            var b = new Color32[grid.CellCount];
+            for (int i = 0; i < grid.CellCount; i++)
+            {
+                TerrainWeights(i, out a[i], out b[i]);
+            }
+
+            _weightsA.SetPixels32(a);
+            _weightsA.Apply(false);
+            _weightsB.SetPixels32(b);
+            _weightsB.Apply(false);
+
+            float width = grid.Width * grid.CellSize;
+            float height = grid.Height * grid.CellSize;
+            _groundInstance = new Material(shader) { name = "Tiled ground (instance)" };
+            _groundInstance.SetTexture("_WeightsA", _weightsA);
+            _groundInstance.SetTexture("_WeightsB", _weightsB);
+            TerrainArt.AssignGroundTiles(_groundInstance);
+            _groundInstance.SetFloat("_TileMeters", TerrainArt.TileMeters);
+            _groundInstance.SetVector("_MapSize", new Vector4(width, height, 0f, 0f));
+
+            var mesh = new Mesh { name = "Ground" };
+            mesh.SetVertices(new List<Vector3>
+            {
+                new Vector3(0f, 0f, 0f), new Vector3(width, 0f, 0f),
+                new Vector3(width, 0f, height), new Vector3(0f, 0f, height),
+            });
+            mesh.SetNormals(new List<Vector3> { Vector3.up, Vector3.up, Vector3.up, Vector3.up });
+            mesh.SetTriangles(new[] { 0, 2, 1, 0, 3, 2 }, 0);
+            mesh.RecalculateBounds();
+            _meshes.Add(mesh);
+            CreateRendererObject("Ground", mesh, _groundInstance, castShadows: false);
+            return true;
+        }
+
+        /// <summary>Which tile a cell shows (A: dirt, grass, road, rubble; B: rail, water, crater, brightness).</summary>
+        void TerrainWeights(int index, out Color32 a, out Color32 b)
+        {
+            var grid = _map.Grid;
+            a = new Color32(0, 0, 0, 0);
+            b = new Color32(0, 0, 0, 0);
+            switch (grid.GetTerrain(index))
+            {
+                case TerrainType.Grass: a.g = 255; break;
+                case TerrainType.Road: a.b = 255; break;
+                case TerrainType.Rubble:
+                case TerrainType.BuildingFloor: a.a = 255; break;
+                case TerrainType.Rail: b.r = 255; break;
+                case TerrainType.Water: b.g = 255; break;
+                case TerrainType.Crater: b.b = 255; break;
+                default: a.r = 255; break;
+            }
+
+            // Brightness varies smoothly over about 6 m, so the repeating tiles do not look printed.
+            var c = grid.CoordOf(index);
+            const float cell = 6f;
+            float fx = c.X / cell, fy = c.Y / cell;
+            int x0 = (int)fx, y0 = (int)fy;
+            float tx = fx - x0, ty = fy - y0;
+            tx = tx * tx * (3f - 2f * tx);
+            ty = ty * ty * (3f - 2f * ty);
+            float v = Mathf.Lerp(
+                Mathf.Lerp(TerrainPalette.Hash01(x0, y0), TerrainPalette.Hash01(x0 + 1, y0), tx),
+                Mathf.Lerp(TerrainPalette.Hash01(x0, y0 + 1), TerrainPalette.Hash01(x0 + 1, y0 + 1), tx), ty);
+            b.a = (byte)(v * 255f);
         }
 
         Color32 GroundColor(int index)
@@ -241,7 +344,7 @@ namespace CloseFight.Game.View
                 }
 
                 builder.Clear();
-                builder.AddPrism(footprint, 0f, building.RoofHeight);
+                builder.AddPrism(footprint, 0f, building.RoofHeight, LongestEdgeAngle(footprint), TerrainArt.TileMeters);
                 if (builder.IsEmpty)
                 {
                     continue;
@@ -251,12 +354,43 @@ namespace CloseFight.Game.View
                 _meshes.Add(mesh);
                 var renderer = CreateRendererObject(mesh.name, mesh, buildingMaterial, castShadows: true);
 
-                // Slight per-building tint so blocks of the same material read apart.
-                Color tint = TerrainPalette.Building(building.Material);
+                // A roof texture by material (Codex tiles), else the plain material color;
+                // a slight per-building shade so neighbouring roofs read apart.
                 float shade = 0.9f + 0.2f * TerrainPalette.Hash01(building.Definition.id, 7);
-                block.SetColor(BaseColorId, tint * shade);
+                var roof = TerrainArt.Roof(building.Material, building.Definition.id);
+                block.Clear();
+                if (roof != null)
+                {
+                    // Weathered wood is the palest tile; tone it down to sit with the others in sunlight.
+                    float tone = building.Material == BuildingMaterial.Wood ? 0.72f : 1f;
+                    block.SetTexture(BaseMapId, roof);
+                    block.SetColor(BaseColorId, Color.white * (shade * tone));
+                }
+                else
+                {
+                    block.SetColor(BaseColorId, TerrainPalette.Building(building.Material) * shade);
+                }
+
                 renderer.SetPropertyBlock(block);
             }
+        }
+
+        /// <summary>Direction of a footprint's longest edge, in radians (roof textures run along it).</summary>
+        static float LongestEdgeAngle(List<float2> footprint)
+        {
+            float best = -1f, angle = 0f;
+            for (int i = 0; i < footprint.Count; i++)
+            {
+                float2 d = footprint[(i + 1) % footprint.Count] - footprint[i];
+                float length = math.lengthsq(d);
+                if (length > best)
+                {
+                    best = length;
+                    angle = math.atan2(d.y, d.x);
+                }
+            }
+
+            return angle;
         }
 
         void BuildWalls()
@@ -367,14 +501,25 @@ namespace CloseFight.Game.View
 
         void OnCellChanged(int index)
         {
-            if (_groundTexture == null)
+            if (_groundTexture == null && _weightsA == null)
             {
                 return;
             }
 
             var coord = _map.Grid.CoordOf(index);
-            _groundTexture.SetPixel(coord.X, coord.Y, GroundColor(index));
-            _groundTexture.Apply(false);
+            if (_weightsA != null)
+            {
+                TerrainWeights(index, out var a, out var b);
+                _weightsA.SetPixel(coord.X, coord.Y, a);
+                _weightsA.Apply(false);
+                _weightsB.SetPixel(coord.X, coord.Y, b);
+                _weightsB.Apply(false);
+            }
+            else
+            {
+                _groundTexture.SetPixel(coord.X, coord.Y, GroundColor(index));
+                _groundTexture.Apply(false);
+            }
 
             if (_overlayTexture != null)
             {
@@ -417,6 +562,10 @@ namespace CloseFight.Game.View
 
             SafeDestroy(_groundTexture);
             SafeDestroy(_groundInstance);
+            SafeDestroy(_weightsA);
+            SafeDestroy(_weightsB);
+            _weightsA = null;
+            _weightsB = null;
             SafeDestroy(_overlayTexture);
             SafeDestroy(_overlayInstance);
             _overlayTexture = null;

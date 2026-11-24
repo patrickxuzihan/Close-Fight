@@ -5,8 +5,9 @@ namespace CloseFight.EditorTools
 {
     /// <summary>
     /// Import settings for Codex art under Resources/Art (art guide: 128 px = 1 m,
-    /// pivot at the canvas center). Applied automatically, so a new delivery only
-    /// needs to be copied into the right folder.
+    /// pivot at the canvas center). Terrain tiles (64 px = 1 m) repeat; UI images
+    /// are plain textures. Applied automatically, so a new delivery only needs to
+    /// be copied into the right folder.
     /// </summary>
     sealed class ArtImportSettings : AssetPostprocessor
     {
@@ -21,6 +22,22 @@ namespace CloseFight.EditorTools
             }
 
             var importer = (TextureImporter)assetImporter;
+            if (assetPath.StartsWith(ArtRoot + "Terrain/") || assetPath.StartsWith(ArtRoot + "UI/"))
+            {
+                // Ground and roof tiles repeat across the map; UI images are drawn as plain textures.
+                bool tile = assetPath.StartsWith(ArtRoot + "Terrain/");
+                importer.textureType = TextureImporterType.Default;
+                importer.sRGBTexture = true;
+                importer.alphaIsTransparency = !tile;
+                importer.mipmapEnabled = true;
+                importer.filterMode = FilterMode.Trilinear;
+                importer.anisoLevel = tile ? 4 : 1;
+                importer.wrapMode = tile ? TextureWrapMode.Repeat : TextureWrapMode.Clamp;
+                importer.textureCompression = TextureImporterCompression.CompressedHQ;
+                importer.maxTextureSize = 2048;
+                return;
+            }
+
             importer.textureType = TextureImporterType.Sprite;
             importer.spriteImportMode = SpriteImportMode.Single;
             importer.spritePixelsPerUnit = PixelsPerMeter;

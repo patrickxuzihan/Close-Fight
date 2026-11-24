@@ -58,6 +58,12 @@ namespace CloseFight.Core.Units
         public GunTeamDefinition GunTeam { get; internal set; }
         /// <summary>Bundled grenades / anti-tank grenades for close assault on tanks (D37).</summary>
         public int AntiTankGrenades { get; internal set; }
+        /// <summary>Engineers: demolition charges left (M12).</summary>
+        public int DemolitionCharges { get; internal set; }
+        /// <summary>Engineers: minefields they can still lay (M12).</summary>
+        public int MineLoads { get; internal set; }
+        /// <summary>Engineering work in progress (demolition, laying or clearing mines), or null.</summary>
+        public Battle.EngineerTask Task { get; internal set; }
         internal float CloseAssaultCooldown;
 
         /// <summary>True while the team fights as a vehicle (not knocked out or abandoned).</summary>

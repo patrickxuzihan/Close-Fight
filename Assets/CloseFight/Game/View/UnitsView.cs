@@ -250,6 +250,7 @@ namespace CloseFight.Game.View
             SyncSmoke();
             _equipment.Sync(alpha, _fogEnabled, _viewSide, _selected);
             SyncObjectives();
+            SyncMineFields();
             SyncAiPlan();
         }
 
@@ -304,6 +305,58 @@ namespace CloseFight.Game.View
             var objective = _battle.Objectives[index];
             float top = FlagSprites.ClothHeight * 0.5f * FlagScale() + 1f;
             return new Vector3(objective.Position.x, 0f, objective.Position.y + top);
+        }
+
+        static readonly Color OwnMines = new Color(1f, 0.85f, 0.25f, 0.85f);
+        static readonly Color EnemyMines = new Color(1f, 0.25f, 0.2f, 0.9f);
+        readonly List<SpriteRenderer> _minePool = new List<SpriteRenderer>();
+
+        /// <summary>Minefields the viewing side knows about: its own in yellow, the enemy's it found in red.</summary>
+        void SyncMineFields()
+        {
+            int used = 0;
+            foreach (var field in _battle.Engineering.MineFields)
+            {
+                bool known = !_fogEnabled || field.KnownTo(_viewSide);
+                if (!known)
+                {
+                    continue;
+                }
+
+                if (used == _minePool.Count)
+                {
+                    _minePool.Add(NewOverlaySprite("Minefield", MarkerSprites.Ring, 9));
+                }
+
+                var ring = _minePool[used++];
+                ring.enabled = true;
+                ring.color = _fogEnabled && field.Owner != _viewSide ? EnemyMines : OwnMines;
+                float size = field.Radius * 2f / 0.94f;
+                ring.transform.position = new Vector3(field.Center.x, 23f, field.Center.y);
+                ring.transform.localScale = new Vector3(size, size, 1f);
+            }
+
+            for (int i = used; i < _minePool.Count; i++)
+            {
+                _minePool[i].enabled = false;
+            }
+        }
+
+        /// <summary>For labels: the minefields the viewing side knows about.</summary>
+        public IEnumerable<CloseFight.Core.Battle.MineField> KnownMineFields()
+        {
+            if (_battle == null)
+            {
+                yield break;
+            }
+
+            foreach (var field in _battle.Engineering.MineFields)
+            {
+                if (!_fogEnabled || field.KnownTo(_viewSide))
+                {
+                    yield return field;
+                }
+            }
         }
 
         void SyncAiPlan()
@@ -458,7 +511,7 @@ namespace CloseFight.Game.View
                 }
 
                 var tracer = _tracerPool[used++];
-                tracer.widthMultiplier = shot.Weapon == WeaponClass.Cannon ? 0.35f : 0.12f;
+                tracer.widthMultiplier = shot.Weapon == WeaponClass.Cannon ? 0.35f : shot.Weapon == WeaponClass.Flamethrower ? 1.2f : 0.12f;
                 var color = TracerColor(shot.Weapon);
                 color.a *= 1f - age / TracerLifetime * 0.7f;
                 SetLineColor(tracer, color);
@@ -479,6 +532,8 @@ namespace CloseFight.Game.View
             switch (weapon)
             {
                 case WeaponClass.Cannon: return new Color(1f, 1f, 0.85f, 1f);
+                case WeaponClass.Flamethrower: return new Color(1f, 0.55f, 0.1f, 0.95f);
+                case WeaponClass.SniperRifle: return new Color(1f, 1f, 0.75f, 0.9f);
                 case WeaponClass.MachineGun: return new Color(1f, 0.45f, 0.15f, 0.9f);
                 case WeaponClass.SubmachineGun: return new Color(1f, 0.85f, 0.35f, 0.8f);
                 default: return new Color(1f, 0.95f, 0.7f, 0.85f);
@@ -796,6 +851,7 @@ namespace CloseFight.Game.View
             _zones = null;
             _equipment.Clear();
             _flags.Clear();
+            _minePool.Clear();
             _planLines.Clear();
             _planRings.Clear();
             _tracerPool.Clear();

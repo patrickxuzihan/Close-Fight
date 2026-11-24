@@ -48,6 +48,11 @@ namespace CloseFight.Game.Battle
                 yield return null;
             }
 
+            if (HasArg("-cfMines"))
+            {
+                _input.DebugLayMines();
+            }
+
             if (_stage == "battle")
             {
                 _input.DebugStartBattle();

@@ -33,6 +33,7 @@ namespace CloseFight.Game.Controls
             OrderType.Fire, OrderType.AreaFire, OrderType.Smoke,
             OrderType.Defend, OrderType.Ambush, OrderType.Hide,
             OrderType.AssaultBuilding, OrderType.Retreat, OrderType.Reverse,
+            OrderType.Demolish, OrderType.LayMines, OrderType.ClearMines,
         };
 
         const float DragThreshold = 8f;
@@ -155,6 +156,19 @@ namespace CloseFight.Game.Controls
             {
                 var parts = center.Split(',');
                 cameraController.FocusOn(new Vector3(float.Parse(parts[0], inv), 0f, float.Parse(parts[1], inv)));
+            }
+        }
+
+        /// <summary>For <see cref="Battle.AutoScreenshot"/>: the player's engineers lay mines 40 m ahead, as if ordered.</summary>
+        internal void DebugLayMines()
+        {
+            foreach (var team in _playerTeams)
+            {
+                if (team.Type == TeamType.Engineer)
+                {
+                    float2 ahead = team.Centroid + Soldier.DirectionOf(team.Facing) * 40f;
+                    _battle.LayMinesBeforeBattle(team, ahead);
+                }
             }
         }
 
@@ -314,6 +328,11 @@ namespace CloseFight.Game.Controls
                 }
             }
 
+            if (_selection.Count > 0 && _stage == Stage.Deployment && keyboard.yKey.wasPressedThisFrame)
+            {
+                ChooseOrder(OrderType.LayMines);
+            }
+
             if (_selection.Count == 0 || _stage != Stage.Battle)
             {
                 return;
@@ -331,6 +350,9 @@ namespace CloseFight.Game.Controls
             if (keyboard.kKey.wasPressedThisFrame) ChooseOrder(OrderType.Smoke);
             if (keyboard.eKey.wasPressedThisFrame) ChooseOrder(OrderType.AreaFire);
             if (keyboard.xKey.wasPressedThisFrame) ChooseOrder(OrderType.Reverse);
+            if (keyboard.qKey.wasPressedThisFrame) ChooseOrder(OrderType.Demolish);
+            if (keyboard.yKey.wasPressedThisFrame) ChooseOrder(OrderType.LayMines);
+            if (keyboard.uKey.wasPressedThisFrame) ChooseOrder(OrderType.ClearMines);
         }
 
         static string Hotkey(OrderType order)
@@ -349,6 +371,9 @@ namespace CloseFight.Game.Controls
                 case OrderType.AreaFire: return "E";
                 case OrderType.Smoke: return "K";
                 case OrderType.Reverse: return "X";
+                case OrderType.Demolish: return "Q";
+                case OrderType.LayMines: return "Y";
+                case OrderType.ClearMines: return "U";
                 default: return "";
             }
         }
@@ -373,7 +398,8 @@ namespace CloseFight.Game.Controls
             // Ctrl + click works as a right click (Mac trackpads without secondary click).
             bool ctrl = Keyboard.current != null && Keyboard.current.ctrlKey.isPressed;
             bool secondary = mouse.rightButton.wasPressedThisFrame || (ctrl && mouse.leftButton.wasPressedThisFrame);
-            if (secondary && !overUi && _stage == Stage.Battle)
+            // In deployment the menu offers only what can be done before the battle: engineers laying mines.
+            if (secondary && !overUi && (_stage == Stage.Battle || (_stage == Stage.Deployment && _selection.Exists(t => t.Type == TeamType.Engineer))))
             {
                 if (_pendingOrder != OrderType.None)
                 {
@@ -549,6 +575,30 @@ namespace CloseFight.Game.Controls
         /// </summary>
         void IssueToSelection(OrderType order, float2 target)
         {
+            if (_stage == Stage.Deployment)
+            {
+                // Mines prepared before the battle go down at once.
+                if (order == OrderType.LayMines)
+                {
+                    bool laid = false;
+                    foreach (var team in _selection)
+                    {
+                        if (_battle.LayMinesBeforeBattle(team, target))
+                        {
+                            laid = true;
+                            break;
+                        }
+                    }
+
+                    if (!laid)
+                    {
+                        ShowToast(Loc.T("deploy.mines_refused"));
+                    }
+                }
+
+                return;
+            }
+
             float2 from = float2.zero;
             foreach (var team in _selection)
             {
@@ -663,6 +713,7 @@ namespace CloseFight.Game.Controls
             }
 
             DrawObjectiveLabels();
+            DrawMineLabels();
             DrawTeamLabels();
             DrawTopBar(width);
             DrawInfoPanel(width, height);
@@ -740,8 +791,8 @@ namespace CloseFight.Game.Controls
 
             if (_stage == Stage.Deployment)
             {
-                Fill(new Rect(width * 0.5f - 330, 34, 660, 30), new Color(0.35f, 0.28f, 0.05f, 0.8f));
-                GUI.Label(new Rect(width * 0.5f - 330, 34, 660, 30), Loc.T("ui.deploy_hint"), _smallCenter);
+                Fill(new Rect(width * 0.5f - 440, 34, 880, 30), new Color(0.35f, 0.28f, 0.05f, 0.8f));
+                GUI.Label(new Rect(width * 0.5f - 440, 34, 880, 30), Loc.T("ui.deploy_hint"), _smallCenter);
             }
             else if (_battle.Clock.Paused && !victory.IsOver)
             {
@@ -753,7 +804,17 @@ namespace CloseFight.Game.Controls
         /// <summary>The scenario's situation and goals, and the choice of side.</summary>
         void DrawBriefing(float width, float height)
         {
-            Fill(new Rect(0, 0, width, height), new Color(0f, 0f, 0f, 0.55f));
+            var background = UiArt.BriefingBackground;
+            if (background != null)
+            {
+                GUI.DrawTexture(new Rect(0, 0, width, height), background, ScaleMode.ScaleAndCrop, false);
+                Fill(new Rect(0, 0, width, height), new Color(0f, 0f, 0f, 0.25f));
+            }
+            else
+            {
+                Fill(new Rect(0, 0, width, height), new Color(0f, 0f, 0f, 0.55f));
+            }
+
             var panel = new Rect(width * 0.5f - 340, height * 0.5f - 250, 680, 500);
             Fill(panel, new Color(0.1f, 0.09f, 0.08f, 0.95f));
 
@@ -803,8 +864,19 @@ namespace CloseFight.Game.Controls
                 bool selected = _selection.Contains(team);
                 Fill(card, selected ? new Color(0.55f, 0.45f, 0.15f, 0.95f) : new Color(0.22f, 0.22f, 0.20f, 0.95f));
 
-                GUI.Label(new Rect(card.x + 6, card.y + 3, CardWidth - 12, 20), $"{i + 1}  {team.DisplayName}", _label);
-                GUI.Label(new Rect(card.x + 6, card.y + 22, CardWidth - 12, 18),
+                // NATO symbol on a small paper chip at the right of the card (D42).
+                var icon = UiArt.IconFor(team);
+                float textWidth = CardWidth - 12;
+                if (icon != null)
+                {
+                    var chip = new Rect(card.xMax - 44, card.y + 6, 38, 34);
+                    Fill(chip, team.Side == Side.German ? new Color(0.80f, 0.83f, 0.86f, 1f) : new Color(0.93f, 0.81f, 0.75f, 1f));
+                    GUI.DrawTexture(new Rect(chip.x - 1, chip.y - 4, 40, 40), icon, ScaleMode.ScaleToFit, true);
+                    textWidth -= 44;
+                }
+
+                GUI.Label(new Rect(card.x + 6, card.y + 3, textWidth, 20), $"{i + 1}  {team.DisplayName}", _label);
+                GUI.Label(new Rect(card.x + 6, card.y + 22, textWidth, 18),
                     $"{Loc.TeamKind(team)} · {team.ActiveCount}/{team.Members.Count} {Loc.T("ui.men")}", _small);
                 GUI.Label(new Rect(card.x + 6, card.y + 40, CardWidth - 12, 18), TeamStateText(team), _small);
 
@@ -869,6 +941,11 @@ namespace CloseFight.Game.Controls
             {
                 state = Loc.T("activity.pinned");
             }
+            else if (team.Task != null && team.Activity == TeamActivity.Idle)
+            {
+                // Engineering work on the spot, with how far along it is.
+                state = $"{Loc.T("work." + Loc.OrderKey(team.Task.Type).Substring(6))} {team.Task.Progress * 100f:0}%";
+            }
             else if (team.IsFiring(now))
             {
                 state = Loc.T("activity.firing");
@@ -910,6 +987,11 @@ namespace CloseFight.Game.Controls
                 state += " · " + Loc.T("ui.ammo_low");
             }
 
+            if (team.Type == TeamType.Engineer)
+            {
+                state += $" · {Loc.T("ui.charges")} {team.DemolitionCharges} · {Loc.T("ui.mines")} {team.MineLoads}";
+            }
+
             return state;
         }
 
@@ -933,6 +1015,25 @@ namespace CloseFight.Game.Controls
                 var color = objective.Owner == Side.German ? new Color(0.25f, 0.25f, 0.25f, 0.8f) : new Color(0.55f, 0.08f, 0.05f, 0.8f);
                 Fill(rect, color);
                 GUI.Label(rect, text, _smallCenter);
+            }
+        }
+
+        /// <summary>Small "minefield" tags over the minefields the player knows about.</summary>
+        void DrawMineLabels()
+        {
+            foreach (var field in unitsView.KnownMineFields())
+            {
+                Vector3 screen = worldCamera.WorldToScreenPoint(new Vector3(field.Center.x, 0f, field.Center.y));
+                if (screen.z < 0f)
+                {
+                    continue;
+                }
+
+                Vector2 gui = ToGui(new Vector2(screen.x, screen.y));
+                var rect = new Rect(gui.x - 30, gui.y - 9, 60, 18);
+                bool own = field.Owner == _playerSide;
+                Fill(rect, own ? new Color(0.45f, 0.38f, 0.08f, 0.75f) : new Color(0.55f, 0.08f, 0.05f, 0.8f));
+                GUI.Label(rect, Loc.T("ui.minefield"), _smallCenter);
             }
         }
 
@@ -1187,16 +1288,29 @@ namespace CloseFight.Game.Controls
                 return;
             }
 
-            float menuHeight = MenuOrders.Length * MenuRowHeight + 10f;
+            // Engineering orders only appear when an engineer team is selected; in deployment, only mine laying.
+            var orders = new List<OrderType>();
+            foreach (var order in MenuOrders)
+            {
+                bool engineering = Engineering.IsEngineeringOrder(order);
+                if (_stage == Stage.Deployment ? order == OrderType.LayMines
+                    : !engineering || _selection.Exists(t => t.Type == TeamType.Engineer))
+                {
+                    orders.Add(order);
+                }
+            }
+
+            float menuHeight = orders.Count * MenuRowHeight + 10f;
             float mx = Mathf.Min(_menuGui.x, width - MenuWidth - 4f);
             float my = Mathf.Min(_menuGui.y, height - menuHeight - 4f);
             _menuRect = new Rect(mx, my, MenuWidth, menuHeight);
             Fill(_menuRect, new Color(0.12f, 0.12f, 0.11f, 0.95f));
 
-            for (int i = 0; i < MenuOrders.Length; i++)
+            for (int i = 0; i < orders.Count; i++)
             {
-                var order = MenuOrders[i];
-                bool available = BattleState.IsImplemented(order);
+                var order = orders[i];
+                bool available = BattleState.IsImplemented(order)
+                    && (!Engineering.IsEngineeringOrder(order) || _selection.Exists(t => Engineering.CanAttempt(t, order)));
                 GUI.enabled = available;
                 string key = Hotkey(order);
                 string label = Loc.T(Loc.OrderKey(order)) + (key.Length > 0 ? $"   [{key}]" : "");

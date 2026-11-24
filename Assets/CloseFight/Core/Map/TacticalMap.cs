@@ -104,6 +104,27 @@ namespace CloseFight.Core.Map
             return true;
         }
 
+        /// <summary>
+        /// A demolition charge blows a wall away (D38, D39: engineers open a new way):
+        /// the cell becomes passable rubble. Building cells are left to <see cref="DamageCell"/>.
+        /// Returns true if a wall was removed.
+        /// </summary>
+        public bool DemolishWall(int cellIndex)
+        {
+            var grid = Grid;
+            if (!grid.HasFlag(cellIndex, CellFlags.Wall) || grid.HasFlag(cellIndex, CellFlags.Building))
+            {
+                return false;
+            }
+
+            grid.RemoveFlags(cellIndex, CellFlags.Wall | CellFlags.BlocksMovement | CellFlags.BlocksSight);
+            grid.SetTerrain(cellIndex, TerrainType.Rubble);
+            grid.SetObstacleHeight(cellIndex, TerrainInfo.TerrainObstacleHeight(TerrainType.Rubble));
+            grid.SetCover(cellIndex, TerrainInfo.TerrainCover(TerrainType.Rubble));
+            CellChanged?.Invoke(cellIndex);
+            return true;
+        }
+
         /// <summary>A tank drives over a fence or a wooden shed: flatten it (D37).</summary>
         public void CrushCell(int cellIndex)
         {

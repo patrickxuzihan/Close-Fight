@@ -44,6 +44,7 @@ namespace CloseFight.EditorTools
                 var map = MapBuilder.Build(MapSerializer.FromJson(File.ReadAllText(Path.Combine(DataRoot, "Maps", scenario.mapId + ".json"))));
                 var battle = ScenarioLoader.CreateBattle(scenario, map, deployment: true, allAi: true);
                 battle.BeginBattle();
+                Debug.Log($"Close Fight duel: minefields at start: {string.Join(" ", battle.Engineering.MineFields.Select(f => $"{f.Owner}@({f.Center.x:0},{f.Center.y:0})"))}");
                 var attack = battle.Commanders.OfType<AttackCommander>().FirstOrDefault();
 
                 var log = new StringBuilder();
@@ -83,6 +84,7 @@ namespace CloseFight.EditorTools
                 }
 
                 watch.Stop();
+                log.AppendLine($"  minefields left: {battle.Engineering.MineFields.Count} ({string.Join(" ", battle.Engineering.MineFields.Select(f => $"{f.Owner} {f.Mines} known DE {f.KnownTo(Side.German)}"))})");
                 log.AppendLine($"  END {Clock(battle.Clock.ElapsedSeconds)} result {battle.Victory.Result} ({battle.Victory.EndReasonKey}) {Status(battle)} — {watch.ElapsedMilliseconds} ms");
                 foreach (var team in battle.Teams)
                 {

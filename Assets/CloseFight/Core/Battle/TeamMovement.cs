@@ -59,9 +59,11 @@ namespace CloseFight.Core.Battle
         static Posture MovingPosture(OrderType order) => order == OrderType.Crawl ? Posture.Prone : Posture.Standing;
         static Posture ArrivedPosture(OrderType order) => order == OrderType.Crawl ? Posture.Prone : Posture.Kneeling;
 
-        /// <summary>Plans a route for the team. Returns false if no step toward the target is possible.</summary>
         /// <summary>A member still taking orders (not cowering, panicking or routing).</summary>
         static bool UnderControl(Soldier soldier) => soldier.IsActive && !soldier.IsOutOfControl;
+
+        /// <summary>Extra route cost per side (its known minefields), set by the battle.</summary>
+        internal System.Func<Side, System.Func<int, float>> SideCost { get; set; }
 
         /// <summary>Who the team moves with: the leader, or the next man still under control.</summary>
         static Soldier Anchor(Team team)
@@ -83,6 +85,7 @@ namespace CloseFight.Core.Battle
             return null;
         }
 
+        /// <summary>Plans a route for the team. Returns false if no step toward the target is possible.</summary>
         public bool PlanMove(Team team, float2 target, OrderType order)
         {
             var leader = Anchor(team);
@@ -96,7 +99,9 @@ namespace CloseFight.Core.Battle
             var start = grid.WorldToCell(leader.Position);
             var goal = grid.WorldToCell(target);
 
+            _pathfinder.SideCost = SideCost?.Invoke(team.Side); // e.g. minefields this side knows about
             bool reached = _pathfinder.FindPath(start, goal, MovementClass.Infantry, _cells);
+            _pathfinder.SideCost = null;
             if (_cells.Count == 0)
             {
                 return false;

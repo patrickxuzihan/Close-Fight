@@ -98,10 +98,17 @@ namespace CloseFight.Core.Battle
                 range *= 1.5f;
             }
 
-            // Muzzle flash and noise give a firing soldier away.
+            // Muzzle flash and noise give a firing soldier away (a sniper far less: single shots, from deep in cover).
+            bool sniper = target.Team.Type == TeamType.Sniper;
             if (now - target.LastFiredAt < 3f)
             {
-                range *= 2f;
+                range *= sniper ? 1.3f : 2f;
+            }
+
+            // Snipers are masters of concealment.
+            if (sniper)
+            {
+                range *= 0.6f;
             }
 
             switch (target.Team.Order.Type)

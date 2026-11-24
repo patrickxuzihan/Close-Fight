@@ -48,6 +48,8 @@ namespace CloseFight.Core.Battle
         public Combat Combat { get; }
         public Psychology Psychology { get; }
         public SmokeField Smoke { get; } = new SmokeField();
+        /// <summary>Demolition charges and minefields (M12).</summary>
+        public Engineering Engineering { get; }
 
         readonly List<Team> _teams = new List<Team>();
         readonly List<Soldier> _soldiers = new List<Soldier>();
@@ -77,6 +79,9 @@ namespace CloseFight.Core.Battle
             Combat = new Combat(this);
             Psychology = new Psychology(this, _movement, _pathfinder);
             _vehicleMovement = new VehicleMovement(map, _pathfinder);
+            Engineering = new Engineering(this, _movement, _pathfinder);
+            _movement.SideCost = Engineering.KnownMineCostFor;
+            _vehicleMovement.SideCost = Engineering.KnownMineCostFor;
             Gunnery = new Gunnery(this);
             Victory = new VictoryConditions(this);
             _retreatEdges[Side.German] = MapEdge.South;
@@ -97,7 +102,16 @@ namespace CloseFight.Core.Battle
         public IReadOnlyList<IBattleCommander> Commanders => _commanders;
         public MapEdge RetreatEdgeOf(Side side) => _retreatEdges[side];
 
-        public static int DefaultSize(TeamType type) => type == TeamType.Rifle ? 6 : 3;
+        public static int DefaultSize(TeamType type)
+        {
+            switch (type)
+            {
+                case TeamType.Rifle: return 6;
+                case TeamType.Engineer: return 5;
+                case TeamType.Sniper: return 2;
+                default: return 3;
+            }
+        }
 
         /// <summary>Creates a team with generated soldiers, deployed in a line around <paramref name="position"/>.</summary>
         public Team AddTeam(string key, Side side, TeamType type, string displayName, float2 position, float facing, int size, int experience,
@@ -152,8 +166,13 @@ namespace CloseFight.Core.Battle
             }
 
             team.Facing = facing;
-            team.SmokeGrenades = type == TeamType.Rifle ? 2 : type == TeamType.Vehicle ? 0 : 1;
-            team.AntiTankGrenades = type == TeamType.Rifle ? 1 : 0;
+            team.SmokeGrenades = type == TeamType.Rifle || type == TeamType.Engineer ? 2 : type == TeamType.Vehicle ? 0 : 1;
+            team.AntiTankGrenades = type == TeamType.Rifle || type == TeamType.Engineer ? 1 : 0;
+            if (type == TeamType.Engineer)
+            {
+                team.DemolitionCharges = 2;
+                team.MineLoads = 2;
+            }
 
             if (vehicleDefinition != null)
             {
@@ -323,6 +342,29 @@ namespace CloseFight.Core.Battle
             return DeployRefusal.None;
         }
 
+        /// <summary>
+        /// Deployment only: engineers lay a minefield prepared before the battle,
+        /// within 150 m of where they stand. False if not allowed or no mines are left.
+        /// </summary>
+        public bool LayMinesBeforeBattle(Team team, float2 point)
+        {
+            if (!IsDeploying || team.Type != TeamType.Engineer || team.MineLoads <= 0 || math.distance(team.Centroid, point) > 150f)
+            {
+                return false;
+            }
+
+            var grid = Map.Grid;
+            var cell = grid.WorldToCell(point);
+            if (!grid.InBounds(cell) || !_pathfinder.IsPassable(grid.IndexOf(cell), MovementClass.Infantry))
+            {
+                return false;
+            }
+
+            team.MineLoads--;
+            Engineering.AddMineField(team.Side, point);
+            return true;
+        }
+
         /// <summary>Moves a team instantly during deployment. Returns false (and leaves it) when not allowed.</summary>
         public bool Redeploy(Team team, float2 position, float facing)
         {
@@ -352,6 +394,9 @@ namespace CloseFight.Core.Battle
                 case OrderType.AssaultBuilding:
                 case OrderType.Retreat:
                 case OrderType.Reverse:
+                case OrderType.Demolish:
+                case OrderType.LayMines:
+                case OrderType.ClearMines:
                     return true;
                 default:
                     return false;
@@ -423,6 +468,7 @@ namespace CloseFight.Core.Battle
             }
 
             team.FallingBack = false;
+            team.Task = null; // any new order ends engineering work
             if (!ExecuteOrder(team, order, target))
             {
                 refusal = OrderRefusal.Impossible;
@@ -479,6 +525,11 @@ namespace CloseFight.Core.Battle
             if (order == OrderType.Reverse)
             {
                 return false; // only vehicles back up
+            }
+
+            if (Engineering.IsEngineeringOrder(order))
+            {
+                return Engineering.Start(team, order, target);
             }
 
             // Mortars fire smoke rounds instead of throwing grenades, at any range they can reach.
@@ -753,6 +804,7 @@ namespace CloseFight.Core.Battle
             Psychology.Step(SimClock.TickSeconds);
             Combat.Step(SimClock.TickSeconds);
             Gunnery.Step(SimClock.TickSeconds);
+            Engineering.Step(SimClock.TickSeconds);
 
             if (Clock.TickCount % AiIntervalTicks == 0)
             {

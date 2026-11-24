@@ -14,6 +14,7 @@ namespace CloseFight.Game.View
     {
         readonly List<Vector3> _vertices = new List<Vector3>();
         readonly List<Vector3> _normals = new List<Vector3>();
+        readonly List<Vector2> _uvs = new List<Vector2>();
         readonly List<int> _triangles = new List<int>();
         readonly List<int> _scratchTriangles = new List<int>();
         readonly List<float2> _scratchPolygon = new List<float2>();
@@ -24,11 +25,16 @@ namespace CloseFight.Game.View
         {
             _vertices.Clear();
             _normals.Clear();
+            _uvs.Clear();
             _triangles.Clear();
         }
 
-        /// <summary>Adds a prism with a roof cap and side walls (no floor).</summary>
-        public void AddPrism(IReadOnlyList<float2> footprint, float baseHeight, float topHeight)
+        /// <summary>
+        /// Adds a prism with a roof cap and side walls (no floor). The roof gets
+        /// texture coordinates in tiles of <paramref name="tileMeters"/>, turned by
+        /// <paramref name="roofAngle"/> (radians) so the texture runs along the building.
+        /// </summary>
+        public void AddPrism(IReadOnlyList<float2> footprint, float baseHeight, float topHeight, float roofAngle = 0f, float tileMeters = 8f)
         {
             if (footprint.Count < 3 || topHeight <= baseHeight)
             {
@@ -43,12 +49,13 @@ namespace CloseFight.Game.View
                 _scratchPolygon.Add(footprint[ccw ? i : footprint.Count - 1 - i]);
             }
 
-            AddRoof(_scratchPolygon, topHeight);
+            AddRoof(_scratchPolygon, topHeight, roofAngle, tileMeters);
             AddSides(_scratchPolygon, baseHeight, topHeight);
         }
 
-        void AddRoof(List<float2> polygon, float height)
+        void AddRoof(List<float2> polygon, float height, float angle, float tileMeters)
         {
+            float cos = math.cos(-angle), sin = math.sin(-angle);
             if (!PolygonTriangulator.Triangulate(polygon, _scratchTriangles))
             {
                 return;
@@ -59,6 +66,8 @@ namespace CloseFight.Game.View
             {
                 _vertices.Add(new Vector3(polygon[i].x, height, polygon[i].y));
                 _normals.Add(Vector3.up);
+                float2 p = polygon[i];
+                _uvs.Add(new Vector2(p.x * cos - p.y * sin, p.x * sin + p.y * cos) / tileMeters);
             }
 
             // Map-space CCW triangles are clockwise seen from above once x,y become x,z,
@@ -94,6 +103,7 @@ namespace CloseFight.Game.View
                 for (int k = 0; k < 4; k++)
                 {
                     _normals.Add(normal);
+                    _uvs.Add(Vector2.zero); // walls are edge-on from the top-down camera
                 }
 
                 _triangles.Add(start + 0);
@@ -115,6 +125,7 @@ namespace CloseFight.Game.View
 
             mesh.SetVertices(_vertices);
             mesh.SetNormals(_normals);
+            mesh.SetUVs(0, _uvs);
             mesh.SetTriangles(_triangles, 0);
             mesh.RecalculateBounds();
             return mesh;

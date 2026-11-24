@@ -339,6 +339,66 @@
       "experience": 45,
       "initialOrder": "Ambush",
       "equipment": "t60"
+    },
+    {
+      "key": "de_sniper",
+      "side": "German",
+      "type": "Sniper",
+      "displayName": "Scharfschützen",
+      "size": 0,
+      "position": {
+        "x": 22,
+        "y": 150
+      },
+      "facing": 90,
+      "experience": 70,
+      "equipment": "",
+      "initialOrder": "None"
+    },
+    {
+      "key": "de_pio",
+      "side": "German",
+      "type": "Engineer",
+      "displayName": "Pioniergruppe",
+      "size": 0,
+      "position": {
+        "x": 18,
+        "y": 70
+      },
+      "facing": 90,
+      "experience": 60,
+      "equipment": "",
+      "initialOrder": "None"
+    },
+    {
+      "key": "su_sniper",
+      "side": "Soviet",
+      "type": "Sniper",
+      "displayName": "Snaypery",
+      "size": 0,
+      "position": {
+        "x": 300,
+        "y": 130
+      },
+      "facing": 270,
+      "experience": 70,
+      "equipment": "",
+      "initialOrder": "None"
+    },
+    {
+      "key": "su_sap",
+      "side": "Soviet",
+      "type": "Engineer",
+      "displayName": "Sapyory",
+      "size": 0,
+      "position": {
+        "x": 200,
+        "y": 160
+      },
+      "facing": 270,
+      "experience": 55,
+      "equipment": "",
+      "initialOrder": "None"
     }
   ],
   "objectives": [

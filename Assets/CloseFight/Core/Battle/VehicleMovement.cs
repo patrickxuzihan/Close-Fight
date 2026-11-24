@@ -17,6 +17,9 @@ namespace CloseFight.Core.Battle
         /// <summary>A cautious Move runs at this fraction of full speed; Move Fast at full speed.</summary>
         const float CautiousFactor = 0.55f;
         const float ReverseSpeed = 2.0f;
+        /// <summary>Extra route cost per side (its known minefields), set by the battle.</summary>
+        internal System.Func<Side, System.Func<int, float>> SideCost { get; set; }
+
         /// <summary>Drive forward only when the hull points within this many degrees of the route.</summary>
         const float DriveAlignment = 30f;
         const float LookAhead = 3f;
@@ -43,7 +46,9 @@ namespace CloseFight.Core.Battle
             target = new float2(
                 math.clamp(target.x, 0f, grid.Width * grid.CellSize - 0.01f),
                 math.clamp(target.y, 0f, grid.Height * grid.CellSize - 0.01f));
+            _pathfinder.SideCost = SideCost?.Invoke(team.Side); // e.g. minefields this side knows about
             bool reached = _pathfinder.FindPath(grid.WorldToCell(vehicle.Position), grid.WorldToCell(target), MovementClass.Vehicle, _cells);
+            _pathfinder.SideCost = null;
             if (_cells.Count < 2)
             {
                 return false;

@@ -66,6 +66,9 @@ namespace CloseFight.Core.Battle
         readonly List<ExplosionEvent> _explosions = new List<ExplosionEvent>();
 
         public IReadOnlyList<ExplosionEvent> RecentExplosions => _explosions;
+
+        /// <summary>Records a burst for the view (mines and charges set off by engineers).</summary>
+        internal void AddExplosion(float2 point, float radius, float now) => _explosions.Add(new ExplosionEvent(point, radius, now, false));
         public int ShellsInFlight => _shells.Count;
 
         public Gunnery(BattleState battle)
