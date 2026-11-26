@@ -45,7 +45,7 @@ namespace CloseFight.Tests
         }
 
         [Test]
-        public void SniperShootsTheOfficerBeforeCloserRiflemen()
+        public void SniperShootsTheOfficerAndGunnerBeforeCloserRiflemen()
         {
             var battle = Battle();
             var sniper = battle.AddTeam("s", Side.German, TeamType.Sniper, "", new float2(150, 20), 0f, 2, 80);
@@ -65,14 +65,17 @@ namespace CloseFight.Tests
                 battle.Step();
                 foreach (var shot in battle.Combat.RecentShots.Where(s => s.ShooterId == sniper.Members[0].Id && s.Time > seen))
                 {
-                    if (math.distance(shot.Impact, officer.Position) < 4f) officerShots++;
+                    // The section's DP gunner is as wanted as the officer (D39).
+                    bool wanted = math.distance(shot.Impact, officer.Position) < 4f
+                        || enemy.Members.Any(m => m.Weapon == Weapons.Dp28 && math.distance(shot.Impact, m.Position) < 4f);
+                    if (wanted) officerShots++;
                     else otherShots++;
                     seen = shot.Time;
                 }
             }
 
             Assert.Greater(officerShots, 0, "precondition: the sniper fired");
-            Assert.AreEqual(0, otherShots, "every shot went at the officer, 60 m further off than his men");
+            Assert.AreEqual(0, otherShots, "every shot went at the officer (60 m further off than his men) or the machine gunner, none at the riflemen");
         }
 
         [Test]

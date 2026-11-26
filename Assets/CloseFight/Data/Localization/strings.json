@@ -60,12 +60,12 @@
     "en": "Deploying"
   },
   "team.rifle": {
-    "zh": "步枪组",
-    "en": "Rifle Team"
+    "zh": "步兵班",
+    "en": "Rifle Squad"
   },
   "team.machine_gun": {
-    "zh": "机枪组",
-    "en": "MG Team"
+    "zh": "重机枪组",
+    "en": "HMG Team"
   },
   "team.headquarters": {
     "zh": "连部",
@@ -862,5 +862,157 @@
   "ui.previous_scenario": {
     "zh": "◀ 上一个剧本",
     "en": "◀ Previous scenario"
+  },
+  "weapon.mg34_heavy": {
+    "zh": "MG 34 重机枪（三脚架）",
+    "en": "MG 34 (heavy, tripod)"
+  },
+  "weapon.maxim": {
+    "zh": "马克沁 M1910 重机枪",
+    "en": "Maxim M1910"
+  },
+  "platoon.headquarters": {
+    "zh": "连部",
+    "en": "Company HQ"
+  },
+  "platoon.rifle": {
+    "zh": "步兵排",
+    "en": "Rifle Platoon"
+  },
+  "platoon.machine_gun": {
+    "zh": "重机枪排",
+    "en": "HMG Platoon"
+  },
+  "platoon.mortar": {
+    "zh": "迫击炮排",
+    "en": "Mortar Platoon"
+  },
+  "platoon.anti_tank": {
+    "zh": "反坦克炮排",
+    "en": "AT Gun Platoon"
+  },
+  "platoon.armor": {
+    "zh": "装甲排",
+    "en": "Armour Platoon"
+  },
+  "platoon.pioneer": {
+    "zh": "工兵排",
+    "en": "Pioneer Platoon"
+  },
+  "platoon.other": {
+    "zh": "直属分队",
+    "en": "Attached"
+  },
+  "ui.roster": {
+    "zh": "部队",
+    "en": "Forces"
+  },
+  "ui.roster_back": {
+    "zh": "← 返回",
+    "en": "← Back"
+  },
+  "ui.roster_hint": {
+    "zh": "双击排看各班 · 双击班组定位",
+    "en": "Double-click a platoon to open it · a squad to find it"
+  },
+  "ui.roster_platoon_hint": {
+    "zh": "双击班组定位到它",
+    "en": "Double-click a squad to find it on the map"
+  },
+  "stance.elastic": {
+    "zh": "弹性防御",
+    "en": "Elastic defence"
+  },
+  "stance.delay": {
+    "zh": "迟滞",
+    "en": "Delaying action"
+  },
+  "stance.hold": {
+    "zh": "死守",
+    "en": "Hold at all costs"
+  },
+  "stance.elastic_short": {
+    "zh": "弹性",
+    "en": "Elastic"
+  },
+  "stance.delay_short": {
+    "zh": "迟滞",
+    "en": "Delay"
+  },
+  "stance.hold_short": {
+    "zh": "死守",
+    "en": "Hold"
+  },
+  "delegation.menu": {
+    "zh": "托管：{0}",
+    "en": "AI: {0}"
+  },
+  "delegation.take_back": {
+    "zh": "取消托管",
+    "en": "Take back command"
+  },
+  "delegation.handed": {
+    "zh": "{0} 交给 AI：{1}（任何命令都会收回）",
+    "en": "{0} handed to the AI: {1} (any order takes it back)"
+  },
+  "delegation.taken_back": {
+    "zh": "已收回指挥",
+    "en": "Back under your command"
+  },
+  "delegation.request_toast": {
+    "zh": "{0} 请求撤退：{1} 秒内不驳回就自动撤",
+    "en": "{0} asks to pull back: it goes in {1} s unless you refuse"
+  },
+  "delegation.refused_toast": {
+    "zh": "{0} 继续坚守",
+    "en": "{0} holds on"
+  },
+  "delegation.requesting": {
+    "zh": "请求撤退 {0}",
+    "en": "Asks to pull back {0}"
+  },
+  "delegation.withdrawing": {
+    "zh": "撤往新阵地",
+    "en": "Falling back"
+  },
+  "delegation.counterattacking": {
+    "zh": "拼死反冲",
+    "en": "Counterattacking"
+  },
+  "delegation.taking_position": {
+    "zh": "进入阵地",
+    "en": "Taking position"
+  },
+  "delegation.approve": {
+    "zh": "准撤",
+    "en": "Go"
+  },
+  "delegation.refuse": {
+    "zh": "驳回",
+    "en": "Stay"
+  },
+  "delegation.info": {
+    "zh": "托管：{0}",
+    "en": "AI: {0}"
+  },
+  "delegation.lines": {
+    "zh": "已后撤 {0} 次",
+    "en": "fell back {0}×"
+  },
+  "ui.teams_count": {
+    "zh": "{0} 个班组",
+    "en": "{0} teams"
+  },
+  "menu.target_enemy": {
+    "zh": "目标：敌{0}",
+    "en": "Target: enemy {0}"
+  },
+  "menu.target_building": {
+    "zh": "目标：建筑（{0} 层）",
+    "en": "Target: building ({0} floors)"
+  },
+  "menu.target_ground": {
+    "zh": "目标：这里",
+    "en": "Target: here"
   }
 }

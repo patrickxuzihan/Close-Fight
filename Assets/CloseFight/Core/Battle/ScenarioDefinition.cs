@@ -22,6 +22,7 @@ namespace CloseFight.Core.Battle
         /// <summary>Battle length in game minutes (D33: adjustable, default 45).</summary>
         public float timeLimitMinutes = VictoryConditions.DefaultTimeLimitMinutes;
         public List<SideDefinition> sides = new List<SideDefinition>();
+        public List<PlatoonDefinition> platoons = new List<PlatoonDefinition>();
         public List<TeamDefinition> teams = new List<TeamDefinition>();
         public List<ObjectiveDefinition> objectives = new List<ObjectiveDefinition>();
     }
@@ -42,9 +43,23 @@ namespace CloseFight.Core.Battle
     }
 
     [Serializable]
+    /// <summary>A platoon in a scenario (M18). Teams name it in their <c>platoon</c> field.</summary>
+    public sealed class PlatoonDefinition
+    {
+        public string key = "";
+        public Side side;
+        public PlatoonType type = PlatoonType.Rifle;
+        /// <summary>Designation, e.g. "1. Zug".</summary>
+        public string name = "";
+        /// <summary>Company label, e.g. "9./IR 194".</summary>
+        public string company = "";
+    }
+
     public sealed class TeamDefinition
     {
         public string key = "";
+        /// <summary>Key of the platoon it belongs to (M18); empty for none.</summary>
+        public string platoon = "";
         public Side side;
         public TeamType type = TeamType.Rifle;
         public string displayName = "";
@@ -114,10 +129,24 @@ namespace CloseFight.Core.Battle
                 battle.Illumination.SetFlares(side.side, side.flares);
             }
 
+            var platoons = new Dictionary<string, Platoon>();
+            if (scenario.platoons != null)
+            {
+                foreach (var platoon in scenario.platoons)
+                {
+                    platoons[platoon.key] = battle.AddPlatoon(platoon.key, platoon.side, platoon.type, platoon.name, platoon.company);
+                }
+            }
+
             foreach (var team in scenario.teams)
             {
-                int size = team.size > 0 ? team.size : BattleState.DefaultSize(team.type);
+                int size = team.size > 0 ? team.size : BattleState.DefaultSize(team.type, team.side);
                 var created = battle.AddTeam(team.key, team.side, team.type, team.displayName, team.position, team.facing, size, team.experience, team.equipment);
+                if (!string.IsNullOrEmpty(team.platoon) && platoons.TryGetValue(team.platoon, out var owner))
+                {
+                    battle.AssignToPlatoon(created, owner);
+                }
+
                 if (team.initialOrder == OrderType.Defend || team.initialOrder == OrderType.Ambush || team.initialOrder == OrderType.Hide)
                 {
                     battle.IssueOrder(created, team.initialOrder, created.Centroid);

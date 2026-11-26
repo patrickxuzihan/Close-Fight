@@ -33,9 +33,10 @@ namespace CloseFight.Tests
             var mg = battle.AddTeam("mg", Side.Soviet, TeamType.MachineGun, "", new float2(150, 150), 0f, 3, 50);
 
             Assert.AreSame(Weapons.Mp40, de.Members[0].Weapon, "German squad leader carries the MP40");
-            Assert.AreSame(Weapons.Kar98k, de.Members[1].Weapon);
-            Assert.AreSame(Weapons.Dp28, mg.Members[0].Weapon);
-            Assert.AreEqual(Weapons.Kar98k.StartingAmmo, de.Members[1].Ammo);
+            Assert.AreSame(Weapons.Mg34, de.Members[1].Weapon, "the squad's light MG");
+            Assert.AreSame(Weapons.Kar98k, de.Members[3].Weapon);
+            Assert.AreSame(Weapons.Maxim, mg.Members[0].Weapon, "a Soviet MG team serves the Maxim");
+            Assert.AreEqual(Weapons.Kar98k.StartingAmmo, de.Members[3].Ammo);
             Assert.AreEqual(2, de.SmokeGrenades);
         }
 
@@ -189,7 +190,10 @@ namespace CloseFight.Tests
 
             Assert.Less(AmmoLeft(su), startAmmo, "the ambush is sprung");
             Assert.AreEqual(OrderType.Defend, su.Order.Type, "a sprung ambush fights normally");
-            Assert.LessOrEqual(math.distance(de.Centroid, su.Centroid), Combat.AmbushRange + 10f);
+            // It waits until the enemy is close: within 50 m, or (D54) within the range the enemy
+            // would spot it from, with a 20 % margin, so that it gets the first shot.
+            float spotted = battle.Visibility.SpottingRangeNow(su.Members[0], battle.Clock.ElapsedSeconds) * 1.2f;
+            Assert.LessOrEqual(math.distance(de.Centroid, su.Centroid), math.max(Combat.AmbushRange, spotted) + 10f);
         }
 
         [Test]

@@ -37,6 +37,8 @@ namespace CloseFight.Core.Battle
         public SimClock Clock { get; } = new SimClock();
         public SimRandom Random { get; }
         public IReadOnlyList<Team> Teams => _teams;
+        /// <summary>Platoons (M18): how the roster groups the teams. Teams may also stand outside any platoon.</summary>
+        public IReadOnlyList<Platoon> Platoons => _platoons;
         public IReadOnlyList<Soldier> Soldiers => _soldiers;
         public IReadOnlyList<Vehicle> Vehicles => _vehicles;
         public IReadOnlyList<Objective> Objectives => _objectives;
@@ -58,6 +60,7 @@ namespace CloseFight.Core.Battle
         public Illumination Illumination { get; }
 
         readonly List<Team> _teams = new List<Team>();
+        readonly List<Platoon> _platoons = new List<Platoon>();
         readonly List<Soldier> _soldiers = new List<Soldier>();
         readonly List<Vehicle> _vehicles = new List<Vehicle>();
         readonly List<Objective> _objectives = new List<Objective>();
@@ -65,6 +68,7 @@ namespace CloseFight.Core.Battle
         VehicleMovement _vehicleMovement;
         readonly Dictionary<Side, MapEdge> _retreatEdges = new Dictionary<Side, MapEdge>();
         readonly GridPathfinder _pathfinder;
+        readonly AI.Autopilot _autopilot;
         readonly TeamMovement _movement;
         readonly Dictionary<Side, List<float2[]>> _deployZones = new Dictionary<Side, List<float2[]>>();
 
@@ -84,6 +88,7 @@ namespace CloseFight.Core.Battle
             Visibility = new Visibility(this);
             Combat = new Combat(this);
             Psychology = new Psychology(this, _movement, _pathfinder);
+            _autopilot = new AI.Autopilot(this, _pathfinder);
             _vehicleMovement = new VehicleMovement(map, _pathfinder);
             Engineering = new Engineering(this, _movement, _pathfinder);
             Support = new OffMapSupport(this);
@@ -110,16 +115,39 @@ namespace CloseFight.Core.Battle
         public IReadOnlyList<IBattleCommander> Commanders => _commanders;
         public MapEdge RetreatEdgeOf(Side side) => _retreatEdges[side];
 
-        public static int DefaultSize(TeamType type)
+        /// <summary>
+        /// Full strength of a team (M18: campaigns start at full strength; losses carry
+        /// over from battle to battle). Rifle squads follow the 1942 tables of organisation:
+        /// a German Schützengruppe of 10 (leader, deputy, a three-man MG 34 team and five
+        /// riflemen), a Soviet rifle section of 11 (leader, a DP gunner and his assistant,
+        /// eight riflemen). A heavy machine gun team is the gun and its crew of four.
+        /// </summary>
+        public static int DefaultSize(TeamType type, Side side = Side.German)
         {
             switch (type)
             {
-                case TeamType.Rifle: return 6;
+                case TeamType.Rifle: return side == Side.German ? 10 : 11;
+                case TeamType.MachineGun: return 4;
                 case TeamType.Engineer: return 5;
                 case TeamType.Sniper: return 2;
                 case TeamType.Observer: return 2;
                 default: return 3;
             }
+        }
+
+        /// <summary>Adds a platoon (M18). Its teams join it with <see cref="AssignToPlatoon"/>.</summary>
+        public Platoon AddPlatoon(string key, Side side, PlatoonType type, string name, string company = "")
+        {
+            var platoon = new Platoon(_platoons.Count, key, side, type, name, company);
+            _platoons.Add(platoon);
+            return platoon;
+        }
+
+        public void AssignToPlatoon(Team team, Platoon platoon)
+        {
+            team.Platoon?.Teams.Remove(team);
+            team.Platoon = platoon;
+            platoon?.Teams.Add(team);
         }
 
         /// <summary>Creates a team with generated soldiers, deployed in a line around <paramref name="position"/>.</summary>
@@ -385,6 +413,45 @@ namespace CloseFight.Core.Battle
             Place(team, position, facing);
             return true;
         }
+
+        // ------------------------------------------------------------ delegation (M15)
+
+        /// <summary>
+        /// Hands a team to the AI (D14, D53): it defends near <paramref name="anchor"/> (null:
+        /// where it is, or where it is heading) with the given stance. Handing over a team
+        /// already delegated only changes its stance.
+        /// </summary>
+        public Delegation Delegate(Team team, Stance stance, float2? anchor = null)
+        {
+            if (team == null || team.ActiveCount == 0)
+            {
+                return null;
+            }
+
+            if (team.Delegation != null)
+            {
+                team.Delegation.Stance = stance;
+                return team.Delegation;
+            }
+
+            float2 here = team.Vehicle != null ? team.Vehicle.Position : team.Centroid;
+            bool moving = team.Activity != TeamActivity.Idle && team.Order.Type != OrderType.Retreat;
+            team.Delegation = new Delegation(stance, Clock.ElapsedSeconds);
+            _autopilot.Begin(team, anchor ?? (moving ? team.Order.Target : here));
+            return team.Delegation;
+        }
+
+        /// <summary>Takes a team back under direct command (any order from the player does this).</summary>
+        public void Undelegate(Team team)
+        {
+            if (team != null)
+            {
+                team.Delegation = null;
+            }
+        }
+
+        /// <summary>The player approves or refuses a delegated team's request to pull back (D53).</summary>
+        public bool AnswerWithdrawal(Team team, bool approve) => team != null && _autopilot.Answer(team, approve);
 
         /// <summary>True for the orders that work in the current milestone.</summary>
         public static bool IsImplemented(OrderType order)
@@ -812,6 +879,11 @@ namespace CloseFight.Core.Battle
 
             Psychology.Step(SimClock.TickSeconds);
             Combat.Step(SimClock.TickSeconds);
+            if (Clock.TickCount % 10 == 0)
+            {
+                HandOverMachineGuns();
+            }
+
             Gunnery.Step(SimClock.TickSeconds);
             Engineering.Step(SimClock.TickSeconds);
             Support.Step(Clock.ElapsedSeconds);
@@ -823,6 +895,11 @@ namespace CloseFight.Core.Battle
                 {
                     commander.Think();
                 }
+            }
+
+            if (Clock.TickCount % AI.Autopilot.IntervalTicks == 0)
+            {
+                _autopilot.Think();
             }
 
             Victory.Step();
@@ -855,6 +932,12 @@ namespace CloseFight.Core.Battle
         /// <summary>A spot <paramref name="distance"/> meters back toward the team's own edge (D14 "new line").</summary>
         public float2 FallbackPoint(Team team, float distance)
         {
+            // A team handed to the AI falls back to the position it prepared (M15).
+            if (team.Delegation != null && team.Delegation.HasFallback)
+            {
+                return team.Delegation.Fallback;
+            }
+
             float2 from = team.Centroid;
             float2 edge = EdgePoint(team.Side, from);
             float2 toward = math.normalizesafe(edge - from, new float2(0f, -1f));
@@ -890,12 +973,87 @@ namespace CloseFight.Core.Battle
             };
         }
 
+        /// <summary>
+        /// When a squad's machine gunner falls, the nearest comrade picks up the gun and
+        /// carries on (M18): the No. 2 first, then a rifleman, the leader last. He leaves
+        /// his own weapon by the fallen man and needs a few seconds before he can fire.
+        /// </summary>
+        void HandOverMachineGuns()
+        {
+            foreach (var team in _teams)
+            {
+                if (team.Vehicle != null || team.Gun != null)
+                {
+                    continue;
+                }
+
+                foreach (var fallen in team.Members)
+                {
+                    if (fallen.IsActive || fallen.Status == SoldierStatus.Fled || fallen.Ammo <= 0
+                        || fallen.Weapon == null || fallen.Weapon.Class != WeaponClass.MachineGun)
+                    {
+                        continue;
+                    }
+
+                    Soldier best = null;
+                    int bestRank = int.MaxValue;
+                    foreach (var mate in team.Members)
+                    {
+                        if (!mate.IsActive || mate.IsOutOfControl || mate.Weapon == null
+                            || math.distance(mate.Position, fallen.Position) > 15f)
+                        {
+                            continue;
+                        }
+
+                        int rank;
+                        switch (mate.Weapon.Class)
+                        {
+                            case WeaponClass.Pistol: rank = 0; break;
+                            case WeaponClass.Rifle: rank = 1; break;
+                            case WeaponClass.SubmachineGun: rank = 2; break;
+                            default: continue; // already has a special weapon
+                        }
+
+                        if (mate.IsLeader)
+                        {
+                            rank += 10;
+                        }
+
+                        if (rank < bestRank)
+                        {
+                            best = mate;
+                            bestRank = rank;
+                        }
+                    }
+
+                    if (best == null)
+                    {
+                        continue;
+                    }
+
+                    var gun = fallen.Weapon;
+                    int belts = fallen.Ammo;
+                    fallen.Weapon = best.Weapon;
+                    fallen.Ammo = best.Ammo;
+                    best.Weapon = gun;
+                    best.Ammo = belts;
+                    best.FireCooldown = math.max(best.FireCooldown, 4f);
+                }
+            }
+        }
+
         static string RankKey(Side side, TeamType type, int index)
         {
             string prefix = side == Side.German ? "rank.de." : "rank.su.";
             if (index == 0)
             {
                 return prefix + (type == TeamType.Headquarters ? "lieutenant" : "squad_leader");
+            }
+
+            // In a rifle squad the deputy leader (seat 4) is the second-ranking man.
+            if (type == TeamType.Rifle)
+            {
+                return prefix + (index == 4 ? "corporal" : "private");
             }
 
             return prefix + (index == 1 ? "corporal" : "private");

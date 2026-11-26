@@ -89,6 +89,14 @@ namespace CloseFight.Core.Units
             burst: 8, interval: 1.4f, accuracy: 0.12f, falloff: 260f, effectiveRange: 700f, maxRange: 1000f,
             startingAmmo: 1000, suppression: 6f, lethality: 0.45f, audibleRange: 700f, needsSetup: true);
 
+        /// <summary>
+        /// The MG 34 on its Lafette 34 tripod with the optical sight: the heavy machine gun of
+        /// the battalion's MG company (M18). Steadier and longer-ranged than the squad's bipod gun.
+        /// </summary>
+        public static readonly WeaponDefinition Mg34Heavy = new WeaponDefinition("mg34_heavy", "weapon.mg34_heavy", WeaponClass.MachineGun,
+            burst: 10, interval: 1.3f, accuracy: 0.16f, falloff: 400f, effectiveRange: 1000f, maxRange: 1500f,
+            startingAmmo: 2500, suppression: 7f, lethality: 0.45f, audibleRange: 800f, needsSetup: true);
+
         // Soviet
         public static readonly WeaponDefinition Mosin = new WeaponDefinition("mosin", "weapon.mosin", WeaponClass.Rifle,
             burst: 1, interval: 3.7f, accuracy: 0.22f, falloff: 200f, effectiveRange: 400f, maxRange: 600f,
@@ -101,6 +109,11 @@ namespace CloseFight.Core.Units
         public static readonly WeaponDefinition Dp28 = new WeaponDefinition("dp28", "weapon.dp28", WeaponClass.MachineGun,
             burst: 6, interval: 1.5f, accuracy: 0.12f, falloff: 230f, effectiveRange: 600f, maxRange: 900f,
             startingAmmo: 600, suppression: 6f, lethality: 0.45f, audibleRange: 650f, needsSetup: true);
+
+        /// <summary>The water-cooled Maxim M1910 on its wheeled Sokolov mount: the Soviet heavy machine gun (M18).</summary>
+        public static readonly WeaponDefinition Maxim = new WeaponDefinition("maxim", "weapon.maxim", WeaponClass.MachineGun,
+            burst: 10, interval: 1.4f, accuracy: 0.16f, falloff: 380f, effectiveRange: 1000f, maxRange: 1400f,
+            startingAmmo: 2500, suppression: 7f, lethality: 0.45f, audibleRange: 800f, needsSetup: true);
 
         // Snipers (M12): one aimed shot every few seconds, accurate far beyond a rifleman's reach.
         public static readonly WeaponDefinition Kar98kScoped = new WeaponDefinition("kar98k_zf39", "weapon.kar98k_zf39", WeaponClass.SniperRifle,
@@ -156,9 +169,15 @@ namespace CloseFight.Core.Units
             switch (type)
             {
                 case TeamType.MachineGun:
+                    // The heavy gun, the No. 2 with his pistol and two riflemen carrying ammunition.
                     if (index == 0)
                     {
-                        return german ? Mg34 : Dp28;
+                        return german ? Mg34Heavy : Maxim;
+                    }
+
+                    if (index == 1)
+                    {
+                        return german ? P08 : Tt33;
                     }
 
                     return german ? Kar98k : Mosin;
@@ -187,13 +206,18 @@ namespace CloseFight.Core.Units
                     return index == 1 ? (german ? Flammenwerfer41 : Roks3) : (german ? Kar98k : Mosin);
 
                 default:
-                    // German squad leaders carried the MP40; Soviet rifle sections often had two PPSh.
-                    if (index == 0 || (!german && index == 1))
+                    // Rifle squads by the 1942 tables (M18). Seat 0 is the leader with a
+                    // submachine gun; seat 1 the light MG gunner. German: the MG No. 2 carries
+                    // a pistol, the rest Kar 98k rifles (seat 4 is the deputy leader). Soviet:
+                    // the DP's assistant has a rifle, and one more man a PPSh.
+                    switch (index)
                     {
-                        return german ? Mp40 : Ppsh41;
+                        case 0: return german ? Mp40 : Ppsh41;
+                        case 1: return german ? Mg34 : Dp28;
+                        case 2: return german ? P08 : Mosin;
+                        case 3: return german ? Kar98k : Ppsh41;
+                        default: return german ? Kar98k : Mosin;
                     }
-
-                    return german ? Kar98k : Mosin;
             }
         }
     }

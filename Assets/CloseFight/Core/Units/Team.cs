@@ -33,6 +33,11 @@ namespace CloseFight.Core.Units
         public TeamType Type { get; }
         public string DisplayName { get; }
         public List<Soldier> Members { get; } = new List<Soldier>();
+        /// <summary>The platoon it belongs to (M18), or null for a team outside any platoon.</summary>
+        public Platoon Platoon { get; internal set; }
+
+        /// <summary>Set while the player has handed the team to the AI (M15); null under direct command.</summary>
+        public Delegation Delegation { get; internal set; }
 
         public TeamOrder Order { get; internal set; } = TeamOrder.None;
         public TeamActivity Activity { get; internal set; } = TeamActivity.Idle;

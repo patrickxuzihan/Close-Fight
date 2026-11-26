@@ -52,3 +52,6 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 *_BurstDebugInformation_DoNotShip/
 *_BackUpThisFolder_ButDontShipItWithYourGame/
+
+# Roster picture candidates from tools/roster/generate.py (only the picks in ArtSource/roster/ are kept)
+/ArtSource/roster/candidates/

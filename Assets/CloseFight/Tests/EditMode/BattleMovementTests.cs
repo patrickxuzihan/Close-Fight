@@ -231,8 +231,8 @@ namespace CloseFight.Tests
             var battle = ScenarioLoader.CreateBattle(scenario, MapBuilder.Build(TestMaps.Empty()));
 
             Assert.AreEqual(2, battle.Teams.Count);
-            Assert.AreEqual(6, battle.Teams[0].Members.Count, "default rifle team size");
-            Assert.AreEqual(3, battle.Teams[1].Members.Count, "default MG team size");
+            Assert.AreEqual(BattleState.DefaultSize(battle.Teams[0].Type, battle.Teams[0].Side), battle.Teams[0].Members.Count, "default (full) rifle squad size");
+            Assert.AreEqual(BattleState.DefaultSize(TeamType.MachineGun), battle.Teams[1].Members.Count, "default MG team size");
             Assert.AreEqual(MapEdge.North, battle.RetreatEdgeOf(Side.Soviet));
         }
 

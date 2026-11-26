@@ -1,0 +1,134 @@
+{
+  "_comment": "Roster unit pictures (M18): one colour group picture per unit kind and side, generated with a local image model through the Draw Things HTTP API (generate.py), then cut out and fitted to the roster tile (process.py). Each prompt names every man in front with his own pose and weapon; the rest of a squad follows behind in depth. The game shows the exact headcount beside the picture.",
+  "styles": {
+    "men": "Full bodies, tightly grouped, isolated on a plain pure white background, no ground, no cast shadow, no scenery, soft even studio lighting, realistic 3D rendered figures with fine detail, like the unit pictures in a classic WWII real-time tactics game. Plain uniforms with no insignia of any kind: no breast eagle, no badges, no medals, no ribbons, no armbands, no stars, no crosses, no flags, no text.",
+    "vehicle": "The whole vehicle in view, isolated on a plain pure white background, no ground, no cast shadow, no scenery, no crew, soft even studio lighting, realistic 3D render with fine detail, like the unit pictures in a classic WWII real-time tactics game. No markings, no crosses, no stars, no numbers, no slogans, no flags, no text."
+  },
+  "uniforms": {
+    "de": "All wear field-grey wool uniforms, black leather jackboots and grey-green coal-scuttle steel helmets with flared rims, with leather belts, Y-straps and ammunition pouches. Every man looks different: different ages, faces, builds and expressions, some unshaven, plain uniforms a little worn and dusty, each weapon complete and correctly held. They carry only 1942 German weapons: wooden-stocked Kar98k bolt-action rifles, MP40 submachine guns with a straight magazine, MG34 machine guns.",
+    "su": "All wear khaki-brown tunics and trousers, black boots and rounded green SSh-40 steel helmets, with rolled greatcoats worn diagonally over the shoulder. Every man looks different: different ages, faces, builds and expressions, some unshaven, plain uniforms a little worn and dusty, each weapon complete and correctly held. They carry only 1942 Soviet weapons: wooden-stocked Mosin-Nagant bolt-action rifles with long spike bayonets, PPSh-41 submachine guns with a round drum magazine, DP-27 machine guns with a flat pan magazine on top; nobody has a curved magazine."
+  },
+  "negative": "AK-47, assault rifle, curved banana magazine, modern weapons, modern equipment, missing gun barrel, broken or deformed weapons, extra limbs, deformed hands, merged bodies, identical faces, clones, camouflage pattern, medals, badges, eagle emblem, star emblem, swastika, flag, text, watermark, ground, shadow, background scenery",
+  "units": [
+    {
+      "key": "unit_de_rifle",
+      "side": "de",
+      "style": "men",
+      "prompt": "A full German rifle squad of ten 1942 German infantrymen moving together as a group, seen from a three-quarter front view, the men in front large and close, the rest following behind them in depth, partly hidden. In front, each man does something different: the squad leader stands half upright looking through binoculars held to his eyes, an MP40 submachine gun slung on his chest; the machine gunner walks carrying an MG34 machine gun over his right shoulder, a long machine gun with a perforated barrel jacket and a folded bipod; his assistant walks beside him with a metal ammunition box in each hand; a rifleman kneels on one knee aiming his Kar98k rifle forward. Behind them six more riflemen follow in a loose file with Kar98k rifles."
+    },
+    {
+      "key": "unit_su_rifle",
+      "side": "su",
+      "style": "men",
+      "prompt": "A full Soviet rifle section of eleven 1942 Red Army infantrymen moving together as a group, seen from a three-quarter front view, the men in front large and close, the rest following behind them in depth, partly hidden. In front, each man does something different: the section leader points forward with his outstretched left arm, holding a PPSh-41 submachine gun with a round drum magazine in his right hand; the machine gunner walks carrying a DP-27 light machine gun over his right shoulder, a large flat round pan magazine on top of the gun; a soldier runs forward in a crouch with a PPSh-41 submachine gun; a rifleman kneels on one knee aiming a Mosin-Nagant rifle with a long spike bayonet fixed. Behind them seven more riflemen follow in a loose file with Mosin-Nagant rifles and bayonets."
+    },
+    {
+      "key": "unit_de_hq",
+      "side": "de",
+      "style": "men",
+      "prompt": "Three 1942 German soldiers of a platoon headquarters close together, seen from a three-quarter front view, each doing something different: in the middle the platoon leader stands holding an open map in both hands and points at it, an MP40 submachine gun slung on his shoulder; on the left a messenger crouches beside him listening, holding a Kar98k rifle; on the right a soldier kneels looking through binoculars, his Kar98k rifle resting against his leg."
+    },
+    {
+      "key": "unit_su_hq",
+      "side": "su",
+      "style": "men",
+      "prompt": "Three 1942 Soviet Red Army soldiers of a platoon headquarters close together, seen from a three-quarter front view, each doing something different: in the middle the platoon commander stands pointing forward with his outstretched left arm, holding a PPSh-41 submachine gun with a round drum magazine in his right hand, a map case on his hip; on the left a messenger runs past him holding a Mosin-Nagant rifle; on the right a soldier kneels looking through binoculars, his Mosin-Nagant rifle across his knee."
+    },
+    {
+      "key": "unit_de_hmg",
+      "side": "de",
+      "style": "men",
+      "prompt": "A German heavy machine gun team of four 1942 German soldiers, seen from a three-quarter front view, each doing something different: in front the gunner lies prone behind an MG34 machine gun mounted on a low folding tripod, aiming and firing; beside him his assistant kneels and feeds the ammunition belt into the gun, a pistol holster on his belt; behind them two soldiers run forward in a crouch, each carrying two metal ammunition boxes, rifles slung on their backs."
+    },
+    {
+      "key": "unit_su_hmg",
+      "side": "su",
+      "style": "men",
+      "prompt": "A Soviet heavy machine gun team of four 1942 Red Army soldiers, seen from a three-quarter front view, each doing something different: in front the gunner lies behind a Maxim M1910 machine gun on a small two-wheeled carriage with a small square steel shield, gripping the twin handles at the rear, the thick water-cooled barrel jacket pointing forward; beside him his assistant kneels and feeds the cloth ammunition belt into the gun; behind them two soldiers run forward in a crouch carrying metal ammunition boxes, rifles slung on their backs."
+    },
+    {
+      "key": "unit_de_sniper",
+      "side": "de",
+      "style": "men",
+      "prompt": "A German sniper team of two 1942 German soldiers side by side, seen from a three-quarter front view: the sniper lies prone aiming a Kar98k rifle with a telescopic sight mounted on top; next to him the spotter kneels looking through binoculars, an MP40 submachine gun slung on his chest. Both have a camouflage shelter-quarter cape over their shoulders."
+    },
+    {
+      "key": "unit_su_sniper",
+      "side": "su",
+      "style": "men",
+      "prompt": "A Soviet sniper team of two 1942 Red Army soldiers side by side, seen from a three-quarter front view: the sniper lies prone aiming a Mosin-Nagant rifle with a telescopic sight mounted on top; next to him the spotter kneels looking through binoculars, a PPSh-41 submachine gun with a drum magazine slung on his chest. Both wear green-brown camouflage smocks over their uniforms."
+    },
+    {
+      "key": "unit_de_engineer",
+      "side": "de",
+      "style": "men",
+      "prompt": "A German assault engineer squad of five 1942 German soldiers, seen from a three-quarter front view, each doing something different: in front the flamethrower operator walks with a flamethrower on his back made of two upright cylindrical tanks side by side, holding the long flame lance forward with both hands; beside him the squad leader crouches with an MP40 submachine gun, pointing ahead; a soldier runs carrying a heavy canvas satchel charge in one hand and a Kar98k rifle in the other; a soldier kneels holding a bundle of stick grenades tied together; behind them a fifth soldier follows with a rifle and a coil of fuse wire."
+    },
+    {
+      "key": "unit_su_engineer",
+      "side": "su",
+      "style": "men",
+      "prompt": "A Soviet assault sapper squad of five 1942 Red Army soldiers, seen from a three-quarter front view, each doing something different: in front the flamethrower operator walks with a flamethrower on his back shaped like a flat rectangular knapsack, holding a rifle-shaped flame gun forward with both hands, a hose running from the knapsack to the gun; beside him the squad leader crouches with a PPSh-41 submachine gun, pointing ahead; a soldier runs carrying a wooden box of explosives under one arm and a Mosin-Nagant rifle in the other hand; a soldier kneels holding a bundle of grenades tied together; behind them a fifth soldier follows with a rifle and a coil of fuse wire."
+    },
+    {
+      "key": "unit_de_observer",
+      "side": "de",
+      "style": "men",
+      "prompt": "A German artillery forward observer team of two 1942 German soldiers kneeling side by side, seen from a three-quarter front view: the observer looks through binoculars held to his eyes, an MP40 submachine gun slung on his chest and a map case on his hip; beside him the radio operator kneels with a box-shaped field radio on his back, a tall thin whip antenna rising high above it, holding a telephone handset to his ear."
+    },
+    {
+      "key": "unit_su_observer",
+      "side": "su",
+      "style": "men",
+      "prompt": "A Soviet artillery forward observer team of two 1942 Red Army soldiers kneeling side by side, seen from a three-quarter front view: the observer looks through binoculars held to his eyes, a PPSh-41 submachine gun slung on his chest and a map case on his hip; beside him the radio operator kneels with a box-shaped field radio on his back, a tall thin whip antenna rising high above it, holding a telephone handset to his ear."
+    },
+    {
+      "key": "unit_pak38",
+      "side": "de",
+      "style": "men",
+      "prompt": "A German 5 cm PaK 38 anti-tank gun with its crew of four 1942 German soldiers, seen from a three-quarter front view: the low gun with a long barrel and a muzzle brake, an angled double steel shield and two spoked wheels with rubber tyres, its split trail spread behind. The gunner crouches behind the shield aiming through the sight, the loader kneels beside the breech holding a shell ready, the gun commander kneels at the edge of the shield looking through binoculars, and a fourth soldier carries an ammunition case."
+    },
+    {
+      "key": "unit_m1937_45",
+      "side": "su",
+      "style": "men",
+      "prompt": "A Soviet 45 mm M1937 anti-tank gun with its crew of four 1942 Red Army soldiers, seen from a three-quarter front view: a small gun with a thin long barrel, a flat steel shield and two spoked wheels, its split trail spread behind. The gunner crouches behind the shield aiming, the loader kneels beside the breech holding a shell ready, the gun commander points forward, and a fourth soldier carries an ammunition box."
+    },
+    {
+      "key": "unit_grw34",
+      "side": "de",
+      "style": "men",
+      "prompt": "A German 8 cm Granatwerfer 34 mortar team of three 1942 German soldiers around their mortar, seen from a three-quarter front view: the mortar tube stands angled steeply upward on its bipod and square base plate. One soldier kneels and holds a mortar bomb over the muzzle, about to drop it in; the gunner kneels at the bipod adjusting the sight; a third soldier crouches beside an open case of mortar bombs, handing one up."
+    },
+    {
+      "key": "unit_bm37",
+      "side": "su",
+      "style": "men",
+      "prompt": "A Soviet 82 mm BM-37 mortar team of three 1942 Red Army soldiers around their mortar, seen from a three-quarter front view: the mortar tube stands angled steeply upward on its bipod and round base plate. One soldier kneels and holds a mortar bomb over the muzzle, about to drop it in; the gunner kneels at the bipod adjusting the sight; a third soldier crouches beside an open box of mortar bombs, handing one up."
+    },
+    {
+      "key": "unit_stug3f",
+      "side": "de",
+      "style": "vehicle",
+      "prompt": "A German StuG III Ausf. F assault gun of 1942, seen from a three-quarter front view: a low turretless armoured hull with a boxy casemate superstructure, a long 7.5 cm gun with a muzzle brake set in the front of the casemate, tracks with six small road wheels and return rollers, painted plain dark grey."
+    },
+    {
+      "key": "unit_pz3j",
+      "side": "de",
+      "style": "vehicle",
+      "prompt": "A German Panzer III Ausf. J medium tank of 1942, seen from a three-quarter front view: a boxy hull, a centred turret with side hatches and a 5 cm gun, tracks with six small road wheels and return rollers, painted plain dark grey."
+    },
+    {
+      "key": "unit_t34_76",
+      "side": "su",
+      "style": "vehicle",
+      "prompt": "A Soviet T-34/76 medium tank of 1942, seen from a three-quarter front view: steeply sloped armour, a hexagonal cast turret set far forward with a 76 mm gun, five large road wheels on each side, wide tracks, painted plain dark green."
+    },
+    {
+      "key": "unit_t60",
+      "side": "su",
+      "style": "vehicle",
+      "prompt": "A Soviet T-60 light tank of 1942, seen from a three-quarter front view: a small low hull with a sloped front, a small turret offset to the left with a thin 20 mm cannon, four road wheels on each side, narrow tracks, painted plain dark green."
+    }
+  ]
+}

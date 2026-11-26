@@ -132,6 +132,11 @@ namespace CloseFight.Core.Battle
                 holdRange = shooter.Weapon.EffectiveRange;
                 priorityOnly = true;
             }
+            else if (!moving && !float.IsPositiveInfinity(holdRange) && team.Type != TeamType.Observer)
+            {
+                // D54: holding still and holding fire, the team shoots first once the enemy is about to find it.
+                holdRange = math.max(holdRange, _battle.Visibility.PreemptRange(team, shooter, now));
+            }
 
             var target = ChooseTarget(shooter, holdRange, priorityOnly);
             if (target == null)

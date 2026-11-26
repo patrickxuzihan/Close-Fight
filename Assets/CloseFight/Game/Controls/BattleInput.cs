@@ -21,7 +21,7 @@ namespace CloseFight.Game.Controls
     /// Flow: briefing (choose a side) → deployment (place teams in the zone) → battle.
     /// UI is IMGUI for the prototype; it moves to UI Toolkit when the look is designed.
     /// </summary>
-    public sealed class BattleInput : MonoBehaviour
+    public sealed partial class BattleInput : MonoBehaviour
     {
         [SerializeField] Camera worldCamera;
         [SerializeField] UnitsView unitsView;
@@ -86,6 +86,7 @@ namespace CloseFight.Game.Controls
         Texture2D _white;
         GUIStyle _label;
         GUIStyle _small;
+        GUIStyle _smallButton;
         GUIStyle _center;
         GUIStyle _button;
         GUIStyle _smallCenter;
@@ -123,6 +124,7 @@ namespace CloseFight.Game.Controls
                 }
             }
 
+            BuildRoster();
             ClearSelection();
         }
 
@@ -233,6 +235,12 @@ namespace CloseFight.Game.Controls
                 if (why == DeployRefusal.None)
                 {
                     _battle.Redeploy(team, spot, facing);
+                    if (team.Delegation != null)
+                    {
+                        var stance = team.Delegation.Stance;
+                        _battle.Undelegate(team);
+                        _battle.Delegate(team, stance);
+                    }
                 }
                 else if (refusal == DeployRefusal.None)
                 {
@@ -351,18 +359,24 @@ namespace CloseFight.Game.Controls
                 }
             }
 
-            // Number keys select teams in roster order.
-            for (int i = 0; i < 9 && i < _playerTeams.Count; i++)
+            // Number keys select what the roster shows: platoons, or the squads of the open platoon.
+            for (int i = 0; i < 9; i++)
             {
                 if (keyboard[Key.Digit1 + i].wasPressedThisFrame)
                 {
-                    SelectTeam(_playerTeams[i], keyboard.shiftKey.isPressed);
+                    RosterHotkey(i, keyboard.shiftKey.isPressed);
                 }
             }
 
             if (_selection.Count > 0 && _stage == Stage.Deployment && keyboard.yKey.wasPressedThisFrame)
             {
                 ChooseOrder(OrderType.LayMines);
+            }
+
+            // M15: hand the selection to the AI, or change its stance.
+            if (_selection.Count > 0 && (_stage == Stage.Battle || _stage == Stage.Deployment) && keyboard.zKey.wasPressedThisFrame)
+            {
+                DelegateSelection(null);
             }
 
             if (_selection.Count == 0 || _stage != Stage.Battle)
@@ -462,8 +476,8 @@ namespace CloseFight.Game.Controls
             // Ctrl + click works as a right click (Mac trackpads without secondary click).
             bool ctrl = Keyboard.current != null && Keyboard.current.ctrlKey.isPressed;
             bool secondary = mouse.rightButton.wasPressedThisFrame || (ctrl && mouse.leftButton.wasPressedThisFrame);
-            // In deployment the menu offers only what can be done before the battle: engineers laying mines.
-            if (secondary && !overUi && (_stage == Stage.Battle || (_stage == Stage.Deployment && _selection.Exists(t => t.Type == TeamType.Engineer))))
+            // Right-click where the order should go (in deployment: mine laying and handing teams to the AI).
+            if (secondary && !overUi && (_stage == Stage.Battle || _stage == Stage.Deployment))
             {
                 if (_pendingOrder != OrderType.None)
                 {
@@ -471,8 +485,7 @@ namespace CloseFight.Game.Controls
                 }
                 else if (_selection.Count > 0)
                 {
-                    _menuOpen = true;
-                    _menuGui = ToGui(screen);
+                    OpenMenuAt(screen);
                 }
             }
 
@@ -683,6 +696,7 @@ namespace CloseFight.Game.Controls
                 float offset = (i - (ordered.Count - 1) * 0.5f) * TeamSpread;
                 bool spread = order == OrderType.Move || order == OrderType.MoveFast || order == OrderType.Crawl;
                 float2 teamTarget = spread ? target + right * offset : target;
+                _battle.Undelegate(ordered[i]); // an order from the player takes the team back from the AI
                 if (!_battle.TryIssueOrder(ordered[i], order, teamTarget, out var refusal))
                 {
                     // D29: always say why a team will not obey.
@@ -734,7 +748,7 @@ namespace CloseFight.Game.Controls
             }
 
             return (_menuOpen && _menuRect.Contains(gui)) || (_supportOpen && _supportRect.Contains(gui))
-                || _rosterRect.Contains(gui) || _infoRect.Contains(gui);
+                || _rosterRect.Contains(gui) || _rosterSquadsRect.Contains(gui) || _infoRect.Contains(gui);
         }
 
         // ---------------------------------------------------------------- drawing
@@ -752,6 +766,7 @@ namespace CloseFight.Game.Controls
             {
                 _label = new GUIStyle(GUI.skin.label) { fontSize = 14, normal = { textColor = Color.white } };
                 _small = new GUIStyle(_label) { fontSize = 12 };
+                _smallButton = new GUIStyle(GUI.skin.button) { fontSize = 11, alignment = TextAnchor.MiddleCenter, padding = new RectOffset(2, 2, 1, 1) };
                 _center = new GUIStyle(_label) { fontSize = 18, alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold };
                 _button = new GUIStyle(GUI.skin.button) { fontSize = 13, alignment = TextAnchor.MiddleLeft };
                 _smallCenter = new GUIStyle(_small) { alignment = TextAnchor.MiddleCenter };
@@ -759,9 +774,12 @@ namespace CloseFight.Game.Controls
             }
         }
 
+        /// <summary>Screenshots (-cfNoHud): the map alone, as a backdrop for HUD design work.</summary>
+        internal bool DebugHideHud;
+
         void OnGUI()
         {
-            if (_battle == null)
+            if (_battle == null || DebugHideHud)
             {
                 return;
             }
@@ -789,6 +807,7 @@ namespace CloseFight.Game.Controls
             DrawSupportMarkers();
             DrawSupportPanel(width);
             DrawMenu(width, height);
+            AnnounceRequests();
             DrawToast(width, height);
             DrawAfterAction(width, height);
         }
@@ -890,7 +909,7 @@ namespace CloseFight.Game.Controls
             var background = UiArt.BriefingBackground;
             if (background != null)
             {
-                GUI.DrawTexture(new Rect(0, 0, width, height), background, ScaleMode.ScaleAndCrop, false);
+                UiArt.DrawPicture(new Rect(0, 0, width, height), background, ScaleMode.ScaleAndCrop);
                 Fill(new Rect(0, 0, width, height), new Color(0f, 0f, 0f, 0.25f));
             }
             else
@@ -945,59 +964,6 @@ namespace CloseFight.Game.Controls
             }
         }
 
-        void DrawRoster(float width, float height)
-        {
-            float barHeight = CardHeight + 16f;
-            _rosterRect = new Rect(0, height - barHeight, width, barHeight);
-            Fill(_rosterRect, new Color(0.08f, 0.08f, 0.07f, 0.85f));
-
-            float x = 8f;
-            float y = height - barHeight + 8f;
-            for (int i = 0; i < _playerTeams.Count; i++)
-            {
-                var team = _playerTeams[i];
-                var card = new Rect(x, y, CardWidth, CardHeight);
-                bool selected = _selection.Contains(team);
-                Fill(card, selected ? new Color(0.55f, 0.45f, 0.15f, 0.95f) : new Color(0.22f, 0.22f, 0.20f, 0.95f));
-
-                // NATO symbol on a small paper chip at the right of the card (D42).
-                var icon = UiArt.IconFor(team);
-                float textWidth = CardWidth - 12;
-                if (icon != null)
-                {
-                    var chip = new Rect(card.xMax - 44, card.y + 6, 38, 34);
-                    Fill(chip, team.Side == Side.German ? new Color(0.80f, 0.83f, 0.86f, 1f) : new Color(0.93f, 0.81f, 0.75f, 1f));
-                    GUI.DrawTexture(new Rect(chip.x - 1, chip.y - 4, 40, 40), icon, ScaleMode.ScaleToFit, true);
-                    textWidth -= 44;
-                }
-
-                GUI.Label(new Rect(card.x + 6, card.y + 3, textWidth, 20), $"{i + 1}  {team.DisplayName}", _label);
-                GUI.Label(new Rect(card.x + 6, card.y + 22, textWidth, 18),
-                    $"{Loc.TeamKind(team)} · {team.ActiveCount}/{team.Members.Count} {Loc.T("ui.men")}", _small);
-                GUI.Label(new Rect(card.x + 6, card.y + 40, CardWidth - 12, 18), TeamStateText(team), _small);
-
-                // Suppression bar along the bottom of the card: green (calm) to red (pinned).
-                float suppression = team.AverageSuppression / 100f;
-                Fill(new Rect(card.x, card.yMax - 4, CardWidth, 4), new Color(0f, 0f, 0f, 0.5f));
-                Fill(new Rect(card.x, card.yMax - 4, CardWidth * suppression, 4), Color.Lerp(new Color(0.3f, 0.8f, 0.3f), new Color(0.9f, 0.15f, 0.1f), suppression));
-
-                if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && card.Contains(Event.current.mousePosition))
-                {
-                    bool additive = Event.current.shift;
-                    if (selected && !additive && cameraController != null)
-                    {
-                        var c = team.Centroid;
-                        cameraController.FocusOn(new Vector3(c.x, 0f, c.y));
-                    }
-
-                    SelectTeam(team, additive);
-                    Event.current.Use();
-                }
-
-                x += CardWidth + 8f;
-            }
-        }
-
         /// <summary>The most important thing about a team, in one line (D29: the player must see why).</summary>
         string TeamStateText(Team team)
         {
@@ -1013,7 +979,12 @@ namespace CloseFight.Game.Controls
 
             string state;
             var vehicle = team.Vehicle;
-            if (vehicle != null && vehicle.Destroyed && team.ActiveCount == 0)
+            string delegation = DelegationText(team);
+            if (delegation != null)
+            {
+                state = delegation;
+            }
+            else if (vehicle != null && vehicle.Destroyed && team.ActiveCount == 0)
             {
                 state = Loc.T("vehicle.destroyed");
             }
@@ -1319,7 +1290,8 @@ namespace CloseFight.Game.Controls
             var team = _selection[0];
             const float panelWidth = 330f;
             float rowHeight = 34f;
-            float panelHeight = 58f + team.Members.Count * rowHeight;
+            bool delegated = team.Delegation != null;
+            float panelHeight = 58f + team.Members.Count * rowHeight + (delegated ? 22f : 0f);
             var panel = new Rect(width - panelWidth - 8f, 34f, panelWidth, panelHeight);
             _infoRect = panel;
             Fill(panel, new Color(0.08f, 0.08f, 0.07f, 0.88f));
@@ -1337,6 +1309,20 @@ namespace CloseFight.Game.Controls
                 $"{Loc.T("ui.casualties")} {team.CasualtyFraction * 100f:0}% · {Loc.T("ui.morale")} {team.AverageMorale:0} · {TeamStateText(team)}", _small);
 
             float y = panel.y + 48f;
+            if (delegated)
+            {
+                var d = team.Delegation;
+                string line = string.Format(Loc.T("delegation.info"), Loc.T(StanceKey(d.Stance)));
+                if (d.Withdrawals > 0)
+                {
+                    line += " · " + string.Format(Loc.T("delegation.lines"), d.Withdrawals);
+                }
+
+                GUI.Label(new Rect(panel.x + 8, y - 2f, 200f, 18f), line, _small);
+                DrawRequestButtons(new Rect(panel.x + panelWidth - 128f, y - 3f, 120f, 19f), team, _smallButton);
+                y += 22f;
+            }
+
             foreach (var soldier in team.Members)
             {
                 string rank = Loc.T(soldier.RankKey);
@@ -1384,39 +1370,37 @@ namespace CloseFight.Game.Controls
                 return;
             }
 
-            // Engineering orders only appear when an engineer team is selected; in deployment, only mine laying.
-            var orders = new List<OrderType>();
-            foreach (var order in MenuOrders)
-            {
-                bool engineering = Engineering.IsEngineeringOrder(order);
-                if (_stage == Stage.Deployment ? order == OrderType.LayMines
-                    : !engineering || _selection.Exists(t => t.Type == TeamType.Engineer))
-                {
-                    orders.Add(order);
-                }
-            }
-
-            float menuHeight = orders.Count * MenuRowHeight + 10f;
+            // What fits the spot clicked comes first; engineering orders only with engineers selected.
+            var orders = MenuOrderList();
+            const float headerHeight = 20f;
+            float menuHeight = headerHeight + (orders.Count + DelegationMenuRows()) * MenuRowHeight + 16f;
             float mx = Mathf.Min(_menuGui.x, width - MenuWidth - 4f);
             float my = Mathf.Min(_menuGui.y, height - menuHeight - 4f);
             _menuRect = new Rect(mx, my, MenuWidth, menuHeight);
             Fill(_menuRect, new Color(0.12f, 0.12f, 0.11f, 0.95f));
+            GUI.Label(new Rect(mx + 8, my + 3, MenuWidth - 16, headerHeight - 2), MenuHeader(), _small);
+            float top = my + headerHeight;
 
             for (int i = 0; i < orders.Count; i++)
             {
                 var order = orders[i];
-                bool available = BattleState.IsImplemented(order)
+                bool available = BattleState.IsImplemented(order) && FitsSpot(order)
                     && (!Engineering.IsEngineeringOrder(order) || _selection.Exists(t => Engineering.CanAttempt(t, order)));
                 GUI.enabled = available;
                 string key = Hotkey(order);
                 string label = Loc.T(Loc.OrderKey(order)) + (key.Length > 0 ? $"   [{key}]" : "");
-                if (GUI.Button(new Rect(mx + 5, my + 5 + i * MenuRowHeight, MenuWidth - 10, MenuRowHeight - 2), label, _button))
+                if (GUI.Button(new Rect(mx + 5, top + 5 + i * MenuRowHeight, MenuWidth - 10, MenuRowHeight - 2), label, _button))
                 {
-                    ChooseOrder(order);
+                    ChooseMenuOrder(order);
                 }
             }
 
             GUI.enabled = true;
+
+            // M15: hand to the AI, below a thin line.
+            float delegationY = top + 5 + orders.Count * MenuRowHeight + 6f;
+            Fill(new Rect(mx + 8, delegationY - 4f, MenuWidth - 16, 1f), new Color(1f, 1f, 1f, 0.25f));
+            DrawDelegationMenu(mx + 5, delegationY);
         }
 
         void DrawBoxSelection()
@@ -1575,7 +1559,8 @@ namespace CloseFight.Game.Controls
             }
 
             int lines = _toast.Split('\n').Length;
-            var rect = new Rect(width * 0.5f - 220, height - CardHeight - 40 - lines * 24, 440, 8 + lines * 24);
+            // Near the top, clear of the roster window wherever the player has put it.
+            var rect = new Rect(width * 0.5f - 220, 76f, 440, 8 + lines * 24);
             Fill(rect, new Color(0f, 0f, 0f, 0.75f));
             GUI.Label(rect, _toast, _center);
         }

@@ -63,9 +63,124 @@
       ]
     }
   ],
+  "platoons": [
+    {
+      "key": "de_kp",
+      "side": "German",
+      "type": "Headquarters",
+      "name": "Kompanietrupp",
+      "company": "1./IR 194"
+    },
+    {
+      "key": "de_z1",
+      "side": "German",
+      "type": "Rifle",
+      "name": "1. Zug",
+      "company": "1./IR 194"
+    },
+    {
+      "key": "de_z2",
+      "side": "German",
+      "type": "Rifle",
+      "name": "2. Zug",
+      "company": "1./IR 194"
+    },
+    {
+      "key": "de_smg",
+      "side": "German",
+      "type": "MachineGun",
+      "name": "sMG-Zug",
+      "company": "4./IR 194"
+    },
+    {
+      "key": "de_grw",
+      "side": "German",
+      "type": "Mortar",
+      "name": "Granatwerfer-Zug",
+      "company": "4./IR 194"
+    },
+    {
+      "key": "de_pzj",
+      "side": "German",
+      "type": "AntiTank",
+      "name": "Panzerjäger-Zug",
+      "company": "14./IR 194"
+    },
+    {
+      "key": "de_stug",
+      "side": "German",
+      "type": "Armor",
+      "name": "Sturmgeschütz-Zug",
+      "company": "StuG-Abt. 244"
+    },
+    {
+      "key": "de_pi",
+      "side": "German",
+      "type": "Pioneer",
+      "name": "Pionier-Zug",
+      "company": "Pi.-Btl. 171"
+    },
+    {
+      "key": "su_rota",
+      "side": "Soviet",
+      "type": "Headquarters",
+      "name": "Upravleniye roty",
+      "company": "1-ya rota, 272-y sp NKVD"
+    },
+    {
+      "key": "su_v1",
+      "side": "Soviet",
+      "type": "Rifle",
+      "name": "1-y vzvod",
+      "company": "1-ya rota, 272-y sp NKVD"
+    },
+    {
+      "key": "su_v2",
+      "side": "Soviet",
+      "type": "Rifle",
+      "name": "2-y vzvod",
+      "company": "1-ya rota, 272-y sp NKVD"
+    },
+    {
+      "key": "su_pv",
+      "side": "Soviet",
+      "type": "MachineGun",
+      "name": "Pulemyotny vzvod",
+      "company": "1-ya rota, 272-y sp NKVD"
+    },
+    {
+      "key": "su_mv",
+      "side": "Soviet",
+      "type": "Mortar",
+      "name": "Minomyotny vzvod",
+      "company": "1-ya rota, 272-y sp NKVD"
+    },
+    {
+      "key": "su_pto",
+      "side": "Soviet",
+      "type": "AntiTank",
+      "name": "Vzvod PTO",
+      "company": "1-ya rota, 272-y sp NKVD"
+    },
+    {
+      "key": "su_tv",
+      "side": "Soviet",
+      "type": "Armor",
+      "name": "Tankovy vzvod",
+      "company": ""
+    },
+    {
+      "key": "su_sv",
+      "side": "Soviet",
+      "type": "Pioneer",
+      "name": "Sapyorny vzvod",
+      "company": "1-ya rota, 272-y sp NKVD"
+    }
+  ],
   "teams": [
     {
       "key": "de_hq",
+      "platoon": "de_kp",
       "side": "German",
       "type": "Headquarters",
       "displayName": "Kompanietrupp",
@@ -79,6 +194,7 @@
     },
     {
       "key": "de_1",
+      "platoon": "de_z1",
       "side": "German",
       "type": "Rifle",
       "displayName": "1. Gruppe",
@@ -92,6 +208,7 @@
     },
     {
       "key": "de_2",
+      "platoon": "de_z1",
       "side": "German",
       "type": "Rifle",
       "displayName": "2. Gruppe",
@@ -105,6 +222,7 @@
     },
     {
       "key": "de_3",
+      "platoon": "de_z1",
       "side": "German",
       "type": "Rifle",
       "displayName": "3. Gruppe",
@@ -118,6 +236,7 @@
     },
     {
       "key": "de_4",
+      "platoon": "de_z1",
       "side": "German",
       "type": "Rifle",
       "displayName": "4. Gruppe",
@@ -130,10 +249,53 @@
       "experience": 50
     },
     {
+      "key": "de_5",
+      "platoon": "de_z2",
+      "side": "German",
+      "type": "Rifle",
+      "displayName": "1. Gruppe",
+      "size": 0,
+      "position": {
+        "x": 28,
+        "y": 60
+      },
+      "facing": 90,
+      "experience": 50
+    },
+    {
+      "key": "de_6",
+      "platoon": "de_z2",
+      "side": "German",
+      "type": "Rifle",
+      "displayName": "2. Gruppe",
+      "size": 0,
+      "position": {
+        "x": 28,
+        "y": 200
+      },
+      "facing": 90,
+      "experience": 50
+    },
+    {
+      "key": "de_7",
+      "platoon": "de_z2",
+      "side": "German",
+      "type": "Rifle",
+      "displayName": "3. Gruppe",
+      "size": 0,
+      "position": {
+        "x": 20,
+        "y": 212
+      },
+      "facing": 90,
+      "experience": 50
+    },
+    {
       "key": "de_mg1",
+      "platoon": "de_smg",
       "side": "German",
       "type": "MachineGun",
-      "displayName": "MG-Trupp 1",
+      "displayName": "1. sMG-Gruppe",
       "size": 0,
       "position": {
         "x": 24,
@@ -144,9 +306,10 @@
     },
     {
       "key": "de_mg2",
+      "platoon": "de_smg",
       "side": "German",
       "type": "MachineGun",
-      "displayName": "MG-Trupp 2",
+      "displayName": "2. sMG-Gruppe",
       "size": 0,
       "position": {
         "x": 24,
@@ -157,6 +320,7 @@
     },
     {
       "key": "de_mortar",
+      "platoon": "de_grw",
       "side": "German",
       "type": "Mortar",
       "displayName": "Granatwerfer",
@@ -171,6 +335,7 @@
     },
     {
       "key": "de_pak",
+      "platoon": "de_pzj",
       "side": "German",
       "type": "AntiTankGun",
       "displayName": "PaK 38",
@@ -185,6 +350,7 @@
     },
     {
       "key": "de_stug",
+      "platoon": "de_stug",
       "side": "German",
       "type": "Vehicle",
       "displayName": "Sturmgeschütz",
@@ -199,6 +365,7 @@
     },
     {
       "key": "su_1",
+      "platoon": "su_v1",
       "side": "Soviet",
       "type": "Rifle",
       "displayName": "1-ye otdeleniye",
@@ -213,6 +380,7 @@
     },
     {
       "key": "su_2",
+      "platoon": "su_v1",
       "side": "Soviet",
       "type": "Rifle",
       "displayName": "2-ye otdeleniye",
@@ -227,6 +395,7 @@
     },
     {
       "key": "su_3",
+      "platoon": "su_v1",
       "side": "Soviet",
       "type": "Rifle",
       "displayName": "3-ye otdeleniye",
@@ -241,9 +410,10 @@
     },
     {
       "key": "su_mg1",
+      "platoon": "su_pv",
       "side": "Soviet",
       "type": "MachineGun",
-      "displayName": "Pulemyot 1",
+      "displayName": "Maksim 1",
       "size": 0,
       "position": {
         "x": 175,
@@ -255,9 +425,10 @@
     },
     {
       "key": "su_mg2",
+      "platoon": "su_pv",
       "side": "Soviet",
       "type": "MachineGun",
-      "displayName": "Pulemyot 2",
+      "displayName": "Maksim 2",
       "size": 0,
       "position": {
         "x": 286,
@@ -269,6 +440,7 @@
     },
     {
       "key": "su_at",
+      "platoon": "su_pto",
       "side": "Soviet",
       "type": "AntiTankGun",
       "displayName": "Sorokapyatka",
@@ -284,6 +456,7 @@
     },
     {
       "key": "su_4",
+      "platoon": "su_v2",
       "side": "Soviet",
       "type": "Rifle",
       "displayName": "4-ye otdeleniye",
@@ -298,6 +471,7 @@
     },
     {
       "key": "su_5",
+      "platoon": "su_v2",
       "side": "Soviet",
       "type": "Rifle",
       "displayName": "5-ye otdeleniye",
@@ -312,6 +486,7 @@
     },
     {
       "key": "su_hq",
+      "platoon": "su_rota",
       "side": "Soviet",
       "type": "Headquarters",
       "displayName": "Shtab roty",
@@ -325,6 +500,7 @@
     },
     {
       "key": "su_mortar",
+      "platoon": "su_mv",
       "side": "Soviet",
       "type": "Mortar",
       "displayName": "Minomyot",
@@ -339,6 +515,7 @@
     },
     {
       "key": "su_t60",
+      "platoon": "su_tv",
       "side": "Soviet",
       "type": "Vehicle",
       "displayName": "T-60",
@@ -354,6 +531,7 @@
     },
     {
       "key": "de_sniper",
+      "platoon": "de_kp",
       "side": "German",
       "type": "Sniper",
       "displayName": "Scharfschützen",
@@ -369,6 +547,7 @@
     },
     {
       "key": "de_pio",
+      "platoon": "de_pi",
       "side": "German",
       "type": "Engineer",
       "displayName": "Pioniergruppe",
@@ -384,6 +563,7 @@
     },
     {
       "key": "su_sniper",
+      "platoon": "su_rota",
       "side": "Soviet",
       "type": "Sniper",
       "displayName": "Snaypery",
@@ -399,6 +579,7 @@
     },
     {
       "key": "su_sap",
+      "platoon": "su_sv",
       "side": "Soviet",
       "type": "Engineer",
       "displayName": "Sapyory",
@@ -414,6 +595,7 @@
     },
     {
       "key": "de_fo",
+      "platoon": "de_kp",
       "side": "German",
       "type": "Observer",
       "displayName": "Artilleriebeobachter",
@@ -429,6 +611,7 @@
     },
     {
       "key": "su_fo",
+      "platoon": "su_rota",
       "side": "Soviet",
       "type": "Observer",
       "displayName": "Artnablyudateli",

@@ -175,7 +175,11 @@ namespace CloseFight.Tests
 
             var assault = attack.Plans.Where(p => p.Role == AttackRole.Assault).Select(p => p.Team.Centroid).ToArray();
             float spread = assault.Max(a => assault.Max(b => math.distance(a, b)));
-            Assert.Less(spread, 60f, "the assault teams start gathered");
+            // The assault teams set up in a line across the front, 12 m apart, each free to
+            // pick cover nearby: gathered means that line plus 18 m at either end (60 m for
+            // three teams; the M18 scenario has two platoons, seven teams).
+            float gathered = (assault.Length - 1) * 12f + 36f;
+            Assert.Less(spread, gathered, $"the {assault.Length} assault teams start gathered");
             foreach (var team in battle.Teams.Where(t => t.Side == Side.German))
             {
                 Assert.IsTrue(battle.InDeployZone(Side.German, team.Vehicle != null ? team.Vehicle.Position : team.Centroid), $"{team.Key} stays in the zone");

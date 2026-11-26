@@ -10,7 +10,7 @@ namespace CloseFight.Game.Battle
     /// Checking the play-mode screens (briefing, deployment, battle UI) from the
     /// command line: the built game started with
     ///   -cfShot path.png [-cfStage briefing|deployment|battle] [-cfSeconds 3]
-    ///   [-cfSide german|soviet] [-cfAiPlan] [-cfZoom 60 -cfCenter 120,130]
+    ///   [-cfSide german|soviet] [-cfAiPlan] [-cfZoom 60 -cfCenter 120,130] [-cfRosterOpen 1 [-cfDelegate]]
     /// opens at that stage, saves one screenshot and quits. Does nothing otherwise.
     /// </summary>
     sealed class AutoScreenshot : MonoBehaviour
@@ -68,6 +68,25 @@ namespace CloseFight.Game.Battle
             if (HasArg("-cfSupport"))
             {
                 _input.DebugSupport();
+            }
+
+            if (int.TryParse(Arg("-cfRosterOpen"), out int platoon))
+            {
+                _input.DebugOpenPlatoon(platoon);
+            }
+
+            _input.DebugHideHud = HasArg("-cfNoHud");
+            var menuAt = Arg("-cfMenu");
+            if (!string.IsNullOrEmpty(menuAt))
+            {
+                var inv = System.Globalization.CultureInfo.InvariantCulture;
+                var parts = menuAt.Split(',');
+                _input.DebugMenu(new Unity.Mathematics.float2(float.Parse(parts[0], inv), float.Parse(parts[1], inv)));
+            }
+
+            if (HasArg("-cfDelegate"))
+            {
+                _input.DebugDelegate(); // M15: the open platoon's squads handed to the AI, the first one asking to pull back
             }
 
             var flareAt = Arg("-cfFlare");

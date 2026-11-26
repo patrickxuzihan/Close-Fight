@@ -131,6 +131,62 @@ namespace CloseFight.Core.Battle
             return math.min(range, MaxSightRange);
         }
 
+        /// <summary>How far away the enemy can spot this soldier right now, night included.</summary>
+        public float SpottingRangeNow(Soldier target, float now)
+        {
+            float range = SpottingRange(target, _battle.Map, now);
+            if (_battle.IsNight)
+            {
+                range = _battle.Illumination.NightRange(target, range, now - target.LastFiredAt < 3f);
+            }
+
+            return range;
+        }
+
+        /// <summary>How far away the enemy can spot this vehicle right now: half as far stopped in ambush or hiding, night included.</summary>
+        public float SpottingRangeNow(Vehicle vehicle, float now)
+        {
+            float range = VehicleSpottingRange;
+            bool firedRecently = now - vehicle.LastFiredAt < 3f;
+            var order = vehicle.Team.Order.Type;
+            if (vehicle.IsOperational && !firedRecently && !vehicle.IsMoving && (order == OrderType.Hide || order == OrderType.Ambush))
+            {
+                range *= 0.5f; // stopped, engine off, camouflaged
+            }
+
+            if (_battle.IsNight)
+            {
+                range = _battle.Illumination.NightVehicleRange(vehicle.Position, range, firedRecently);
+            }
+
+            return range;
+        }
+
+        /// <summary>
+        /// D54: how close the enemy may come before a team holding its fire shoots first.
+        /// Once the enemy sees any of the team (or its vehicle), at once; otherwise at the
+        /// range it would be spotted from, with a margin: better the first shot than the second.
+        /// </summary>
+        public float PreemptRange(Team team, Soldier shooter, float now)
+        {
+            const float Margin = 1.2f;
+            var enemy = team.Side == Side.German ? Side.Soviet : Side.German;
+            if (team.Vehicle != null && team.Vehicle.IsOperational)
+            {
+                return CanSee(enemy, team.Vehicle) ? float.PositiveInfinity : SpottingRangeNow(team.Vehicle, now) * Margin;
+            }
+
+            foreach (var member in team.Members)
+            {
+                if (member.IsActive && !member.IsMounted && CanSee(enemy, member))
+                {
+                    return float.PositiveInfinity;
+                }
+            }
+
+            return shooter != null ? SpottingRangeNow(shooter, now) * Margin : 0f;
+        }
+
         /// <summary>Recomputes what both sides can see.</summary>
         public void Recompute()
         {
@@ -158,12 +214,7 @@ namespace CloseFight.Core.Battle
                     continue;
                 }
 
-                float range = SpottingRange(target, map, now);
-                if (_battle.IsNight)
-                {
-                    range = _battle.Illumination.NightRange(target, range, now - target.LastFiredAt < 3f);
-                }
-
+                float range = SpottingRangeNow(target, now);
                 foreach (var observer in _battle.Soldiers)
                 {
                     if (observer.Team.Side != side || !observer.IsActive)
@@ -201,19 +252,7 @@ namespace CloseFight.Core.Battle
                     continue;
                 }
 
-                float range = VehicleSpottingRange;
-                bool firedRecently = now - vehicle.LastFiredAt < 3f;
-                var order = vehicle.Team.Order.Type;
-                if (vehicle.IsOperational && !firedRecently && !vehicle.IsMoving && (order == OrderType.Hide || order == OrderType.Ambush))
-                {
-                    range *= 0.5f; // stopped, engine off, camouflaged
-                }
-
-                if (_battle.IsNight)
-                {
-                    range = _battle.Illumination.NightVehicleRange(vehicle.Position, range, firedRecently);
-                }
-
+                float range = SpottingRangeNow(vehicle, now);
                 foreach (var observer in _battle.Soldiers)
                 {
                     if (observer.Team.Side != side || !observer.IsActive

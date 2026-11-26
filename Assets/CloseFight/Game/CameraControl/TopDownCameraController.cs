@@ -45,7 +45,12 @@ namespace CloseFight.Game.CameraControl
             }
         }
 
-        /// <summary>Frames the whole map and limits panning to it.</summary>
+        /// <summary>
+        /// Shows the map filling the whole screen and keeps the view on the map: the
+        /// battlefield always runs to the screen edges, with no empty margins beside
+        /// it whatever the window's shape (zoom out stops where the map would no longer
+        /// cover the screen).
+        /// </summary>
         public void Configure(Rect worldBounds)
         {
             _bounds = worldBounds;
@@ -55,13 +60,19 @@ namespace CloseFight.Game.CameraControl
             cam.farClipPlane = cameraHeight + 50f;
             transform.rotation = Quaternion.Euler(90f, 0f, 0f);
 
-            float aspect = cam.aspect > 0f ? cam.aspect : 16f / 9f;
-            float fitHeight = worldBounds.height * 0.5f;
-            float fitWidth = worldBounds.width * 0.5f / aspect;
-            cam.orthographicSize = Mathf.Clamp(Mathf.Max(fitHeight, fitWidth) * 1.05f, minOrthographicSize, maxOrthographicSize);
-
+            cam.orthographicSize = MaxSize();
             var center = worldBounds.center;
             transform.position = new Vector3(center.x, cameraHeight, center.y);
+            ClampToBounds();
+        }
+
+        /// <summary>The widest zoom at which the map still covers the whole screen.</summary>
+        float MaxSize()
+        {
+            var cam = Cam;
+            float aspect = cam.aspect > 0f ? cam.aspect : 16f / 9f;
+            float cover = Mathf.Min(_bounds.height * 0.5f, _bounds.width * 0.5f / aspect);
+            return Mathf.Clamp(cover, minOrthographicSize, maxOrthographicSize);
         }
 
         /// <summary>Centers the view on a ground point, keeping the zoom.</summary>
@@ -146,7 +157,7 @@ namespace CloseFight.Game.CameraControl
         {
             var cam = Cam;
             Vector3 before = ScreenToGround(screenPoint);
-            cam.orthographicSize = Mathf.Clamp(cam.orthographicSize * factor, minOrthographicSize, maxOrthographicSize);
+            cam.orthographicSize = Mathf.Clamp(cam.orthographicSize * factor, minOrthographicSize, MaxSize());
             Vector3 after = ScreenToGround(screenPoint);
             transform.position += before - after;
         }
@@ -158,11 +169,20 @@ namespace CloseFight.Game.CameraControl
             return world;
         }
 
+        /// <summary>Keeps the whole view on the map (or centred on it, along an axis where the map is narrower than the view).</summary>
         void ClampToBounds()
         {
+            var cam = Cam;
+            if (cam.orthographicSize > MaxSize())
+            {
+                cam.orthographicSize = MaxSize(); // the window changed shape
+            }
+
+            float halfHeight = cam.orthographicSize;
+            float halfWidth = halfHeight * (cam.aspect > 0f ? cam.aspect : 16f / 9f);
             Vector3 p = transform.position;
-            p.x = Mathf.Clamp(p.x, _bounds.xMin, _bounds.xMax);
-            p.z = Mathf.Clamp(p.z, _bounds.yMin, _bounds.yMax);
+            p.x = halfWidth * 2f >= _bounds.width ? _bounds.center.x : Mathf.Clamp(p.x, _bounds.xMin + halfWidth, _bounds.xMax - halfWidth);
+            p.z = halfHeight * 2f >= _bounds.height ? _bounds.center.y : Mathf.Clamp(p.z, _bounds.yMin + halfHeight, _bounds.yMax - halfHeight);
             p.y = cameraHeight;
             transform.position = p;
         }

@@ -28,6 +28,15 @@ Read docs/art/codex/00-style-guide.md first, then complete the task described in
 | `terrain/01–03` | T1 地面贴图 6 种、T2 屋顶贴图 4 种、T3 弹坑 / 瓦砾堆 / 焦痕贴片 |
 | `ui/01-unit-icons.md` | U1 北约风格的手绘墨水单位符号 7 个（名单卡片和以后的战略地图用，D42） |
 | `ui/02-briefing-background.md` | U2 简报背景插画（火车站一带，斜俯视，无任何标志） |
+| `ui/03-hud-concept.md` | U3 战斗界面（HUD）的视觉设计：三套不同方向的整屏效果图和组件表，配色、字体、尺寸写进 notes.md。只出设计，不出素材；选定方向后再出命令图标和贴图 |
+| `ui/03b-hud-compact.md` | U3b：用户选了方向 A。改成紧凑版（面积减半、信息不减），去掉「AI 味」（不再框里套框，去掉重复标签，正常状态不显示）；用代码画在真实游戏截图上，不生成图片 |
+| `roster/01-head-marker.md` | R1 班组栏的人头标记（白色头盔小人，游戏按伤情着色） |
+| `roster/00-picture-guide.md` | 班组栏单位图（R2、R3）共用的规则：仿后期 CC 的彩色渲染、三分之四正面、透明底、无任何标志、在 76 × 54 的小格里要认得出 |
+| `roster/02-vehicle-pictures.md` | R2 四辆车的单位图：StuG III F、三号 J、T-34/76、T-60，不带乘员 |
+| `roster/03-gun-pictures.md` | R3 四门炮连炮手的单位图：PaK 38、45 毫米炮、两种迫击炮。德军炮手如果被拦，就画不带人的炮 |
+| `roster/04-squad-test.md` | R4 试验：德、苏步兵班的单位图，按 CC 的取景（几个人肩并肩、钢盔贴上沿、膝盖处切掉、人占满格子），每方出 4 人和 6 人两版。德军被拦就整个停下 |
+| `roster/squads/00-squad-guide.md` | R5 其余 11 种步兵班组单位图的共用规则：照 R4 德军步兵班的样板，取景、画风、军装、武器、被拦怎么办、文件命名 |
+| `roster/squads/01–11` | R5 每张图一个任务、一个对话：01 苏军步兵班，02/03 排部，04/05 重机枪组，06/07 狙击组，08/09 突击工兵，10/11 炮兵观察组（双数是德军，单数是苏军） |
 
 ## 顺序和依赖
 
@@ -36,6 +45,20 @@ Read docs/art/codex/00-style-guide.md first, then complete the task described in
 - **载具和火炮**：8 个任务彼此独立，随时可以同时开。
 - **载具第二版**：四辆车按 `00-vehicle-guide.md` 第 3 节新加的「明暗和做旧」要求重画，StuG 还要按 `01-stug3f.md` 改外形。四个对话可以同时开。
 - **第二批（2026-11-23）**：T1、T2、U1、U2 彼此独立，可以同时开；T3 最好等 T1 做完（预览图要铺在 T1 的地面上）。
+- **班组栏（2026-11-24，M18）**：
+  - 单位图改成仿后期 CC 的彩色渲染群像。
+  - 步兵班组的图用本机的 Draw Things 出，做法见 [../roster-pictures.md](../roster-pictures.md)。原因是 Codex 的图片服务拦下了所有德军士兵（4 次 `abuse`）。
+  - R1 人头标记随时可以开。
+- **班组栏第二批（2026-11-26）**：
+  - 本机模型画不对炮和车：它把 PaK 38 画成了履带车，给没有炮塔的 StuG 加了炮塔。所以炮和车改回 Codex 做。
+  - R2（车）和 R3（炮）彼此独立，可以同时开，各开一个新对话。
+- **班组图试验（2026-11-26）**：
+  - 本机出的步兵图放进游戏后人太小，没有 CC 那种人占满格子的效果。用户决定先试 Codex。
+  - R4 只试步兵班。德军能出、取景合适，再把其余班组也交给 Codex；德军被拦，就回到本机模型，改取景重出。
+  - R4 和 R2、R3 互不影响，可以同时开。
+  - 结果：R2、R3 八张全部做成，德军炮手也没被拦，已经进游戏。R4 的德军 4 人版做成了，填满格子，很像 CC，先放进游戏试看；6 人版被拦了一次，按规矩停下，苏军没做。
+  - 下一步是 R5：照 R4 德军步兵班的样子，把其余 11 种班组也交给 Codex。
+  - 用户的意见：一张图开一个对话，免得一个对话里越做越乱。所以 R5 拆成一份共用规则加 11 份单图任务，每份开一个新对话，可以同时开。各自只写自己那张图的文件，笔记也各写各的（`unit_<单位>_notes.md`），不改共用的 `notes.md`。
 
 ## 出图位置
 
@@ -46,7 +69,9 @@ Read docs/art/codex/00-style-guide.md first, then complete the task described in
 | 载具 | `ArtSource/codex/vehicles/` |
 | 地面、屋顶、贴片 | `ArtSource/codex/terrain/` |
 | 单位符号、简报背景 | `ArtSource/codex/ui/` |
+| 战斗界面设计（U3） | `ArtSource/codex/ui/hud/` |
 | 火炮 | `ArtSource/codex/guns/` |
+| 班组栏人头标记、车和炮的单位图 | `ArtSource/codex/roster/` |
 
 这些目录都在 Unity 的 `Assets/` 之外，草稿不会被直接导入游戏。我检查合格后，再处理成游戏用的格式，挪进项目。
 
@@ -64,4 +89,5 @@ Read docs/art/codex/00-style-guide.md first, then complete the task described in
   - 屋顶贴图放同一个文件夹，按建筑材质选用，纹理顺着建筑长边。
   - 单位符号显示在名单卡片上，简报背景换成了新插画。这两类放 `Resources/Art/UI/`，背景存成 JPG 以减小体积。
   - 步兵等苏军那套齐了再一起接。
+- 班组栏（M18）：单位图的做法和文件名见 [../roster-pictures.md](../roster-pictures.md)。人头标记存成 `Resources/Art/Roster/head.png`。
 - 地面、屋顶、界面图片的导入规则也在 `ArtImportSettings.cs` 里：地面和屋顶贴图设为可平铺，界面图片作为普通贴图。返工后直接覆盖同名文件。

@@ -213,6 +213,21 @@ namespace CloseFight.Core.Battle
             float holdRange = team.Order.Type == OrderType.Ambush ? HeavyAmbushRange
                 : team.Order.Type == OrderType.Hide ? 15f
                 : float.PositiveInfinity;
+            if (!float.IsPositiveInfinity(holdRange) && team.Activity == TeamActivity.Idle)
+            {
+                // D54: fire first once the enemy is about to find the gun (crew or vehicle).
+                Soldier crewman = null;
+                foreach (var member in team.Members)
+                {
+                    if (member.IsActive)
+                    {
+                        crewman = member;
+                        break;
+                    }
+                }
+
+                holdRange = math.max(holdRange, _battle.Visibility.PreemptRange(team, crewman, _battle.Clock.ElapsedSeconds));
+            }
 
             // A named target first, then any enemy tank, then infantry.
             if (team.FireTarget != null && TryAimAtTeam(weapon, team.FireTarget, float.PositiveInfinity, ref aim))

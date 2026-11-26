@@ -22,12 +22,15 @@ namespace CloseFight.EditorTools
             }
 
             var importer = (TextureImporter)assetImporter;
-            if (assetPath.StartsWith(ArtRoot + "Terrain/") || assetPath.StartsWith(ArtRoot + "UI/"))
+            if (assetPath.StartsWith(ArtRoot + "Terrain/") || assetPath.StartsWith(ArtRoot + "UI/") || assetPath.StartsWith(ArtRoot + "Roster/"))
             {
-                // Ground and roof tiles repeat across the map; UI images are drawn as plain textures.
+                // Ground and roof tiles repeat across the map; UI and roster images are drawn as plain textures.
                 bool tile = assetPath.StartsWith(ArtRoot + "Terrain/");
                 importer.textureType = TextureImporterType.Default;
-                importer.sRGBTexture = true;
+                // UI and roster pictures are drawn with the GuiPicture shader (UiArt.DrawPicture),
+                // which decodes sRGB itself: plain IMGUI drawing shows them too bright in this
+                // linear-colour project. Terrain tiles go through the normal sRGB path.
+                importer.sRGBTexture = tile;
                 importer.alphaIsTransparency = !tile;
                 importer.mipmapEnabled = true;
                 importer.filterMode = FilterMode.Trilinear;
