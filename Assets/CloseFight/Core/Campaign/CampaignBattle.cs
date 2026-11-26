@@ -191,11 +191,12 @@ namespace CloseFight.Core.Campaign
         public static CampaignBattle Create(CampaignState state, PendingBattle pending, Battlefield field, TacticalMap map,
             BattleForces german, BattleForces soviet, Side? playerSide, bool deployment = true)
         {
-            var battle = new BattleState(map, state.definition.seed + (ulong)state.turn * 7919UL + StableHash(pending.district))
+            var battle = new BattleState(map, state.definition.seed + (ulong)state.turn * 7919UL + CampaignHash.Of(pending.district))
             {
                 IsNight = pending.night,
             };
             var result = new CampaignBattle(state, pending, battle);
+            DistrictDamage.Apply(map, state.District(pending.district));
             var attacker = pending.attacker;
             var defender = pending.Defender;
 
@@ -238,18 +239,6 @@ namespace CloseFight.Core.Campaign
 
             battle.Visibility.Recompute();
             return result;
-        }
-
-        /// <summary>A string hash that is the same on every run (string.GetHashCode is not guaranteed to be).</summary>
-        static ulong StableHash(string text)
-        {
-            ulong hash = 14695981039346656037UL;
-            foreach (char c in text)
-            {
-                hash = (hash ^ c) * 1099511628211UL;
-            }
-
-            return hash;
         }
 
         void AddSide(Side side, BattleForces forces, List<MapPoint> zone, List<MapPoint> enemyZone, TacticalMap map)
@@ -320,7 +309,7 @@ namespace CloseFight.Core.Campaign
                 for (float x = minX + step / 2; x < maxX; x += step)
                 {
                     var p = new float2(x, y);
-                    if (!PolygonMath.Contains(zone, p))
+                    if (!PolygonMath.Contains(zone, p) || Blocked(map, p))
                     {
                         continue;
                     }
@@ -364,6 +353,13 @@ namespace CloseFight.Core.Campaign
             }
 
             return spread;
+        }
+
+        /// <summary>Water, walls and props: nobody can stand there.</summary>
+        static bool Blocked(TacticalMap map, float2 p)
+        {
+            var cell = map.Grid.WorldToCell(p);
+            return !map.Grid.InBounds(cell) || map.Grid.HasFlag(map.Grid.IndexOf(cell), CellFlags.BlocksMovement) && map.BuildingAt(map.Grid.IndexOf(cell)) == null;
         }
 
         static bool ClearOfRoofs(TacticalMap map, float2 p, float radius)
@@ -451,6 +447,7 @@ namespace CloseFight.Core.Campaign
             }
 
             Finished = true;
+            DistrictDamage.Capture(Battle.Map, _state.District(Pending.district));
             var outcome = new BattleOutcome
             {
                 winner = Battle.Victory.Result == CloseFight.Core.Battle.BattleResult.GermanVictory ? Side.German

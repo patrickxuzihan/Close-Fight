@@ -1194,5 +1194,17 @@
   "district.sarpinsky": {
     "zh": "萨尔平斯基岛",
     "en": "Sarpinsky island"
+  },
+  "objective.district_centre": {
+    "zh": "中心",
+    "en": "Centre"
+  },
+  "objective.district_left": {
+    "zh": "左后方",
+    "en": "Left rear"
+  },
+  "objective.district_right": {
+    "zh": "右后方",
+    "en": "Right rear"
   }
 }

@@ -228,5 +228,9 @@ namespace CloseFight.Core.Campaign
         public bool contested;
         /// <summary>Side that attacked in the undecided battle; it is still the attacker next turn.</summary>
         public Side contestedAttacker;
+        /// <summary>Building cells of its battle map that have collapsed in earlier battles (D33: damage stays).</summary>
+        public List<int> collapsed = new List<int>();
+        /// <summary>Wall and fence cells of its battle map blown or crushed in earlier battles.</summary>
+        public List<int> wallsGone = new List<int>();
     }
 }
