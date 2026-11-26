@@ -154,37 +154,67 @@ namespace CloseFight.Core.Battle
         public Team AddTeam(string key, Side side, TeamType type, string displayName, float2 position, float facing, int size, int experience,
             string equipment = null)
         {
+            if (type == TeamType.Vehicle)
+            {
+                size = Equipment.Vehicle(equipment).Crew.Length;
+            }
+            else if (type == TeamType.AntiTankGun || type == TeamType.Mortar)
+            {
+                size = Equipment.GunTeam(equipment).CrewSize;
+            }
+
+            size = math.max(1, size);
+            var men = new SoldierSpec[size];
+            for (int i = 0; i < size; i++)
+            {
+                var (first, last) = NameGenerator.Next(side, Random);
+                var attributes = RollAttributes(experience, i == 0);
+                men[i] = new SoldierSpec
+                {
+                    Seat = i, FirstName = first, LastName = last, RankKey = RankKey(side, type, i),
+                    Attributes = attributes, Morale = attributes.Morale, AmmoShare = 1f,
+                };
+            }
+
+            return AddTeam(key, side, type, displayName, position, facing, men, equipment);
+        }
+
+        /// <summary>
+        /// Creates a team of the given men (the campaign's roll, M16): each keeps his name, rank,
+        /// attributes and seat, and draws the weapon of his seat with his share of its ammunition.
+        /// Empty seats stay empty.
+        /// </summary>
+        public Team AddTeam(string key, Side side, TeamType type, string displayName, float2 position, float facing, IReadOnlyList<SoldierSpec> men,
+            string equipment = null)
+        {
             var team = new Team(_teams.Count, key, side, type, displayName);
             VehicleDefinition vehicleDefinition = null;
             GunTeamDefinition gunTeam = null;
             if (type == TeamType.Vehicle)
             {
                 vehicleDefinition = Equipment.Vehicle(equipment);
-                size = vehicleDefinition.Crew.Length;
             }
             else if (type == TeamType.AntiTankGun || type == TeamType.Mortar)
             {
                 gunTeam = Equipment.GunTeam(equipment);
-                size = gunTeam.CrewSize;
             }
 
-            size = math.max(1, size);
-
-            for (int i = 0; i < size; i++)
+            foreach (var man in men)
             {
-                var (first, last) = NameGenerator.Next(side, Random);
-                var soldier = new Soldier(_soldiers.Count, first, last)
+                int i = man.Seat;
+                var soldier = new Soldier(_soldiers.Count, man.FirstName, man.LastName)
                 {
                     Team = team,
                     IsLeader = i == 0,
-                    RankKey = RankKey(side, type, i),
-                    Attributes = RollAttributes(experience, i == 0),
+                    RankKey = man.RankKey,
+                    Attributes = man.Attributes,
                 };
-                soldier.Morale = soldier.BaseMorale = soldier.Attributes.Morale;
+                soldier.BaseMorale = man.Attributes.Morale;
+                soldier.Morale = man.Morale > 0f ? man.Morale : man.Attributes.Morale;
                 if (vehicleDefinition != null)
                 {
                     // Inside the tank only the gunner shoots, with the coaxial MG.
-                    soldier.Role = vehicleDefinition.Crew[i];
+                    soldier.Role = vehicleDefinition.Crew[math.min(i, vehicleDefinition.Crew.Length - 1)];
                     soldier.Weapon = soldier.Role == CrewRole.Gunner ? vehicleDefinition.CoaxMg : null;
                 }
                 else if (gunTeam != null)
@@ -197,7 +227,7 @@ namespace CloseFight.Core.Battle
                     soldier.Weapon = Weapons.Issue(side, type, i);
                 }
 
-                soldier.Ammo = soldier.Weapon != null ? soldier.Weapon.StartingAmmo : 0;
+                soldier.Ammo = soldier.Weapon != null ? (int)math.ceil(soldier.Weapon.StartingAmmo * math.saturate(man.AmmoShare)) : 0;
                 team.Members.Add(soldier);
                 _soldiers.Add(soldier);
             }
@@ -1042,7 +1072,8 @@ namespace CloseFight.Core.Battle
             }
         }
 
-        static string RankKey(Side side, TeamType type, int index)
+        /// <summary>Localization key of the rank of the man in seat <paramref name="index"/> of a team (also used by the campaign roll).</summary>
+        public static string RankKey(Side side, TeamType type, int index)
         {
             string prefix = side == Side.German ? "rank.de." : "rank.su.";
             if (index == 0)

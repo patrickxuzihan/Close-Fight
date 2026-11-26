@@ -1,0 +1,3827 @@
+{
+  "id": "stalingrad_center",
+  "nameKey": "campaign.stalingrad_center",
+  "startDate": "1942-09-13",
+  "turns": 28,
+  "seed": 1942,
+  "playerSide": "German",
+  "attacker": "German",
+  "districts": [
+    {
+      "id": "orlovka",
+      "nameKey": "district.orlovka",
+      "kind": "Outskirts",
+      "owner": "Soviet",
+      "neighbours": [
+        "workers",
+        "gorodishche",
+        "razgulyaevka"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 124.5,
+          "y": 0.0
+        },
+        {
+          "x": 503.3,
+          "y": 0.0
+        },
+        {
+          "x": 418.9,
+          "y": 243.7
+        },
+        {
+          "x": 299.2,
+          "y": 274.5
+        }
+      ],
+      "label": {
+        "x": 330,
+        "y": 80
+      }
+    },
+    {
+      "id": "workers",
+      "nameKey": "district.workers",
+      "kind": "Residential",
+      "owner": "Soviet",
+      "neighbours": [
+        "orlovka",
+        "barrikady",
+        "bannyi",
+        "razgulyaevka"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 503.3,
+          "y": 0.0
+        },
+        {
+          "x": 679.8,
+          "y": 0.0
+        },
+        {
+          "x": 700.0,
+          "y": 212.5
+        },
+        {
+          "x": 531.9,
+          "y": 317.6
+        },
+        {
+          "x": 418.9,
+          "y": 243.7
+        }
+      ],
+      "label": {
+        "x": 590,
+        "y": 170
+      }
+    },
+    {
+      "id": "barrikady",
+      "nameKey": "district.barrikady",
+      "kind": "Industrial",
+      "owner": "Soviet",
+      "neighbours": [
+        "workers",
+        "tractor",
+        "bannyi",
+        "red_october"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 679.8,
+          "y": 0.0
+        },
+        {
+          "x": 808.3,
+          "y": 0.0
+        },
+        {
+          "x": 934.8,
+          "y": 189.6
+        },
+        {
+          "x": 810.0,
+          "y": 279.7
+        },
+        {
+          "x": 700.0,
+          "y": 212.5
+        }
+      ],
+      "label": {
+        "x": 800,
+        "y": 150
+      }
+    },
+    {
+      "id": "tractor",
+      "nameKey": "district.tractor",
+      "kind": "Industrial",
+      "owner": "Soviet",
+      "neighbours": [
+        "barrikady",
+        "spartanovka",
+        "red_october"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 808.3,
+          "y": 0.0
+        },
+        {
+          "x": 1053.1,
+          "y": 0.0
+        },
+        {
+          "x": 967.7,
+          "y": 192.0
+        },
+        {
+          "x": 934.8,
+          "y": 189.6
+        }
+      ],
+      "label": {
+        "x": 950,
+        "y": 50
+      }
+    },
+    {
+      "id": "spartanovka",
+      "nameKey": "district.spartanovka",
+      "kind": "Residential",
+      "owner": "Soviet",
+      "neighbours": [
+        "tractor",
+        "red_october",
+        "red_october_landing",
+        "zaitsevsky"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": true,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 1053.1,
+          "y": 0.0
+        },
+        {
+          "x": 1130,
+          "y": 0
+        },
+        {
+          "x": 1169.7,
+          "y": 238.3
+        },
+        {
+          "x": 1049.3,
+          "y": 249.5
+        },
+        {
+          "x": 967.7,
+          "y": 192.0
+        }
+      ],
+      "label": {
+        "x": 1085,
+        "y": 110
+      }
+    },
+    {
+      "id": "bannyi",
+      "nameKey": "district.bannyi",
+      "kind": "Hill",
+      "owner": "Soviet",
+      "neighbours": [
+        "workers",
+        "barrikady",
+        "red_october",
+        "razgulyaevka",
+        "mamayev"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 531.9,
+          "y": 317.6
+        },
+        {
+          "x": 700.0,
+          "y": 212.5
+        },
+        {
+          "x": 810.0,
+          "y": 279.7
+        },
+        {
+          "x": 810.0,
+          "y": 384.0
+        },
+        {
+          "x": 574.0,
+          "y": 431.2
+        }
+      ],
+      "label": {
+        "x": 690,
+        "y": 330
+      }
+    },
+    {
+      "id": "red_october",
+      "nameKey": "district.red_october",
+      "kind": "Industrial",
+      "owner": "Soviet",
+      "neighbours": [
+        "barrikady",
+        "tractor",
+        "spartanovka",
+        "bannyi",
+        "red_october_landing",
+        "mamayev",
+        "ravines"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 810.0,
+          "y": 384.0
+        },
+        {
+          "x": 810.0,
+          "y": 279.7
+        },
+        {
+          "x": 934.8,
+          "y": 189.6
+        },
+        {
+          "x": 967.7,
+          "y": 192.0
+        },
+        {
+          "x": 1049.3,
+          "y": 249.5
+        },
+        {
+          "x": 995.0,
+          "y": 445.0
+        },
+        {
+          "x": 904.9,
+          "y": 495.9
+        },
+        {
+          "x": 887.7,
+          "y": 492.8
+        }
+      ],
+      "label": {
+        "x": 930,
+        "y": 330
+      }
+    },
+    {
+      "id": "red_october_landing",
+      "nameKey": "district.red_october_landing",
+      "kind": "Riverside",
+      "owner": "Soviet",
+      "neighbours": [
+        "spartanovka",
+        "red_october",
+        "ravines",
+        "tumak"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": true,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 1169.7,
+          "y": 238.3
+        },
+        {
+          "x": 1180,
+          "y": 300
+        },
+        {
+          "x": 1205.4,
+          "y": 503.5
+        },
+        {
+          "x": 995.0,
+          "y": 445.0
+        },
+        {
+          "x": 1049.3,
+          "y": 249.5
+        }
+      ],
+      "label": {
+        "x": 1110,
+        "y": 380
+      }
+    },
+    {
+      "id": "gorodishche",
+      "nameKey": "district.gorodishche",
+      "kind": "Outskirts",
+      "owner": "German",
+      "neighbours": [
+        "orlovka",
+        "razgulyaevka",
+        "gumrak"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 124.5,
+          "y": 0.0
+        },
+        {
+          "x": 299.2,
+          "y": 274.5
+        },
+        {
+          "x": 200.6,
+          "y": 420.0
+        },
+        {
+          "x": 0.0,
+          "y": 420.0
+        }
+      ],
+      "label": {
+        "x": 110,
+        "y": 220
+      },
+      "depotOf": "German"
+    },
+    {
+      "id": "razgulyaevka",
+      "nameKey": "district.razgulyaevka",
+      "kind": "Outskirts",
+      "owner": "German",
+      "neighbours": [
+        "orlovka",
+        "workers",
+        "bannyi",
+        "gorodishche",
+        "gumrak",
+        "mamayev",
+        "aviagorodok",
+        "red_barracks"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 200.6,
+          "y": 420.0
+        },
+        {
+          "x": 299.2,
+          "y": 274.5
+        },
+        {
+          "x": 418.9,
+          "y": 243.7
+        },
+        {
+          "x": 531.9,
+          "y": 317.6
+        },
+        {
+          "x": 574.0,
+          "y": 431.2
+        },
+        {
+          "x": 555.1,
+          "y": 544.6
+        },
+        {
+          "x": 505.1,
+          "y": 585.3
+        },
+        {
+          "x": 309.5,
+          "y": 597.5
+        }
+      ],
+      "label": {
+        "x": 420,
+        "y": 430
+      }
+    },
+    {
+      "id": "gumrak",
+      "nameKey": "district.gumrak",
+      "kind": "Outskirts",
+      "owner": "German",
+      "neighbours": [
+        "gorodishche",
+        "razgulyaevka",
+        "hill_146",
+        "aviagorodok"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 0.0,
+          "y": 845.0
+        },
+        {
+          "x": 0.0,
+          "y": 420.0
+        },
+        {
+          "x": 200.6,
+          "y": 420.0
+        },
+        {
+          "x": 309.5,
+          "y": 597.5
+        },
+        {
+          "x": 275.2,
+          "y": 684.5
+        }
+      ],
+      "label": {
+        "x": 110,
+        "y": 620
+      },
+      "depotOf": "German"
+    },
+    {
+      "id": "hill_146",
+      "nameKey": "district.hill_146",
+      "kind": "Hill",
+      "owner": "German",
+      "neighbours": [
+        "gumrak",
+        "sadovaya",
+        "aviagorodok",
+        "hill_112",
+        "tsaritsa_west"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 305.6,
+          "y": 1039.6
+        },
+        {
+          "x": 0.0,
+          "y": 850.5
+        },
+        {
+          "x": 0.0,
+          "y": 845.0
+        },
+        {
+          "x": 275.2,
+          "y": 684.5
+        },
+        {
+          "x": 414.6,
+          "y": 925.3
+        },
+        {
+          "x": 401.2,
+          "y": 975.8
+        }
+      ],
+      "label": {
+        "x": 250,
+        "y": 860
+      }
+    },
+    {
+      "id": "sadovaya",
+      "nameKey": "district.sadovaya",
+      "kind": "Railway",
+      "owner": "German",
+      "neighbours": [
+        "hill_146",
+        "upper_yelshanka",
+        "tsaritsa_west"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 0.0,
+          "y": 1219.3
+        },
+        {
+          "x": 0.0,
+          "y": 850.5
+        },
+        {
+          "x": 305.6,
+          "y": 1039.6
+        },
+        {
+          "x": 259.0,
+          "y": 1210.4
+        }
+      ],
+      "label": {
+        "x": 120,
+        "y": 1070
+      }
+    },
+    {
+      "id": "upper_yelshanka",
+      "nameKey": "district.upper_yelshanka",
+      "kind": "Outskirts",
+      "owner": "German",
+      "neighbours": [
+        "sadovaya",
+        "peschanka",
+        "tsaritsa_west",
+        "minina"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 321.3,
+          "y": 1510.0
+        },
+        {
+          "x": 0.0,
+          "y": 1510.0
+        },
+        {
+          "x": 0.0,
+          "y": 1219.3
+        },
+        {
+          "x": 259.0,
+          "y": 1210.4
+        },
+        {
+          "x": 326.2,
+          "y": 1317.9
+        }
+      ],
+      "label": {
+        "x": 130,
+        "y": 1360
+      }
+    },
+    {
+      "id": "peschanka",
+      "nameKey": "district.peschanka",
+      "kind": "Outskirts",
+      "owner": "German",
+      "neighbours": [
+        "upper_yelshanka",
+        "minina",
+        "yelshanka",
+        "voroponovo"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 184.1,
+          "y": 1900.0
+        },
+        {
+          "x": 0,
+          "y": 1900
+        },
+        {
+          "x": 0.0,
+          "y": 1510.0
+        },
+        {
+          "x": 321.3,
+          "y": 1510.0
+        },
+        {
+          "x": 346.8,
+          "y": 1544.4
+        },
+        {
+          "x": 357.3,
+          "y": 1604.6
+        }
+      ],
+      "label": {
+        "x": 130,
+        "y": 1660
+      },
+      "depotOf": "German"
+    },
+    {
+      "id": "mamayev",
+      "nameKey": "district.mamayev",
+      "kind": "Hill",
+      "owner": "Soviet",
+      "neighbours": [
+        "bannyi",
+        "red_october",
+        "razgulyaevka",
+        "red_barracks",
+        "nail_factory"
+      ],
+      "key": true,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 555.1,
+          "y": 544.6
+        },
+        {
+          "x": 574.0,
+          "y": 431.2
+        },
+        {
+          "x": 810.0,
+          "y": 384.0
+        },
+        {
+          "x": 887.7,
+          "y": 492.8
+        },
+        {
+          "x": 743.4,
+          "y": 613.0
+        }
+      ],
+      "label": {
+        "x": 720,
+        "y": 480
+      }
+    },
+    {
+      "id": "ravines",
+      "nameKey": "district.ravines",
+      "kind": "Riverside",
+      "owner": "Soviet",
+      "neighbours": [
+        "red_october",
+        "red_october_landing",
+        "nail_factory",
+        "specialists"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 1205.4,
+          "y": 503.5
+        },
+        {
+          "x": 1219.9,
+          "y": 619.5
+        },
+        {
+          "x": 1000.4,
+          "y": 677.3
+        },
+        {
+          "x": 904.9,
+          "y": 495.9
+        },
+        {
+          "x": 995.0,
+          "y": 445.0
+        }
+      ],
+      "label": {
+        "x": 1060,
+        "y": 560
+      }
+    },
+    {
+      "id": "aviagorodok",
+      "nameKey": "district.aviagorodok",
+      "kind": "Outskirts",
+      "owner": "German",
+      "neighbours": [
+        "razgulyaevka",
+        "gumrak",
+        "hill_146",
+        "red_barracks",
+        "hill_112"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 414.6,
+          "y": 925.3
+        },
+        {
+          "x": 275.2,
+          "y": 684.5
+        },
+        {
+          "x": 309.5,
+          "y": 597.5
+        },
+        {
+          "x": 505.1,
+          "y": 585.3
+        },
+        {
+          "x": 562.4,
+          "y": 814.5
+        }
+      ],
+      "label": {
+        "x": 440,
+        "y": 750
+      }
+    },
+    {
+      "id": "red_barracks",
+      "nameKey": "district.red_barracks",
+      "kind": "Residential",
+      "owner": "Soviet",
+      "neighbours": [
+        "razgulyaevka",
+        "mamayev",
+        "aviagorodok",
+        "nail_factory",
+        "hill_112",
+        "station"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 562.4,
+          "y": 814.5
+        },
+        {
+          "x": 505.1,
+          "y": 585.3
+        },
+        {
+          "x": 555.1,
+          "y": 544.6
+        },
+        {
+          "x": 743.4,
+          "y": 613.0
+        },
+        {
+          "x": 770.4,
+          "y": 768.3
+        },
+        {
+          "x": 683.4,
+          "y": 838.7
+        }
+      ],
+      "label": {
+        "x": 640,
+        "y": 700
+      }
+    },
+    {
+      "id": "nail_factory",
+      "nameKey": "district.nail_factory",
+      "kind": "Industrial",
+      "owner": "Soviet",
+      "neighbours": [
+        "mamayev",
+        "ravines",
+        "red_barracks",
+        "specialists",
+        "station",
+        "january9"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 770.4,
+          "y": 768.3
+        },
+        {
+          "x": 743.4,
+          "y": 613.0
+        },
+        {
+          "x": 887.7,
+          "y": 492.8
+        },
+        {
+          "x": 904.9,
+          "y": 495.9
+        },
+        {
+          "x": 1000.4,
+          "y": 677.3
+        },
+        {
+          "x": 979.8,
+          "y": 732.1
+        },
+        {
+          "x": 887.9,
+          "y": 796.5
+        }
+      ],
+      "label": {
+        "x": 870,
+        "y": 660
+      }
+    },
+    {
+      "id": "specialists",
+      "nameKey": "district.specialists",
+      "kind": "Riverside",
+      "owner": "Soviet",
+      "neighbours": [
+        "ravines",
+        "nail_factory",
+        "january9",
+        "landing"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 1219.9,
+          "y": 619.5
+        },
+        {
+          "x": 1230,
+          "y": 700
+        },
+        {
+          "x": 1241.0,
+          "y": 846.3
+        },
+        {
+          "x": 1132.7,
+          "y": 871.1
+        },
+        {
+          "x": 979.8,
+          "y": 732.1
+        },
+        {
+          "x": 1000.4,
+          "y": 677.3
+        }
+      ],
+      "label": {
+        "x": 1110,
+        "y": 750
+      }
+    },
+    {
+      "id": "hill_112",
+      "nameKey": "district.hill_112",
+      "kind": "Hill",
+      "owner": "Soviet",
+      "neighbours": [
+        "hill_146",
+        "aviagorodok",
+        "red_barracks",
+        "station",
+        "tsaritsa_west",
+        "tsaritsa"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 401.3,
+          "y": 975.8
+        },
+        {
+          "x": 414.6,
+          "y": 925.3
+        },
+        {
+          "x": 562.4,
+          "y": 814.5
+        },
+        {
+          "x": 683.4,
+          "y": 838.7
+        },
+        {
+          "x": 727.0,
+          "y": 1078.3
+        },
+        {
+          "x": 656.6,
+          "y": 1146.1
+        }
+      ],
+      "label": {
+        "x": 590,
+        "y": 950
+      }
+    },
+    {
+      "id": "station",
+      "nameKey": "district.station",
+      "kind": "Railway",
+      "owner": "Soviet",
+      "neighbours": [
+        "red_barracks",
+        "nail_factory",
+        "hill_112",
+        "january9",
+        "red_square",
+        "tsaritsa"
+      ],
+      "key": true,
+      "crossing": false,
+      "landing": false,
+      "mapId": "stalingrad_station",
+      "outline": [
+        {
+          "x": 727.0,
+          "y": 1078.3
+        },
+        {
+          "x": 683.4,
+          "y": 838.7
+        },
+        {
+          "x": 770.4,
+          "y": 768.3
+        },
+        {
+          "x": 887.9,
+          "y": 796.5
+        },
+        {
+          "x": 921.4,
+          "y": 930.5
+        },
+        {
+          "x": 791.9,
+          "y": 1069.9
+        }
+      ],
+      "label": {
+        "x": 810,
+        "y": 910
+      }
+    },
+    {
+      "id": "january9",
+      "nameKey": "district.january9",
+      "kind": "Square",
+      "owner": "Soviet",
+      "neighbours": [
+        "nail_factory",
+        "specialists",
+        "station",
+        "red_square",
+        "landing"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 1047.6,
+          "y": 972.5
+        },
+        {
+          "x": 921.4,
+          "y": 930.5
+        },
+        {
+          "x": 887.9,
+          "y": 796.5
+        },
+        {
+          "x": 979.8,
+          "y": 732.1
+        },
+        {
+          "x": 1132.7,
+          "y": 871.1
+        }
+      ],
+      "label": {
+        "x": 1010,
+        "y": 860
+      }
+    },
+    {
+      "id": "red_square",
+      "nameKey": "district.red_square",
+      "kind": "Square",
+      "owner": "Soviet",
+      "neighbours": [
+        "station",
+        "january9",
+        "landing",
+        "state_bank",
+        "tsaritsa"
+      ],
+      "key": true,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 791.9,
+          "y": 1069.9
+        },
+        {
+          "x": 921.4,
+          "y": 930.5
+        },
+        {
+          "x": 1047.6,
+          "y": 972.5
+        },
+        {
+          "x": 1070.5,
+          "y": 1070.8
+        },
+        {
+          "x": 986.9,
+          "y": 1178.3
+        }
+      ],
+      "label": {
+        "x": 950,
+        "y": 1040
+      }
+    },
+    {
+      "id": "landing",
+      "nameKey": "district.landing",
+      "kind": "Riverside",
+      "owner": "Soviet",
+      "neighbours": [
+        "specialists",
+        "january9",
+        "red_square",
+        "state_bank",
+        "krasnaya_sloboda",
+        "golodny"
+      ],
+      "key": true,
+      "crossing": false,
+      "landing": true,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 1241.0,
+          "y": 846.3
+        },
+        {
+          "x": 1260,
+          "y": 1100
+        },
+        {
+          "x": 1259.7,
+          "y": 1105.7
+        },
+        {
+          "x": 1070.5,
+          "y": 1070.8
+        },
+        {
+          "x": 1047.6,
+          "y": 972.5
+        },
+        {
+          "x": 1132.7,
+          "y": 871.1
+        }
+      ],
+      "label": {
+        "x": 1165,
+        "y": 990
+      }
+    },
+    {
+      "id": "state_bank",
+      "nameKey": "district.state_bank",
+      "kind": "Riverside",
+      "owner": "Soviet",
+      "neighbours": [
+        "red_square",
+        "landing",
+        "tsaritsa",
+        "cannery",
+        "golodny"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 1259.7,
+          "y": 1105.7
+        },
+        {
+          "x": 1250.5,
+          "y": 1257.7
+        },
+        {
+          "x": 1002.2,
+          "y": 1285.3
+        },
+        {
+          "x": 986.9,
+          "y": 1178.3
+        },
+        {
+          "x": 1070.5,
+          "y": 1070.8
+        }
+      ],
+      "label": {
+        "x": 1130,
+        "y": 1180
+      }
+    },
+    {
+      "id": "tsaritsa_west",
+      "nameKey": "district.tsaritsa_west",
+      "kind": "Outskirts",
+      "owner": "German",
+      "neighbours": [
+        "hill_146",
+        "sadovaya",
+        "upper_yelshanka",
+        "hill_112",
+        "tsaritsa",
+        "minina"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 326.2,
+          "y": 1317.9
+        },
+        {
+          "x": 259.0,
+          "y": 1210.4
+        },
+        {
+          "x": 305.6,
+          "y": 1039.6
+        },
+        {
+          "x": 401.3,
+          "y": 975.8
+        },
+        {
+          "x": 656.6,
+          "y": 1146.1
+        },
+        {
+          "x": 646.8,
+          "y": 1211.1
+        }
+      ],
+      "label": {
+        "x": 450,
+        "y": 1160
+      }
+    },
+    {
+      "id": "tsaritsa",
+      "nameKey": "district.tsaritsa",
+      "kind": "Hill",
+      "owner": "Soviet",
+      "neighbours": [
+        "hill_112",
+        "station",
+        "red_square",
+        "state_bank",
+        "tsaritsa_west",
+        "minina",
+        "station2",
+        "elevator"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 668.9,
+          "y": 1259.6
+        },
+        {
+          "x": 646.8,
+          "y": 1211.1
+        },
+        {
+          "x": 656.6,
+          "y": 1146.1
+        },
+        {
+          "x": 727.0,
+          "y": 1078.3
+        },
+        {
+          "x": 791.9,
+          "y": 1069.9
+        },
+        {
+          "x": 986.9,
+          "y": 1178.3
+        },
+        {
+          "x": 1002.2,
+          "y": 1285.3
+        },
+        {
+          "x": 1001.9,
+          "y": 1285.9
+        },
+        {
+          "x": 907.6,
+          "y": 1339.2
+        }
+      ],
+      "label": {
+        "x": 850,
+        "y": 1220
+      }
+    },
+    {
+      "id": "minina",
+      "nameKey": "district.minina",
+      "kind": "Outskirts",
+      "owner": "German",
+      "neighbours": [
+        "upper_yelshanka",
+        "peschanka",
+        "tsaritsa_west",
+        "tsaritsa",
+        "station2",
+        "yelshanka"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 346.8,
+          "y": 1544.4
+        },
+        {
+          "x": 321.3,
+          "y": 1510.0
+        },
+        {
+          "x": 326.2,
+          "y": 1317.9
+        },
+        {
+          "x": 646.8,
+          "y": 1211.1
+        },
+        {
+          "x": 668.9,
+          "y": 1259.6
+        },
+        {
+          "x": 648.5,
+          "y": 1443.8
+        }
+      ],
+      "label": {
+        "x": 520,
+        "y": 1370
+      }
+    },
+    {
+      "id": "station2",
+      "nameKey": "district.station2",
+      "kind": "Railway",
+      "owner": "Soviet",
+      "neighbours": [
+        "tsaritsa",
+        "minina",
+        "elevator",
+        "yelshanka",
+        "south_suburb"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 648.5,
+          "y": 1443.8
+        },
+        {
+          "x": 668.9,
+          "y": 1259.6
+        },
+        {
+          "x": 907.6,
+          "y": 1339.2
+        },
+        {
+          "x": 843.8,
+          "y": 1581.6
+        },
+        {
+          "x": 770.6,
+          "y": 1579.6
+        }
+      ],
+      "label": {
+        "x": 790,
+        "y": 1400
+      }
+    },
+    {
+      "id": "elevator",
+      "nameKey": "district.elevator",
+      "kind": "Industrial",
+      "owner": "Soviet",
+      "neighbours": [
+        "tsaritsa",
+        "station2",
+        "cannery",
+        "south_suburb",
+        "kuperosnoye"
+      ],
+      "key": true,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 881.0,
+          "y": 1605.6
+        },
+        {
+          "x": 843.8,
+          "y": 1581.6
+        },
+        {
+          "x": 907.6,
+          "y": 1339.2
+        },
+        {
+          "x": 1001.9,
+          "y": 1285.9
+        },
+        {
+          "x": 1120.5,
+          "y": 1509.8
+        }
+      ],
+      "label": {
+        "x": 980,
+        "y": 1450
+      }
+    },
+    {
+      "id": "cannery",
+      "nameKey": "district.cannery",
+      "kind": "Riverside",
+      "owner": "Soviet",
+      "neighbours": [
+        "state_bank",
+        "elevator",
+        "kuperosnoye"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 1250.5,
+          "y": 1257.7
+        },
+        {
+          "x": 1233.3,
+          "y": 1544.8
+        },
+        {
+          "x": 1120.5,
+          "y": 1509.8
+        },
+        {
+          "x": 1001.9,
+          "y": 1285.9
+        },
+        {
+          "x": 1002.2,
+          "y": 1285.3
+        }
+      ],
+      "label": {
+        "x": 1150,
+        "y": 1360
+      }
+    },
+    {
+      "id": "yelshanka",
+      "nameKey": "district.yelshanka",
+      "kind": "Outskirts",
+      "owner": "German",
+      "neighbours": [
+        "peschanka",
+        "minina",
+        "station2",
+        "voroponovo",
+        "south_suburb"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 594.3,
+          "y": 1765.7
+        },
+        {
+          "x": 357.3,
+          "y": 1604.6
+        },
+        {
+          "x": 346.8,
+          "y": 1544.4
+        },
+        {
+          "x": 648.5,
+          "y": 1443.8
+        },
+        {
+          "x": 770.6,
+          "y": 1579.6
+        }
+      ],
+      "label": {
+        "x": 590,
+        "y": 1580
+      }
+    },
+    {
+      "id": "voroponovo",
+      "nameKey": "district.voroponovo",
+      "kind": "Railway",
+      "owner": "German",
+      "neighbours": [
+        "peschanka",
+        "yelshanka",
+        "south_suburb"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 620.4,
+          "y": 1900.0
+        },
+        {
+          "x": 184.1,
+          "y": 1900.0
+        },
+        {
+          "x": 357.3,
+          "y": 1604.6
+        },
+        {
+          "x": 594.3,
+          "y": 1765.7
+        }
+      ],
+      "label": {
+        "x": 420,
+        "y": 1830
+      }
+    },
+    {
+      "id": "south_suburb",
+      "nameKey": "district.south_suburb",
+      "kind": "Residential",
+      "owner": "German",
+      "neighbours": [
+        "station2",
+        "elevator",
+        "yelshanka",
+        "voroponovo",
+        "kuperosnoye",
+        "beketovka"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 880.4,
+          "y": 1900.0
+        },
+        {
+          "x": 620.4,
+          "y": 1900.0
+        },
+        {
+          "x": 594.3,
+          "y": 1765.7
+        },
+        {
+          "x": 770.6,
+          "y": 1579.6
+        },
+        {
+          "x": 843.8,
+          "y": 1581.6
+        },
+        {
+          "x": 881.0,
+          "y": 1605.6
+        },
+        {
+          "x": 929.6,
+          "y": 1729.5
+        }
+      ],
+      "label": {
+        "x": 780,
+        "y": 1760
+      }
+    },
+    {
+      "id": "kuperosnoye",
+      "nameKey": "district.kuperosnoye",
+      "kind": "Riverside",
+      "owner": "German",
+      "neighbours": [
+        "elevator",
+        "cannery",
+        "south_suburb",
+        "beketovka",
+        "sarpinsky"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 1233.3,
+          "y": 1544.8
+        },
+        {
+          "x": 1230,
+          "y": 1600
+        },
+        {
+          "x": 1198.3,
+          "y": 1758.5
+        },
+        {
+          "x": 929.6,
+          "y": 1729.5
+        },
+        {
+          "x": 881.0,
+          "y": 1605.6
+        },
+        {
+          "x": 1120.5,
+          "y": 1509.8
+        }
+      ],
+      "label": {
+        "x": 1060,
+        "y": 1650
+      }
+    },
+    {
+      "id": "beketovka",
+      "nameKey": "district.beketovka",
+      "kind": "Riverside",
+      "owner": "Soviet",
+      "neighbours": [
+        "south_suburb",
+        "kuperosnoye",
+        "sarpinsky"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": true,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 1198.3,
+          "y": 1758.5
+        },
+        {
+          "x": 1170,
+          "y": 1900
+        },
+        {
+          "x": 880.4,
+          "y": 1900.0
+        },
+        {
+          "x": 929.6,
+          "y": 1729.5
+        }
+      ],
+      "label": {
+        "x": 1040,
+        "y": 1835
+      }
+    },
+    {
+      "id": "tumak",
+      "nameKey": "district.tumak",
+      "kind": "Outskirts",
+      "owner": "Soviet",
+      "neighbours": [
+        "krasnaya_sloboda",
+        "zaitsevsky",
+        "red_october_landing"
+      ],
+      "key": false,
+      "crossing": true,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 1300,
+          "y": 0
+        },
+        {
+          "x": 1350,
+          "y": 300
+        },
+        {
+          "x": 1387.9,
+          "y": 602.9
+        },
+        {
+          "x": 1600.0,
+          "y": 596.9
+        },
+        {
+          "x": 1600,
+          "y": 0
+        }
+      ],
+      "label": {
+        "x": 1480,
+        "y": 250
+      },
+      "depotOf": "Soviet",
+      "closedTo": "German"
+    },
+    {
+      "id": "krasnaya_sloboda",
+      "nameKey": "district.krasnaya_sloboda",
+      "kind": "Outskirts",
+      "owner": "Soviet",
+      "neighbours": [
+        "tumak",
+        "akhtuba",
+        "landing",
+        "golodny"
+      ],
+      "key": false,
+      "crossing": true,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 1387.9,
+          "y": 602.9
+        },
+        {
+          "x": 1400,
+          "y": 700
+        },
+        {
+          "x": 1430,
+          "y": 1100
+        },
+        {
+          "x": 1418.1,
+          "y": 1298.9
+        },
+        {
+          "x": 1600.0,
+          "y": 1301.5
+        },
+        {
+          "x": 1600.0,
+          "y": 596.9
+        }
+      ],
+      "label": {
+        "x": 1500,
+        "y": 950
+      },
+      "depotOf": "Soviet",
+      "closedTo": "German"
+    },
+    {
+      "id": "akhtuba",
+      "nameKey": "district.akhtuba",
+      "kind": "Outskirts",
+      "owner": "Soviet",
+      "neighbours": [
+        "krasnaya_sloboda",
+        "sarpinsky"
+      ],
+      "key": false,
+      "crossing": true,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 1418.1,
+          "y": 1298.9
+        },
+        {
+          "x": 1400,
+          "y": 1600
+        },
+        {
+          "x": 1340,
+          "y": 1900
+        },
+        {
+          "x": 1600,
+          "y": 1900
+        },
+        {
+          "x": 1600.0,
+          "y": 1301.5
+        }
+      ],
+      "label": {
+        "x": 1490,
+        "y": 1650
+      },
+      "depotOf": "Soviet",
+      "closedTo": "German"
+    },
+    {
+      "id": "zaitsevsky",
+      "nameKey": "district.zaitsevsky",
+      "kind": "Riverside",
+      "owner": "Soviet",
+      "neighbours": [
+        "spartanovka",
+        "tumak"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 1242.0,
+          "y": 50.0
+        },
+        {
+          "x": 1258.1,
+          "y": 59.1
+        },
+        {
+          "x": 1271.7,
+          "y": 85.1
+        },
+        {
+          "x": 1280.8,
+          "y": 124.1
+        },
+        {
+          "x": 1284.0,
+          "y": 170.0
+        },
+        {
+          "x": 1280.8,
+          "y": 215.9
+        },
+        {
+          "x": 1271.7,
+          "y": 254.9
+        },
+        {
+          "x": 1258.1,
+          "y": 280.9
+        },
+        {
+          "x": 1242.0,
+          "y": 290.0
+        },
+        {
+          "x": 1225.9,
+          "y": 280.9
+        },
+        {
+          "x": 1212.3,
+          "y": 254.9
+        },
+        {
+          "x": 1203.2,
+          "y": 215.9
+        },
+        {
+          "x": 1200.0,
+          "y": 170.0
+        },
+        {
+          "x": 1203.2,
+          "y": 124.1
+        },
+        {
+          "x": 1212.3,
+          "y": 85.1
+        },
+        {
+          "x": 1225.9,
+          "y": 59.1
+        }
+      ],
+      "label": {
+        "x": 1242,
+        "y": 170
+      },
+      "closedTo": "German"
+    },
+    {
+      "id": "golodny",
+      "nameKey": "district.golodny",
+      "kind": "Riverside",
+      "owner": "Soviet",
+      "neighbours": [
+        "landing",
+        "state_bank",
+        "krasnaya_sloboda"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 1337.0,
+          "y": 1080.0
+        },
+        {
+          "x": 1352.3,
+          "y": 1090.7
+        },
+        {
+          "x": 1365.3,
+          "y": 1121.0
+        },
+        {
+          "x": 1374.0,
+          "y": 1166.4
+        },
+        {
+          "x": 1377.0,
+          "y": 1220.0
+        },
+        {
+          "x": 1374.0,
+          "y": 1273.6
+        },
+        {
+          "x": 1365.3,
+          "y": 1319.0
+        },
+        {
+          "x": 1352.3,
+          "y": 1349.3
+        },
+        {
+          "x": 1337.0,
+          "y": 1360.0
+        },
+        {
+          "x": 1321.7,
+          "y": 1349.3
+        },
+        {
+          "x": 1308.7,
+          "y": 1319.0
+        },
+        {
+          "x": 1300.0,
+          "y": 1273.6
+        },
+        {
+          "x": 1297.0,
+          "y": 1220.0
+        },
+        {
+          "x": 1300.0,
+          "y": 1166.4
+        },
+        {
+          "x": 1308.7,
+          "y": 1121.0
+        },
+        {
+          "x": 1321.7,
+          "y": 1090.7
+        }
+      ],
+      "label": {
+        "x": 1337,
+        "y": 1220
+      },
+      "closedTo": "German"
+    },
+    {
+      "id": "sarpinsky",
+      "nameKey": "district.sarpinsky",
+      "kind": "Riverside",
+      "owner": "Soviet",
+      "neighbours": [
+        "beketovka",
+        "kuperosnoye",
+        "akhtuba"
+      ],
+      "key": false,
+      "crossing": false,
+      "landing": false,
+      "mapId": "",
+      "outline": [
+        {
+          "x": 1287.0,
+          "y": 1580.0
+        },
+        {
+          "x": 1305.4,
+          "y": 1591.4
+        },
+        {
+          "x": 1320.9,
+          "y": 1623.9
+        },
+        {
+          "x": 1331.3,
+          "y": 1672.6
+        },
+        {
+          "x": 1335.0,
+          "y": 1730.0
+        },
+        {
+          "x": 1331.3,
+          "y": 1787.4
+        },
+        {
+          "x": 1320.9,
+          "y": 1836.1
+        },
+        {
+          "x": 1305.4,
+          "y": 1868.6
+        },
+        {
+          "x": 1287.0,
+          "y": 1880.0
+        },
+        {
+          "x": 1268.6,
+          "y": 1868.6
+        },
+        {
+          "x": 1253.1,
+          "y": 1836.1
+        },
+        {
+          "x": 1242.7,
+          "y": 1787.4
+        },
+        {
+          "x": 1239.0,
+          "y": 1730.0
+        },
+        {
+          "x": 1242.7,
+          "y": 1672.6
+        },
+        {
+          "x": 1253.1,
+          "y": 1623.9
+        },
+        {
+          "x": 1268.6,
+          "y": 1591.4
+        }
+      ],
+      "label": {
+        "x": 1287,
+        "y": 1730
+      },
+      "closedTo": "German"
+    }
+  ],
+  "regiments": [
+    {
+      "id": "de_ir544",
+      "side": "German",
+      "name": "IR 544",
+      "division": "389. ID",
+      "district": "gorodishche",
+      "experience": 55,
+      "strength": 0.6,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "de_staff",
+          "name": "Stab IR 544"
+        },
+        {
+          "template": "de_rifle",
+          "name": "1./IR 544"
+        },
+        {
+          "template": "de_rifle",
+          "name": "2./IR 544"
+        },
+        {
+          "template": "de_rifle",
+          "name": "3./IR 544"
+        },
+        {
+          "template": "de_mg",
+          "name": "4./IR 544"
+        },
+        {
+          "template": "de_antitank",
+          "name": "14./IR 544"
+        }
+      ]
+    },
+    {
+      "id": "de_ir546",
+      "side": "German",
+      "name": "IR 546",
+      "division": "389. ID",
+      "district": "gorodishche",
+      "experience": 55,
+      "strength": 0.6,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "de_staff",
+          "name": "Stab IR 546"
+        },
+        {
+          "template": "de_rifle",
+          "name": "1./IR 546"
+        },
+        {
+          "template": "de_rifle",
+          "name": "2./IR 546"
+        },
+        {
+          "template": "de_rifle",
+          "name": "3./IR 546"
+        },
+        {
+          "template": "de_mg",
+          "name": "4./IR 546"
+        },
+        {
+          "template": "de_antitank",
+          "name": "14./IR 546"
+        },
+        {
+          "template": "de_pioneer",
+          "name": "Pi.-Btl. 389"
+        }
+      ]
+    },
+    {
+      "id": "de_ir516",
+      "side": "German",
+      "name": "IR 516",
+      "division": "295. ID",
+      "district": "razgulyaevka",
+      "experience": 55,
+      "strength": 0.6,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "de_staff",
+          "name": "Stab IR 516"
+        },
+        {
+          "template": "de_rifle",
+          "name": "1./IR 516"
+        },
+        {
+          "template": "de_rifle",
+          "name": "2./IR 516"
+        },
+        {
+          "template": "de_rifle",
+          "name": "3./IR 516"
+        },
+        {
+          "template": "de_mg",
+          "name": "4./IR 516"
+        },
+        {
+          "template": "de_antitank",
+          "name": "14./IR 516"
+        },
+        {
+          "template": "de_pioneer",
+          "name": "Pi.-Btl. 295"
+        }
+      ]
+    },
+    {
+      "id": "de_ir518",
+      "side": "German",
+      "name": "IR 518",
+      "division": "295. ID",
+      "district": "razgulyaevka",
+      "experience": 55,
+      "strength": 0.6,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "de_staff",
+          "name": "Stab IR 518"
+        },
+        {
+          "template": "de_rifle",
+          "name": "1./IR 518"
+        },
+        {
+          "template": "de_rifle",
+          "name": "2./IR 518"
+        },
+        {
+          "template": "de_rifle",
+          "name": "3./IR 518"
+        },
+        {
+          "template": "de_mg",
+          "name": "4./IR 518"
+        },
+        {
+          "template": "de_antitank",
+          "name": "14./IR 518"
+        },
+        {
+          "template": "de_stug",
+          "name": "StuG-Abt. 245"
+        }
+      ]
+    },
+    {
+      "id": "de_ir203",
+      "side": "German",
+      "name": "IR 203",
+      "division": "76. ID",
+      "district": "gumrak",
+      "experience": 55,
+      "strength": 0.6,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "de_staff",
+          "name": "Stab IR 203"
+        },
+        {
+          "template": "de_rifle",
+          "name": "1./IR 203"
+        },
+        {
+          "template": "de_rifle",
+          "name": "2./IR 203"
+        },
+        {
+          "template": "de_rifle",
+          "name": "3./IR 203"
+        },
+        {
+          "template": "de_mg",
+          "name": "4./IR 203"
+        },
+        {
+          "template": "de_antitank",
+          "name": "14./IR 203"
+        }
+      ]
+    },
+    {
+      "id": "de_ir194",
+      "side": "German",
+      "name": "IR 194",
+      "division": "71. ID",
+      "district": "aviagorodok",
+      "experience": 55,
+      "strength": 0.6,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "de_staff",
+          "name": "Stab IR 194"
+        },
+        {
+          "template": "de_rifle",
+          "name": "1./IR 194"
+        },
+        {
+          "template": "de_rifle",
+          "name": "2./IR 194"
+        },
+        {
+          "template": "de_rifle",
+          "name": "3./IR 194"
+        },
+        {
+          "template": "de_mg",
+          "name": "4./IR 194"
+        },
+        {
+          "template": "de_antitank",
+          "name": "14./IR 194"
+        },
+        {
+          "template": "de_stug",
+          "name": "StuG-Abt. 244"
+        }
+      ]
+    },
+    {
+      "id": "de_ir191",
+      "side": "German",
+      "name": "IR 191",
+      "division": "71. ID",
+      "district": "aviagorodok",
+      "experience": 55,
+      "strength": 0.6,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "de_staff",
+          "name": "Stab IR 191"
+        },
+        {
+          "template": "de_rifle",
+          "name": "1./IR 191"
+        },
+        {
+          "template": "de_rifle",
+          "name": "2./IR 191"
+        },
+        {
+          "template": "de_rifle",
+          "name": "3./IR 191"
+        },
+        {
+          "template": "de_mg",
+          "name": "4./IR 191"
+        },
+        {
+          "template": "de_antitank",
+          "name": "14./IR 191"
+        },
+        {
+          "template": "de_pioneer",
+          "name": "Pi.-Btl. 171"
+        }
+      ]
+    },
+    {
+      "id": "de_ir211",
+      "side": "German",
+      "name": "IR 211",
+      "division": "71. ID",
+      "district": "tsaritsa_west",
+      "experience": 55,
+      "strength": 0.6,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "de_staff",
+          "name": "Stab IR 211"
+        },
+        {
+          "template": "de_rifle",
+          "name": "1./IR 211"
+        },
+        {
+          "template": "de_rifle",
+          "name": "2./IR 211"
+        },
+        {
+          "template": "de_rifle",
+          "name": "3./IR 211"
+        },
+        {
+          "template": "de_mg",
+          "name": "4./IR 211"
+        },
+        {
+          "template": "de_antitank",
+          "name": "14./IR 211"
+        }
+      ]
+    },
+    {
+      "id": "de_sr21",
+      "side": "German",
+      "name": "SR 21",
+      "division": "24. PD",
+      "district": "tsaritsa_west",
+      "experience": 60,
+      "strength": 0.6,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "de_staff",
+          "name": "Stab SR 21"
+        },
+        {
+          "template": "de_rifle",
+          "name": "1./SR 21"
+        },
+        {
+          "template": "de_rifle",
+          "name": "2./SR 21"
+        },
+        {
+          "template": "de_rifle",
+          "name": "3./SR 21"
+        },
+        {
+          "template": "de_mg",
+          "name": "4./SR 21"
+        },
+        {
+          "template": "de_antitank",
+          "name": "14./SR 21"
+        },
+        {
+          "template": "de_panzer",
+          "name": "Pz.-Rgt. 24"
+        }
+      ]
+    },
+    {
+      "id": "de_sr26",
+      "side": "German",
+      "name": "SR 26",
+      "division": "24. PD",
+      "district": "minina",
+      "experience": 60,
+      "strength": 0.6,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "de_staff",
+          "name": "Stab SR 26"
+        },
+        {
+          "template": "de_rifle",
+          "name": "1./SR 26"
+        },
+        {
+          "template": "de_rifle",
+          "name": "2./SR 26"
+        },
+        {
+          "template": "de_rifle",
+          "name": "3./SR 26"
+        },
+        {
+          "template": "de_mg",
+          "name": "4./SR 26"
+        },
+        {
+          "template": "de_antitank",
+          "name": "14./SR 26"
+        },
+        {
+          "template": "de_panzer",
+          "name": "Pz.-Rgt. 24"
+        }
+      ]
+    },
+    {
+      "id": "de_ir267",
+      "side": "German",
+      "name": "IR 267",
+      "division": "94. ID",
+      "district": "minina",
+      "experience": 55,
+      "strength": 0.6,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "de_staff",
+          "name": "Stab IR 267"
+        },
+        {
+          "template": "de_rifle",
+          "name": "1./IR 267"
+        },
+        {
+          "template": "de_rifle",
+          "name": "2./IR 267"
+        },
+        {
+          "template": "de_rifle",
+          "name": "3./IR 267"
+        },
+        {
+          "template": "de_mg",
+          "name": "4./IR 267"
+        },
+        {
+          "template": "de_antitank",
+          "name": "14./IR 267"
+        }
+      ]
+    },
+    {
+      "id": "de_ir276",
+      "side": "German",
+      "name": "IR 276",
+      "division": "94. ID",
+      "district": "yelshanka",
+      "experience": 55,
+      "strength": 0.6,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "de_staff",
+          "name": "Stab IR 276"
+        },
+        {
+          "template": "de_rifle",
+          "name": "1./IR 276"
+        },
+        {
+          "template": "de_rifle",
+          "name": "2./IR 276"
+        },
+        {
+          "template": "de_rifle",
+          "name": "3./IR 276"
+        },
+        {
+          "template": "de_mg",
+          "name": "4./IR 276"
+        },
+        {
+          "template": "de_antitank",
+          "name": "14./IR 276"
+        },
+        {
+          "template": "de_pioneer",
+          "name": "Pi.-Btl. 194"
+        }
+      ]
+    },
+    {
+      "id": "de_ir71",
+      "side": "German",
+      "name": "IR 71 (mot.)",
+      "division": "29. ID (mot.)",
+      "district": "yelshanka",
+      "experience": 55,
+      "strength": 0.6,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "de_staff",
+          "name": "Stab IR 71"
+        },
+        {
+          "template": "de_rifle",
+          "name": "1./IR 71"
+        },
+        {
+          "template": "de_rifle",
+          "name": "2./IR 71"
+        },
+        {
+          "template": "de_rifle",
+          "name": "3./IR 71"
+        },
+        {
+          "template": "de_mg",
+          "name": "4./IR 71"
+        },
+        {
+          "template": "de_antitank",
+          "name": "14./IR 71"
+        },
+        {
+          "template": "de_panzer",
+          "name": "Pz.-Abt. 129"
+        }
+      ]
+    },
+    {
+      "id": "de_ir15",
+      "side": "German",
+      "name": "IR 15 (mot.)",
+      "division": "29. ID (mot.)",
+      "district": "south_suburb",
+      "experience": 55,
+      "strength": 0.6,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "de_staff",
+          "name": "Stab IR 15"
+        },
+        {
+          "template": "de_rifle",
+          "name": "1./IR 15"
+        },
+        {
+          "template": "de_rifle",
+          "name": "2./IR 15"
+        },
+        {
+          "template": "de_rifle",
+          "name": "3./IR 15"
+        },
+        {
+          "template": "de_mg",
+          "name": "4./IR 15"
+        },
+        {
+          "template": "de_antitank",
+          "name": "14./IR 15"
+        }
+      ]
+    },
+    {
+      "id": "de_sr103",
+      "side": "German",
+      "name": "SR 103",
+      "division": "14. PD",
+      "district": "kuperosnoye",
+      "experience": 60,
+      "strength": 0.6,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "de_staff",
+          "name": "Stab SR 103"
+        },
+        {
+          "template": "de_rifle",
+          "name": "1./SR 103"
+        },
+        {
+          "template": "de_rifle",
+          "name": "2./SR 103"
+        },
+        {
+          "template": "de_rifle",
+          "name": "3./SR 103"
+        },
+        {
+          "template": "de_mg",
+          "name": "4./SR 103"
+        },
+        {
+          "template": "de_antitank",
+          "name": "14./SR 103"
+        },
+        {
+          "template": "de_panzer",
+          "name": "Pz.-Rgt. 36"
+        }
+      ]
+    },
+    {
+      "id": "de_sr108",
+      "side": "German",
+      "name": "SR 108",
+      "division": "14. PD",
+      "district": "voroponovo",
+      "experience": 60,
+      "strength": 0.6,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "de_staff",
+          "name": "Stab SR 108"
+        },
+        {
+          "template": "de_rifle",
+          "name": "1./SR 108"
+        },
+        {
+          "template": "de_rifle",
+          "name": "2./SR 108"
+        },
+        {
+          "template": "de_rifle",
+          "name": "3./SR 108"
+        },
+        {
+          "template": "de_mg",
+          "name": "4./SR 108"
+        },
+        {
+          "template": "de_antitank",
+          "name": "14./SR 108"
+        }
+      ]
+    },
+    {
+      "id": "su_115osbr",
+      "side": "Soviet",
+      "name": "115-ya osbr",
+      "division": "115-ya osbr",
+      "district": "orlovka",
+      "experience": 45,
+      "strength": 0.55,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "su_staff",
+          "name": "Shtab 115-ya osbr"
+        },
+        {
+          "template": "su_rifle",
+          "name": "1-ya rota, 115-ya osbr"
+        },
+        {
+          "template": "su_rifle",
+          "name": "2-ya rota, 115-ya osbr"
+        },
+        {
+          "template": "su_rifle",
+          "name": "3-ya rota, 115-ya osbr"
+        },
+        {
+          "template": "su_mg",
+          "name": "Pulemyotnaya rota, 115-ya osbr"
+        },
+        {
+          "template": "su_mortar",
+          "name": "Minomyotnaya rota, 115-ya osbr"
+        },
+        {
+          "template": "su_antitank",
+          "name": "Batareya PTO, 115-ya osbr"
+        }
+      ]
+    },
+    {
+      "id": "su_124osbr",
+      "side": "Soviet",
+      "name": "124-ya osbr",
+      "division": "Gruppa Gorokhova",
+      "district": "spartanovka",
+      "experience": 50,
+      "strength": 0.65,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "su_staff",
+          "name": "Shtab 124-ya osbr"
+        },
+        {
+          "template": "su_rifle",
+          "name": "1-ya rota, 124-ya osbr"
+        },
+        {
+          "template": "su_rifle",
+          "name": "2-ya rota, 124-ya osbr"
+        },
+        {
+          "template": "su_rifle",
+          "name": "3-ya rota, 124-ya osbr"
+        },
+        {
+          "template": "su_mg",
+          "name": "Pulemyotnaya rota, 124-ya osbr"
+        },
+        {
+          "template": "su_mortar",
+          "name": "Minomyotnaya rota, 124-ya osbr"
+        },
+        {
+          "template": "su_antitank",
+          "name": "Batareya PTO, 124-ya osbr"
+        }
+      ]
+    },
+    {
+      "id": "su_149osbr",
+      "side": "Soviet",
+      "name": "149-ya osbr",
+      "division": "Gruppa Gorokhova",
+      "district": "tractor",
+      "experience": 50,
+      "strength": 0.6,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "su_staff",
+          "name": "Shtab 149-ya osbr"
+        },
+        {
+          "template": "su_rifle",
+          "name": "1-ya rota, 149-ya osbr"
+        },
+        {
+          "template": "su_rifle",
+          "name": "2-ya rota, 149-ya osbr"
+        },
+        {
+          "template": "su_rifle",
+          "name": "3-ya rota, 149-ya osbr"
+        },
+        {
+          "template": "su_mg",
+          "name": "Pulemyotnaya rota, 149-ya osbr"
+        },
+        {
+          "template": "su_mortar",
+          "name": "Minomyotnaya rota, 149-ya osbr"
+        }
+      ]
+    },
+    {
+      "id": "su_189tbr",
+      "side": "Soviet",
+      "name": "189-ya tbr",
+      "division": "23-y tk",
+      "district": "barrikady",
+      "experience": 50,
+      "strength": 0.6,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "su_staff",
+          "name": "Shtab 189-ya tbr"
+        },
+        {
+          "template": "su_tank",
+          "name": "1-ya tankovaya rota"
+        },
+        {
+          "template": "su_light_tank",
+          "name": "2-ya tankovaya rota"
+        },
+        {
+          "template": "su_rifle",
+          "name": "Motostrelkovaya rota, 189-ya tbr"
+        }
+      ]
+    },
+    {
+      "id": "su_282nkvd",
+      "side": "Soviet",
+      "name": "282-y sp NKVD",
+      "division": "10-ya sd NKVD",
+      "district": "workers",
+      "experience": 50,
+      "strength": 0.6,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "su_staff",
+          "name": "Shtab 282-y sp NKVD"
+        },
+        {
+          "template": "su_rifle",
+          "name": "1-ya rota, 282-y sp NKVD"
+        },
+        {
+          "template": "su_rifle",
+          "name": "2-ya rota, 282-y sp NKVD"
+        },
+        {
+          "template": "su_rifle",
+          "name": "3-ya rota, 282-y sp NKVD"
+        },
+        {
+          "template": "su_mg",
+          "name": "Pulemyotnaya rota, 282-y sp NKVD"
+        },
+        {
+          "template": "su_mortar",
+          "name": "Minomyotnaya rota, 282-y sp NKVD"
+        }
+      ]
+    },
+    {
+      "id": "su_269nkvd",
+      "side": "Soviet",
+      "name": "269-y sp NKVD",
+      "division": "10-ya sd NKVD",
+      "district": "mamayev",
+      "experience": 50,
+      "strength": 0.6,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "su_staff",
+          "name": "Shtab 269-y sp NKVD"
+        },
+        {
+          "template": "su_rifle",
+          "name": "1-ya rota, 269-y sp NKVD"
+        },
+        {
+          "template": "su_rifle",
+          "name": "2-ya rota, 269-y sp NKVD"
+        },
+        {
+          "template": "su_rifle",
+          "name": "3-ya rota, 269-y sp NKVD"
+        },
+        {
+          "template": "su_mg",
+          "name": "Pulemyotnaya rota, 269-y sp NKVD"
+        },
+        {
+          "template": "su_mortar",
+          "name": "Minomyotnaya rota, 269-y sp NKVD"
+        }
+      ]
+    },
+    {
+      "id": "su_416sp",
+      "side": "Soviet",
+      "name": "416-y sp",
+      "division": "112-ya sd",
+      "district": "red_barracks",
+      "experience": 45,
+      "strength": 0.4,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "su_staff",
+          "name": "Shtab 416-y sp"
+        },
+        {
+          "template": "su_rifle",
+          "name": "1-ya rota, 416-y sp"
+        },
+        {
+          "template": "su_rifle",
+          "name": "2-ya rota, 416-y sp"
+        },
+        {
+          "template": "su_mg",
+          "name": "Pulemyotnaya rota, 416-y sp"
+        },
+        {
+          "template": "su_mortar",
+          "name": "Minomyotnaya rota, 416-y sp"
+        }
+      ]
+    },
+    {
+      "id": "su_524sp",
+      "side": "Soviet",
+      "name": "524-y sp",
+      "division": "112-ya sd",
+      "district": "nail_factory",
+      "experience": 45,
+      "strength": 0.4,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "su_staff",
+          "name": "Shtab 524-y sp"
+        },
+        {
+          "template": "su_rifle",
+          "name": "1-ya rota, 524-y sp"
+        },
+        {
+          "template": "su_rifle",
+          "name": "2-ya rota, 524-y sp"
+        },
+        {
+          "template": "su_mg",
+          "name": "Pulemyotnaya rota, 524-y sp"
+        },
+        {
+          "template": "su_mortar",
+          "name": "Minomyotnaya rota, 524-y sp"
+        }
+      ]
+    },
+    {
+      "id": "su_42osbr",
+      "side": "Soviet",
+      "name": "42-ya osbr",
+      "division": "42-ya osbr",
+      "district": "hill_112",
+      "experience": 50,
+      "strength": 0.5,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "su_staff",
+          "name": "Shtab 42-ya osbr"
+        },
+        {
+          "template": "su_rifle",
+          "name": "1-ya rota, 42-ya osbr"
+        },
+        {
+          "template": "su_rifle",
+          "name": "2-ya rota, 42-ya osbr"
+        },
+        {
+          "template": "su_rifle",
+          "name": "3-ya rota, 42-ya osbr"
+        },
+        {
+          "template": "su_mg",
+          "name": "Pulemyotnaya rota, 42-ya osbr"
+        },
+        {
+          "template": "su_mortar",
+          "name": "Minomyotnaya rota, 42-ya osbr"
+        },
+        {
+          "template": "su_antitank",
+          "name": "Batareya PTO, 42-ya osbr"
+        }
+      ]
+    },
+    {
+      "id": "su_272nkvd",
+      "side": "Soviet",
+      "name": "272-y sp NKVD",
+      "division": "10-ya sd NKVD",
+      "district": "station",
+      "experience": 50,
+      "strength": 0.6,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "su_staff",
+          "name": "Shtab 272-y sp NKVD"
+        },
+        {
+          "template": "su_rifle",
+          "name": "1-ya rota, 272-y sp NKVD"
+        },
+        {
+          "template": "su_rifle",
+          "name": "2-ya rota, 272-y sp NKVD"
+        },
+        {
+          "template": "su_rifle",
+          "name": "3-ya rota, 272-y sp NKVD"
+        },
+        {
+          "template": "su_mg",
+          "name": "Pulemyotnaya rota, 272-y sp NKVD"
+        },
+        {
+          "template": "su_mortar",
+          "name": "Minomyotnaya rota, 272-y sp NKVD"
+        },
+        {
+          "template": "su_antitank",
+          "name": "Batareya PTO, 272-y sp NKVD"
+        },
+        {
+          "template": "su_sapper",
+          "name": "Sapyornaya rota, 272-y sp NKVD"
+        }
+      ]
+    },
+    {
+      "id": "su_6gvtbr",
+      "side": "Soviet",
+      "name": "6-ya gv. tbr",
+      "division": "6-ya gv. tbr",
+      "district": "red_square",
+      "experience": 55,
+      "strength": 0.6,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "su_staff",
+          "name": "Shtab 6-y gv. tbr"
+        },
+        {
+          "template": "su_tank",
+          "name": "1-ya tankovaya rota"
+        },
+        {
+          "template": "su_light_tank",
+          "name": "2-ya tankovaya rota"
+        },
+        {
+          "template": "su_rifle",
+          "name": "Motostrelkovaya rota, 6-y gv. tbr"
+        }
+      ]
+    },
+    {
+      "id": "su_907sp",
+      "side": "Soviet",
+      "name": "907-y sp",
+      "division": "244-ya sd",
+      "district": "tsaritsa",
+      "experience": 45,
+      "strength": 0.35,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "su_staff",
+          "name": "Shtab 907-y sp"
+        },
+        {
+          "template": "su_rifle",
+          "name": "1-ya rota, 907-y sp"
+        },
+        {
+          "template": "su_rifle",
+          "name": "2-ya rota, 907-y sp"
+        },
+        {
+          "template": "su_mg",
+          "name": "Pulemyotnaya rota, 907-y sp"
+        },
+        {
+          "template": "su_mortar",
+          "name": "Minomyotnaya rota, 907-y sp"
+        }
+      ]
+    },
+    {
+      "id": "su_100gvsp",
+      "side": "Soviet",
+      "name": "100-y gv. sp",
+      "division": "35-ya gv. sd",
+      "district": "station2",
+      "experience": 55,
+      "strength": 0.45,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "su_staff",
+          "name": "Shtab 100-y gv. sp"
+        },
+        {
+          "template": "su_rifle",
+          "name": "1-ya rota, 100-y gv. sp"
+        },
+        {
+          "template": "su_rifle",
+          "name": "2-ya rota, 100-y gv. sp"
+        },
+        {
+          "template": "su_rifle",
+          "name": "3-ya rota, 100-y gv. sp"
+        },
+        {
+          "template": "su_mg",
+          "name": "Pulemyotnaya rota, 100-y gv. sp"
+        },
+        {
+          "template": "su_mortar",
+          "name": "Minomyotnaya rota, 100-y gv. sp"
+        },
+        {
+          "template": "su_antitank",
+          "name": "Batareya PTO, 100-y gv. sp"
+        }
+      ]
+    },
+    {
+      "id": "su_101gvsp",
+      "side": "Soviet",
+      "name": "101-y gv. sp",
+      "division": "35-ya gv. sd",
+      "district": "elevator",
+      "experience": 55,
+      "strength": 0.45,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "su_staff",
+          "name": "Shtab 101-y gv. sp"
+        },
+        {
+          "template": "su_rifle",
+          "name": "1-ya rota, 101-y gv. sp"
+        },
+        {
+          "template": "su_rifle",
+          "name": "2-ya rota, 101-y gv. sp"
+        },
+        {
+          "template": "su_rifle",
+          "name": "3-ya rota, 101-y gv. sp"
+        },
+        {
+          "template": "su_mg",
+          "name": "Pulemyotnaya rota, 101-y gv. sp"
+        },
+        {
+          "template": "su_mortar",
+          "name": "Minomyotnaya rota, 101-y gv. sp"
+        },
+        {
+          "template": "su_antitank",
+          "name": "Batareya PTO, 101-y gv. sp"
+        }
+      ]
+    },
+    {
+      "id": "su_10osbr",
+      "side": "Soviet",
+      "name": "10-ya osbr",
+      "division": "10-ya osbr",
+      "district": "cannery",
+      "experience": 45,
+      "strength": 0.5,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "su_staff",
+          "name": "Shtab 10-ya osbr"
+        },
+        {
+          "template": "su_rifle",
+          "name": "1-ya rota, 10-ya osbr"
+        },
+        {
+          "template": "su_rifle",
+          "name": "2-ya rota, 10-ya osbr"
+        },
+        {
+          "template": "su_rifle",
+          "name": "3-ya rota, 10-ya osbr"
+        },
+        {
+          "template": "su_mg",
+          "name": "Pulemyotnaya rota, 10-ya osbr"
+        },
+        {
+          "template": "su_mortar",
+          "name": "Minomyotnaya rota, 10-ya osbr"
+        }
+      ]
+    },
+    {
+      "id": "su_106gvsp",
+      "side": "Soviet",
+      "name": "106-y gv. sp",
+      "division": "36-ya gv. sd",
+      "district": "beketovka",
+      "experience": 55,
+      "strength": 0.6,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "su_staff",
+          "name": "Shtab 106-y gv. sp"
+        },
+        {
+          "template": "su_rifle",
+          "name": "1-ya rota, 106-y gv. sp"
+        },
+        {
+          "template": "su_rifle",
+          "name": "2-ya rota, 106-y gv. sp"
+        },
+        {
+          "template": "su_rifle",
+          "name": "3-ya rota, 106-y gv. sp"
+        },
+        {
+          "template": "su_mg",
+          "name": "Pulemyotnaya rota, 106-y gv. sp"
+        },
+        {
+          "template": "su_mortar",
+          "name": "Minomyotnaya rota, 106-y gv. sp"
+        },
+        {
+          "template": "su_antitank",
+          "name": "Batareya PTO, 106-y gv. sp"
+        }
+      ]
+    },
+    {
+      "id": "su_550sp",
+      "side": "Soviet",
+      "name": "550-y sp",
+      "division": "126-ya sd",
+      "district": "beketovka",
+      "experience": 45,
+      "strength": 0.5,
+      "morale": 70,
+      "companies": [
+        {
+          "template": "su_staff",
+          "name": "Shtab 550-y sp"
+        },
+        {
+          "template": "su_rifle",
+          "name": "1-ya rota, 550-y sp"
+        },
+        {
+          "template": "su_rifle",
+          "name": "2-ya rota, 550-y sp"
+        },
+        {
+          "template": "su_rifle",
+          "name": "3-ya rota, 550-y sp"
+        },
+        {
+          "template": "su_mg",
+          "name": "Pulemyotnaya rota, 550-y sp"
+        },
+        {
+          "template": "su_mortar",
+          "name": "Minomyotnaya rota, 550-y sp"
+        }
+      ]
+    }
+  ],
+  "arrivals": [
+    {
+      "turn": 4,
+      "regiment": {
+        "id": "su_42gvsp",
+        "side": "Soviet",
+        "name": "42-y gv. sp",
+        "division": "13-ya gv. sd",
+        "district": "landing",
+        "experience": 60,
+        "strength": 0.85,
+        "morale": 85,
+        "companies": [
+          {
+            "template": "su_staff",
+            "name": "Shtab 42-y gv. sp"
+          },
+          {
+            "template": "su_rifle",
+            "name": "1-ya rota, 42-y gv. sp"
+          },
+          {
+            "template": "su_rifle",
+            "name": "2-ya rota, 42-y gv. sp"
+          },
+          {
+            "template": "su_rifle",
+            "name": "3-ya rota, 42-y gv. sp"
+          },
+          {
+            "template": "su_mg",
+            "name": "Pulemyotnaya rota, 42-y gv. sp"
+          },
+          {
+            "template": "su_mortar",
+            "name": "Minomyotnaya rota, 42-y gv. sp"
+          },
+          {
+            "template": "su_antitank",
+            "name": "Batareya PTO, 42-y gv. sp"
+          },
+          {
+            "template": "su_sapper",
+            "name": "Sapyornaya rota, 42-y gv. sp"
+          }
+        ]
+      }
+    },
+    {
+      "turn": 4,
+      "regiment": {
+        "id": "su_39gvsp",
+        "side": "Soviet",
+        "name": "39-y gv. sp",
+        "division": "13-ya gv. sd",
+        "district": "landing",
+        "experience": 60,
+        "strength": 0.85,
+        "morale": 85,
+        "companies": [
+          {
+            "template": "su_staff",
+            "name": "Shtab 39-y gv. sp"
+          },
+          {
+            "template": "su_rifle",
+            "name": "1-ya rota, 39-y gv. sp"
+          },
+          {
+            "template": "su_rifle",
+            "name": "2-ya rota, 39-y gv. sp"
+          },
+          {
+            "template": "su_rifle",
+            "name": "3-ya rota, 39-y gv. sp"
+          },
+          {
+            "template": "su_mg",
+            "name": "Pulemyotnaya rota, 39-y gv. sp"
+          },
+          {
+            "template": "su_mortar",
+            "name": "Minomyotnaya rota, 39-y gv. sp"
+          },
+          {
+            "template": "su_antitank",
+            "name": "Batareya PTO, 39-y gv. sp"
+          },
+          {
+            "template": "su_sapper",
+            "name": "Sapyornaya rota, 39-y gv. sp"
+          }
+        ]
+      }
+    },
+    {
+      "turn": 6,
+      "regiment": {
+        "id": "su_34gvsp",
+        "side": "Soviet",
+        "name": "34-y gv. sp",
+        "division": "13-ya gv. sd",
+        "district": "krasnaya_sloboda",
+        "experience": 60,
+        "strength": 0.85,
+        "morale": 85,
+        "companies": [
+          {
+            "template": "su_staff",
+            "name": "Shtab 34-y gv. sp"
+          },
+          {
+            "template": "su_rifle",
+            "name": "1-ya rota, 34-y gv. sp"
+          },
+          {
+            "template": "su_rifle",
+            "name": "2-ya rota, 34-y gv. sp"
+          },
+          {
+            "template": "su_rifle",
+            "name": "3-ya rota, 34-y gv. sp"
+          },
+          {
+            "template": "su_mg",
+            "name": "Pulemyotnaya rota, 34-y gv. sp"
+          },
+          {
+            "template": "su_mortar",
+            "name": "Minomyotnaya rota, 34-y gv. sp"
+          },
+          {
+            "template": "su_antitank",
+            "name": "Batareya PTO, 34-y gv. sp"
+          },
+          {
+            "template": "su_sapper",
+            "name": "Sapyornaya rota, 34-y gv. sp"
+          }
+        ]
+      }
+    },
+    {
+      "turn": 10,
+      "regiment": {
+        "id": "su_92osbr",
+        "side": "Soviet",
+        "name": "92-ya osbr",
+        "division": "92-ya osbr (morskaya pekhota)",
+        "district": "akhtuba",
+        "experience": 55,
+        "strength": 0.8,
+        "morale": 80,
+        "companies": [
+          {
+            "template": "su_staff",
+            "name": "Shtab 92-ya osbr"
+          },
+          {
+            "template": "su_rifle",
+            "name": "1-ya rota, 92-ya osbr"
+          },
+          {
+            "template": "su_rifle",
+            "name": "2-ya rota, 92-ya osbr"
+          },
+          {
+            "template": "su_rifle",
+            "name": "3-ya rota, 92-ya osbr"
+          },
+          {
+            "template": "su_mg",
+            "name": "Pulemyotnaya rota, 92-ya osbr"
+          },
+          {
+            "template": "su_mortar",
+            "name": "Minomyotnaya rota, 92-ya osbr"
+          },
+          {
+            "template": "su_antitank",
+            "name": "Batareya PTO, 92-ya osbr"
+          }
+        ]
+      }
+    },
+    {
+      "turn": 14,
+      "regiment": {
+        "id": "su_90sp",
+        "side": "Soviet",
+        "name": "90-y sp",
+        "division": "95-ya sd",
+        "district": "tumak",
+        "experience": 50,
+        "strength": 0.75,
+        "morale": 75,
+        "companies": [
+          {
+            "template": "su_staff",
+            "name": "Shtab 90-y sp"
+          },
+          {
+            "template": "su_rifle",
+            "name": "1-ya rota, 90-y sp"
+          },
+          {
+            "template": "su_rifle",
+            "name": "2-ya rota, 90-y sp"
+          },
+          {
+            "template": "su_rifle",
+            "name": "3-ya rota, 90-y sp"
+          },
+          {
+            "template": "su_mg",
+            "name": "Pulemyotnaya rota, 90-y sp"
+          },
+          {
+            "template": "su_mortar",
+            "name": "Minomyotnaya rota, 90-y sp"
+          },
+          {
+            "template": "su_antitank",
+            "name": "Batareya PTO, 90-y sp"
+          }
+        ]
+      }
+    },
+    {
+      "turn": 14,
+      "regiment": {
+        "id": "su_161sp",
+        "side": "Soviet",
+        "name": "161-y sp",
+        "division": "95-ya sd",
+        "district": "tumak",
+        "experience": 50,
+        "strength": 0.75,
+        "morale": 75,
+        "companies": [
+          {
+            "template": "su_staff",
+            "name": "Shtab 161-y sp"
+          },
+          {
+            "template": "su_rifle",
+            "name": "1-ya rota, 161-y sp"
+          },
+          {
+            "template": "su_rifle",
+            "name": "2-ya rota, 161-y sp"
+          },
+          {
+            "template": "su_rifle",
+            "name": "3-ya rota, 161-y sp"
+          },
+          {
+            "template": "su_mg",
+            "name": "Pulemyotnaya rota, 161-y sp"
+          },
+          {
+            "template": "su_mortar",
+            "name": "Minomyotnaya rota, 161-y sp"
+          },
+          {
+            "template": "su_antitank",
+            "name": "Batareya PTO, 161-y sp"
+          }
+        ]
+      }
+    },
+    {
+      "turn": 22,
+      "regiment": {
+        "id": "su_1043sp",
+        "side": "Soviet",
+        "name": "1043-y sp",
+        "division": "284-ya sd",
+        "district": "krasnaya_sloboda",
+        "experience": 50,
+        "strength": 0.8,
+        "morale": 75,
+        "companies": [
+          {
+            "template": "su_staff",
+            "name": "Shtab 1043-y sp"
+          },
+          {
+            "template": "su_rifle",
+            "name": "1-ya rota, 1043-y sp"
+          },
+          {
+            "template": "su_rifle",
+            "name": "2-ya rota, 1043-y sp"
+          },
+          {
+            "template": "su_rifle",
+            "name": "3-ya rota, 1043-y sp"
+          },
+          {
+            "template": "su_mg",
+            "name": "Pulemyotnaya rota, 1043-y sp"
+          },
+          {
+            "template": "su_mortar",
+            "name": "Minomyotnaya rota, 1043-y sp"
+          },
+          {
+            "template": "su_sapper",
+            "name": "Sapyornaya rota, 1043-y sp"
+          }
+        ]
+      }
+    },
+    {
+      "turn": 22,
+      "regiment": {
+        "id": "su_1045sp",
+        "side": "Soviet",
+        "name": "1045-y sp",
+        "division": "284-ya sd",
+        "district": "krasnaya_sloboda",
+        "experience": 50,
+        "strength": 0.8,
+        "morale": 75,
+        "companies": [
+          {
+            "template": "su_staff",
+            "name": "Shtab 1045-y sp"
+          },
+          {
+            "template": "su_rifle",
+            "name": "1-ya rota, 1045-y sp"
+          },
+          {
+            "template": "su_rifle",
+            "name": "2-ya rota, 1045-y sp"
+          },
+          {
+            "template": "su_rifle",
+            "name": "3-ya rota, 1045-y sp"
+          },
+          {
+            "template": "su_mg",
+            "name": "Pulemyotnaya rota, 1045-y sp"
+          },
+          {
+            "template": "su_mortar",
+            "name": "Minomyotnaya rota, 1045-y sp"
+          },
+          {
+            "template": "su_sapper",
+            "name": "Sapyornaya rota, 1045-y sp"
+          }
+        ]
+      }
+    },
+    {
+      "turn": 25,
+      "regiment": {
+        "id": "de_jr54",
+        "side": "German",
+        "name": "Jäger-Rgt. 54",
+        "division": "100. JD",
+        "district": "gumrak",
+        "experience": 55,
+        "strength": 0.8,
+        "morale": 75,
+        "companies": [
+          {
+            "template": "de_staff",
+            "name": "Stab JR 54"
+          },
+          {
+            "template": "de_rifle",
+            "name": "1./JR 54"
+          },
+          {
+            "template": "de_rifle",
+            "name": "2./JR 54"
+          },
+          {
+            "template": "de_rifle",
+            "name": "3./JR 54"
+          },
+          {
+            "template": "de_mg",
+            "name": "4./JR 54"
+          },
+          {
+            "template": "de_antitank",
+            "name": "14./JR 54"
+          }
+        ]
+      }
+    },
+    {
+      "turn": 25,
+      "regiment": {
+        "id": "de_jr227",
+        "side": "German",
+        "name": "Jäger-Rgt. 227",
+        "division": "100. JD",
+        "district": "gumrak",
+        "experience": 55,
+        "strength": 0.8,
+        "morale": 75,
+        "companies": [
+          {
+            "template": "de_staff",
+            "name": "Stab JR 227"
+          },
+          {
+            "template": "de_rifle",
+            "name": "1./JR 227"
+          },
+          {
+            "template": "de_rifle",
+            "name": "2./JR 227"
+          },
+          {
+            "template": "de_rifle",
+            "name": "3./JR 227"
+          },
+          {
+            "template": "de_mg",
+            "name": "4./JR 227"
+          },
+          {
+            "template": "de_antitank",
+            "name": "14./JR 227"
+          }
+        ]
+      }
+    }
+  ],
+  "purchases": [
+    {
+      "side": "German",
+      "template": "de_rifle",
+      "name": "Marsch-Kompanie",
+      "cost": 160
+    },
+    {
+      "side": "German",
+      "template": "de_pioneer",
+      "name": "Pionier-Kompanie",
+      "cost": 140
+    },
+    {
+      "side": "German",
+      "template": "de_stug",
+      "name": "StuG-Batterie",
+      "cost": 240
+    },
+    {
+      "side": "German",
+      "template": "de_panzer",
+      "name": "Panzer-Kompanie",
+      "cost": 260
+    },
+    {
+      "side": "Soviet",
+      "template": "su_rifle",
+      "name": "Marshevaya rota",
+      "cost": 140
+    },
+    {
+      "side": "Soviet",
+      "template": "su_sapper",
+      "name": "Shturmovaya gruppa",
+      "cost": 120
+    },
+    {
+      "side": "Soviet",
+      "template": "su_antitank",
+      "name": "Batareya PTO",
+      "cost": 110
+    },
+    {
+      "side": "Soviet",
+      "template": "su_tank",
+      "name": "Tankovaya rota",
+      "cost": 240
+    }
+  ]
+}

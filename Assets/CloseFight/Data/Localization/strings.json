@@ -1014,5 +1014,185 @@
   "menu.target_ground": {
     "zh": "目标：这里",
     "en": "Target: here"
+  },
+  "campaign.stalingrad_center": {
+    "zh": "斯大林格勒，1942 年 9 月 13–26 日",
+    "en": "Stalingrad, 13–26 September 1942"
+  },
+  "district.orlovka": {
+    "zh": "奥尔洛夫卡",
+    "en": "Orlovka"
+  },
+  "district.workers": {
+    "zh": "街垒厂工人村",
+    "en": "Barrikady workers' settlement"
+  },
+  "district.barrikady": {
+    "zh": "街垒厂",
+    "en": "Barrikady factory"
+  },
+  "district.tractor": {
+    "zh": "拖拉机厂",
+    "en": "Tractor factory"
+  },
+  "district.spartanovka": {
+    "zh": "斯巴达诺夫卡",
+    "en": "Spartanovka"
+  },
+  "district.bannyi": {
+    "zh": "班内冲沟",
+    "en": "Bannyi ravine"
+  },
+  "district.red_october": {
+    "zh": "红十月厂",
+    "en": "Red October factory"
+  },
+  "district.red_october_landing": {
+    "zh": "红十月厂码头",
+    "en": "Red October landing"
+  },
+  "district.gorodishche": {
+    "zh": "戈罗季谢",
+    "en": "Gorodishche"
+  },
+  "district.razgulyaevka": {
+    "zh": "拉兹古利亚耶夫卡",
+    "en": "Razgulyayevka"
+  },
+  "district.gumrak": {
+    "zh": "古姆拉克（机场）",
+    "en": "Gumrak (airfield)"
+  },
+  "district.hill_146": {
+    "zh": "146.1 高地",
+    "en": "Height 146.1"
+  },
+  "district.sadovaya": {
+    "zh": "萨多瓦亚车站",
+    "en": "Sadovaya station"
+  },
+  "district.upper_yelshanka": {
+    "zh": "上叶尔尚卡",
+    "en": "Verkhnyaya Yelshanka"
+  },
+  "district.peschanka": {
+    "zh": "佩先卡",
+    "en": "Peschanka"
+  },
+  "district.mamayev": {
+    "zh": "马马耶夫岗（102 高地）",
+    "en": "Mamayev Kurgan (Height 102.0)"
+  },
+  "district.ravines": {
+    "zh": "多尔吉与克鲁托伊冲沟",
+    "en": "Dolgiy and Krutoy ravines"
+  },
+  "district.aviagorodok": {
+    "zh": "航空城",
+    "en": "Aviagorodok"
+  },
+  "district.red_barracks": {
+    "zh": "红色兵营",
+    "en": "Red Barracks"
+  },
+  "district.nail_factory": {
+    "zh": "制钉厂",
+    "en": "Nail factory"
+  },
+  "district.specialists": {
+    "zh": "专家楼",
+    "en": "Specialists' Houses"
+  },
+  "district.hill_112": {
+    "zh": "112.5 高地",
+    "en": "Height 112.5"
+  },
+  "district.station": {
+    "zh": "第一火车站",
+    "en": "Stalingrad-1 station"
+  },
+  "district.january9": {
+    "zh": "1 月 9 日广场",
+    "en": "9 January Square"
+  },
+  "district.red_square": {
+    "zh": "阵亡战士广场",
+    "en": "Square of the Fallen Fighters"
+  },
+  "district.landing": {
+    "zh": "中央码头",
+    "en": "Central landing stage"
+  },
+  "district.state_bank": {
+    "zh": "国家银行与老城",
+    "en": "State Bank and old town"
+  },
+  "district.tsaritsa_west": {
+    "zh": "察里津河上游",
+    "en": "Upper Tsaritsa"
+  },
+  "district.tsaritsa": {
+    "zh": "察里津河谷",
+    "en": "Tsaritsa gorge"
+  },
+  "district.minina": {
+    "zh": "米宁诺郊区",
+    "en": "Minina suburb"
+  },
+  "district.station2": {
+    "zh": "第二火车站",
+    "en": "Stalingrad-2 station"
+  },
+  "district.elevator": {
+    "zh": "粮仓",
+    "en": "Grain elevator"
+  },
+  "district.cannery": {
+    "zh": "罐头厂与南部河岸",
+    "en": "Cannery and southern bank"
+  },
+  "district.yelshanka": {
+    "zh": "叶尔尚卡",
+    "en": "Yelshanka"
+  },
+  "district.voroponovo": {
+    "zh": "沃罗波诺沃车站",
+    "en": "Voroponovo station"
+  },
+  "district.south_suburb": {
+    "zh": "南郊住宅区",
+    "en": "Southern suburb"
+  },
+  "district.kuperosnoye": {
+    "zh": "库波罗斯诺耶",
+    "en": "Kuperosnoye"
+  },
+  "district.beketovka": {
+    "zh": "别克托夫卡",
+    "en": "Beketovka"
+  },
+  "district.tumak": {
+    "zh": "图马克（对岸）",
+    "en": "Tumak (east bank)"
+  },
+  "district.krasnaya_sloboda": {
+    "zh": "红斯洛博达（对岸）",
+    "en": "Krasnaya Sloboda (east bank)"
+  },
+  "district.akhtuba": {
+    "zh": "阿赫图巴（对岸）",
+    "en": "Akhtuba (east bank)"
+  },
+  "district.zaitsevsky": {
+    "zh": "扎伊采夫斯基岛",
+    "en": "Zaitsevsky island"
+  },
+  "district.golodny": {
+    "zh": "戈洛德内岛",
+    "en": "Golodny island"
+  },
+  "district.sarpinsky": {
+    "zh": "萨尔平斯基岛",
+    "en": "Sarpinsky island"
   }
 }
