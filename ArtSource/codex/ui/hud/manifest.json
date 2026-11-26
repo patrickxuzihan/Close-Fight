@@ -1,0 +1,11 @@
+{
+  "a_concept": "raw_iterations/concept_a_initial_raw.png",
+  "a_refine": "concept_a_raw.png",
+  "a_components": "components_a_raw.png",
+  "b_concept": "raw_iterations/concept_b_initial_raw.png",
+  "b_refine": "concept_b_raw.png",
+  "b_components": "components_b_raw.png",
+  "c_concept": "raw_iterations/concept_c_initial_raw.png",
+  "c_refine": "concept_c_raw.png",
+  "c_components": "components_c_raw.png"
+}
